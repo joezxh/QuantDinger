@@ -1,18 +1,32 @@
-# QuantDinger Frontend
-# Build context: repository root (see docker-compose.yml)
-#
-# Serves the pre-built SPA from `frontend/dist/` (nginx). Vue source lives in a
-# separate private repository: build there, then copy `dist/` into this tree.
+# QuantDinger Frontend Dockerfile
+# Stage 1: Build
+FROM node:18-alpine as builder
 
-ARG RUNTIME_IMAGE=nginx:1.25-alpine
+WORKDIR /app
 
-FROM ${RUNTIME_IMAGE}
+# Copy package files
+COPY package*.json ./
 
-RUN apk add --no-cache curl
+# Install dependencies (prefer npm)
+RUN npm install --legacy-peer-deps
 
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
-COPY frontend/dist/ /usr/share/nginx/html/
+# Copy source code
+COPY . .
 
+# Build production version
+RUN npm run build
+
+# Stage 2: Production image (using nginx)
+# Use specific version to avoid mirror registry issues
+FROM nginx:1.25-alpine
+
+# Copy build artifacts
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY deploy/nginx-docker.conf /etc/nginx/conf.d/default.conf
+
+# Expose port
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

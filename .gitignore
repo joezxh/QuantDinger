@@ -12,7 +12,8 @@
 !/frontend/
 !/frontend/dist/
 !/frontend/dist/**
-
+node_modules
+/frontend/dist/
 # ========================
 # Environment & Secrets
 # ========================

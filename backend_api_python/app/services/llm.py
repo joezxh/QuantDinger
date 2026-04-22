@@ -20,6 +20,7 @@ class LLMProvider(Enum):
     """Supported LLM providers"""
     OPENROUTER = "openrouter"
     OPENAI = "openai"
+    OPENAI_COMPATIBLE = "openai-compatible"
     GOOGLE = "google"
     DEEPSEEK = "deepseek"
     GROK = "grok"
@@ -36,6 +37,11 @@ PROVIDER_CONFIGS = {
         "base_url": "https://api.openai.com/v1",
         "default_model": "gpt-4o",
         "fallback_model": "gpt-4o-mini",
+    },
+    LLMProvider.OPENAI_COMPATIBLE: {
+        "base_url": "",
+        "default_model": "default",
+        "fallback_model": "",
     },
     LLMProvider.GOOGLE: {
         "base_url": "https://generativelanguage.googleapis.com/v1beta",
@@ -91,6 +97,8 @@ class LLMService:
         
         # Auto-detect: find any provider with a configured API key
         # Priority: DeepSeek > Grok > OpenAI > Google > OpenRouter
+        # Note: openai-compatible is excluded from auto-detect because it requires
+        # an explicit BASE_URL configuration.
         priority_order = [
             LLMProvider.DEEPSEEK,
             LLMProvider.GROK,
@@ -114,6 +122,7 @@ class LLMService:
         key_map = {
             LLMProvider.OPENROUTER: APIKeys.OPENROUTER_API_KEY,
             LLMProvider.OPENAI: APIKeys.OPENAI_API_KEY,
+            LLMProvider.OPENAI_COMPATIBLE: APIKeys.OPENAI_COMPATIBLE_API_KEY,
             LLMProvider.GOOGLE: APIKeys.GOOGLE_API_KEY,
             LLMProvider.DEEPSEEK: APIKeys.DEEPSEEK_API_KEY,
             LLMProvider.GROK: APIKeys.GROK_API_KEY,
@@ -124,15 +133,21 @@ class LLMService:
         """Get base URL for the specified provider."""
         p = provider or self.provider
         config = load_addon_config()
-        
+
         # Check for custom base URL in config
         provider_config = config.get(p.value, {})
         custom_url = provider_config.get('base_url') or os.getenv(f'{p.value.upper()}_BASE_URL', '').strip()
-        
+
         if custom_url:
             return custom_url.rstrip('/')
-        
-        return PROVIDER_CONFIGS[p]["base_url"]
+
+        default_url = PROVIDER_CONFIGS[p].get("base_url")
+        if not default_url and p == LLMProvider.OPENAI_COMPATIBLE:
+            raise ValueError(
+                "OPENAI_COMPATIBLE_BASE_URL is required for openai-compatible provider. "
+                "Please set it in settings."
+            )
+        return default_url
 
     def get_default_model(self, provider: LLMProvider = None) -> str:
         """Get default model for the specified provider."""
@@ -287,10 +302,10 @@ class LLMService:
         
         model = model.strip()
         
-        # If using OpenRouter, keep the original format
-        if provider == LLMProvider.OPENROUTER:
+        # If using OpenRouter or a private OpenAI-compatible endpoint, keep the original format
+        if provider in (LLMProvider.OPENROUTER, LLMProvider.OPENAI_COMPATIBLE):
             return model
-        
+
         # For direct providers, extract the model name from OpenRouter format
         # e.g., 'openai/gpt-4o' -> 'gpt-4o'
         #       'google/gemini-1.5-flash' -> 'gemini-1.5-flash'
@@ -309,12 +324,12 @@ class LLMService:
                 'x-ai': LLMProvider.GROK,
                 'xai': LLMProvider.GROK,
             }
-            
+
             # If the model prefix matches the current provider, use the extracted model name
             matched_provider = prefix_to_provider.get(prefix_lower)
             if matched_provider == provider:
                 return actual_model
-            
+
             # If model prefix doesn't match current provider, use provider's default model
             # This prevents sending 'gpt-4o' to DeepSeek, etc.
             logger.warning(f"Model '{model}' doesn't match provider '{provider.value}', using default model")

@@ -94,7 +94,7 @@ CONFIG_SCHEMA = {
                 'key': 'ADMIN_USER',
                 'label': 'Admin Username',
                 'type': 'text',
-                'default': 'quantdinger',
+                'default': 'quantumquant',
                 'description': 'Administrator login username'
             },
             {
@@ -128,6 +128,7 @@ CONFIG_SCHEMA = {
                 'options': [
                     {'value': 'openrouter', 'label': 'OpenRouter (Multi-model gateway)'},
                     {'value': 'openai', 'label': 'OpenAI Direct'},
+                    {'value': 'openai-compatible', 'label': 'OpenAI Compatible (Private / Self-hosted)'},
                     {'value': 'google', 'label': 'Google Gemini'},
                     {'value': 'deepseek', 'label': 'DeepSeek'},
                     {'value': 'grok', 'label': 'xAI Grok'},
@@ -189,6 +190,31 @@ CONFIG_SCHEMA = {
                 'default': 'https://api.openai.com/v1',
                 'description': 'Custom API endpoint (for proxies or Azure)',
                 'group': 'openai'
+            },
+            # OpenAI Compatible (Private / Self-hosted)
+            {
+                'key': 'OPENAI_COMPATIBLE_API_KEY',
+                'label': 'OpenAI Compatible API Key',
+                'type': 'password',
+                'required': False,
+                'description': 'API key for your private OpenAI-compatible endpoint (e.g., vLLM, Ollama, LocalAI)',
+                'group': 'openai-compatible'
+            },
+            {
+                'key': 'OPENAI_COMPATIBLE_BASE_URL',
+                'label': 'OpenAI Compatible Base URL',
+                'type': 'text',
+                'default': 'http://localhost:8000/v1',
+                'description': 'Custom OpenAI-compatible API endpoint URL (supports private deployment)',
+                'group': 'openai-compatible'
+            },
+            {
+                'key': 'OPENAI_COMPATIBLE_MODEL',
+                'label': 'OpenAI Compatible Model',
+                'type': 'text',
+                'default': 'default',
+                'description': 'Model name for your private endpoint, e.g., qwen2.5, llama3.1, default',
+                'group': 'openai-compatible'
             },
             # Google Gemini
             {

@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/brokermr810/QuantDinger">
-    <img src="screenshots/logo.jpg" alt="QuantDinger Logo" width="220" height="220">
+    <img src="screenshots/logo.svg" alt="QuantumQuant Logo" width="220" height="220">
   </a>
 
   <h1>QuantDinger</h1>
@@ -11,12 +11,12 @@
   <p>
     <a href="../README.md"><strong>English</strong></a> &nbsp;·&nbsp;
     <a href="README_CN.md"><strong>简体中文</strong></a> &nbsp;·&nbsp;
-    <a href="https://ai.quantdinger.com"><strong>在线演示</strong></a> &nbsp;·&nbsp;
+    <a href="https://ai.quantumquant.com"><strong>在线演示</strong></a> &nbsp;·&nbsp;
     <a href="https://www.youtube.com/watch?v=tNAZ9uMiUUw"><strong>视频演示</strong></a> &nbsp;·&nbsp;
-    <a href="https://www.quantdinger.com"><strong>官网</strong></a> &nbsp;·&nbsp;
-    <a href="https://t.me/quantdinger"><strong>Telegram</strong></a> &nbsp;·&nbsp;
+    <a href="https://www.quantumquant.com"><strong>官网</strong></a> &nbsp;·&nbsp;
+    <a href="https://t.me/quantumquant"><strong>Telegram</strong></a> &nbsp;·&nbsp;
     <a href="https://discord.com/invite/tyx5B6TChr"><strong>Discord</strong></a> &nbsp;·&nbsp;
-    <a href="https://youtube.com/@quantdinger"><strong>YouTube</strong></a>
+    <a href="https://youtube.com/@quantumquant"><strong>YouTube</strong></a>
   </p>
 
   <p>
@@ -44,7 +44,7 @@ git clone https://github.com/brokermr810/QuantDinger.git && cd QuantDinger && cp
 启动后：
 
 - 打开 `http://localhost:8888`
-- 默认登录：`quantdinger` / `123456`
+- 默认登录：`quantumquant` / `123456`
 - 正式环境部署前请先检查 `backend_api_python/.env`
 
 ## QuantDinger 是什么？
@@ -349,7 +349,7 @@ docker-compose up -d --build
 
 - 前端地址：`http://localhost:8888`
 - 后端健康检查：`http://localhost:5000/api/health`
-- 默认登录：`quantdinger` / `123456`
+- 默认登录：`quantumquant` / `123456`
 
 部署注意事项：
 
@@ -570,10 +570,10 @@ QuantDinger/
 
 | 交易所 | 注册链接 |
 |--------|----------|
-| Binance | [注册开户](https://www.bsmkweb.cc/register?ref=QUANTDINGER) |
+| Binance | [注册开户](https://www.bsmkweb.cc/register?ref=QUANTUMQUANT) |
 | Bitget | [注册开户](https://partner.hdmune.cn/bg/7r4xz8kd) |
 | Bybit | [注册开户](https://partner.bybit.com/b/DINGER) |
-| OKX | [注册开户](https://www.xqmnobxky.com/join/QUANTDINGER) |
+| OKX | [注册开户](https://www.xqmnobxky.com/join/QUANTUMQUANT) |
 | Gate.io | [注册开户](https://www.gateport.company/share/DINGER) |
 | HTX | [注册开户](https://www.htx.com/invite/zh-cn/1f?invite_code=dinger) |
 
@@ -587,9 +587,9 @@ QuantDinger/
 
 如需商业授权、前端源码、品牌授权或部署支持，可联系：
 
-- Website: [quantdinger.com](https://quantdinger.com)
+- Website: [quantumquant.com](https://quantumquant.com)
 - Telegram: [t.me/worldinbroker](https://t.me/worldinbroker)
-- Email: [support@quantdinger.com](mailto:support@quantdinger.com)
+- Email: [support@quantumquant.com](mailto:support@quantumquant.com)
 
 ## 法律声明与合规提示
 
@@ -602,23 +602,23 @@ QuantDinger/
 
 ## 从这里开始
 
-- **想先看产品效果？** 先打开[在线演示](https://ai.quantdinger.com)或观看[视频演示](https://www.youtube.com/watch?v=tNAZ9uMiUUw)。
+- **想先看产品效果？** 先打开[在线演示](https://ai.quantumquant.com)或观看[视频演示](https://www.youtube.com/watch?v=tNAZ9uMiUUw)。
 - **想尽快自己部署？** 直接看[快速开始](#快速开始)，用 Docker Compose 拉起来。
 - **想开始写策略？** 先看[策略开发指南](STRATEGY_DEV_GUIDE_CN.md)。示例代码位于 [`examples/`](examples/)，并已与开发指南保持同步。
 - **想上云或生产部署？** 看[云服务器部署文档](CLOUD_DEPLOYMENT_CN.md)。
-- **想做商业授权或定制化？** 直接通过 [quantdinger.com](https://quantdinger.com) 联系项目方。
+- **想做商业授权或定制化？** 直接通过 [quantumquant.com](https://quantumquant.com) 联系项目方。
 
 ## 社区与支持
 
 <p>
-  <a href="https://t.me/quantdinger"><img src="https://img.shields.io/badge/Telegram-群组-26A5E4?style=for-the-badge&logo=telegram" alt="Telegram"></a>
+  <a href="https://t.me/quantumquant"><img src="https://img.shields.io/badge/Telegram-群组-26A5E4?style=for-the-badge&logo=telegram" alt="Telegram"></a>
   <a href="https://discord.com/invite/tyx5B6TChr"><img src="https://img.shields.io/badge/Discord-服务器-5865F2?style=for-the-badge&logo=discord" alt="Discord"></a>
-  <a href="https://youtube.com/@quantdinger"><img src="https://img.shields.io/badge/YouTube-频道-FF0000?style=for-the-badge&logo=youtube" alt="YouTube"></a>
+  <a href="https://youtube.com/@quantumquant"><img src="https://img.shields.io/badge/YouTube-频道-FF0000?style=for-the-badge&logo=youtube" alt="YouTube"></a>
 </p>
 
 - [贡献指南](../CONTRIBUTING.md)
 - [问题反馈 / 功能建议](https://github.com/brokermr810/QuantDinger/issues)
-- Email: [support@quantdinger.com](mailto:support@quantdinger.com)
+- Email: [support@quantumquant.com](mailto:support@quantumquant.com)
 
 ## 支持项目
 

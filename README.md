@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/brokermr810/QuantDinger">
-    <img src="docs/screenshots/logo.jpg" alt="QuantDinger Logo" width="220" height="220">
+    <img src="docs/screenshots/logo.svg" alt="QuantumQuant Logo" width="220" height="220">
   </a>
 
   <h1>QuantDinger</h1>
@@ -11,12 +11,12 @@
   <p>
     <a href="README.md"><strong>English</strong></a> &nbsp;·&nbsp;
     <a href="docs/README_CN.md"><strong>简体中文</strong></a> &nbsp;·&nbsp;
-    <a href="https://ai.quantdinger.com"><strong>Live Demo</strong></a> &nbsp;·&nbsp;
+    <a href="https://ai.quantumquant.com"><strong>Live Demo</strong></a> &nbsp;·&nbsp;
     <a href="https://www.youtube.com/watch?v=tNAZ9uMiUUw"><strong>Video Demo</strong></a> &nbsp;·&nbsp;
-    <a href="https://www.quantdinger.com"><strong>Website</strong></a> &nbsp;·&nbsp;
-    <a href="https://t.me/quantdinger"><strong>Telegram</strong></a> &nbsp;·&nbsp;
+    <a href="https://www.quantumquant.com"><strong>Website</strong></a> &nbsp;·&nbsp;
+    <a href="https://t.me/quantumquant"><strong>Telegram</strong></a> &nbsp;·&nbsp;
     <a href="https://discord.com/invite/tyx5B6TChr"><strong>Discord</strong></a> &nbsp;·&nbsp;
-    <a href="https://youtube.com/@quantdinger"><strong>YouTube</strong></a>
+    <a href="https://youtube.com/@quantumquant"><strong>YouTube</strong></a>
   </p>
 
   <p>
@@ -44,7 +44,7 @@ git clone https://github.com/brokermr810/QuantDinger.git && cd QuantDinger && cp
 Then open:
 
 - `http://localhost:8888`
-- login with `quantdinger` / `123456`
+- login with `quantumquant` / `123456`
 - read `backend_api_python/.env` before production use
 
 ## What Is QuantDinger?
@@ -349,7 +349,7 @@ After startup:
 
 - Frontend: `http://localhost:8888`
 - Backend health check: `http://localhost:5000/api/health`
-- Default login: `quantdinger` / `123456`
+- Default login: `quantumquant` / `123456`
 
 Important deployment notes:
 
@@ -572,10 +572,10 @@ The following links are available in-app under **Profile -> Open account** and m
 
 | Exchange | Signup Link |
 |----------|-------------|
-| Binance | [Register](https://www.bsmkweb.cc/register?ref=QUANTDINGER) |
+| Binance | [Register](https://www.bsmkweb.cc/register?ref=QUANTUMQUANT) |
 | Bitget | [Register](https://partner.hdmune.cn/bg/7r4xz8kd) |
 | Bybit | [Register](https://partner.bybit.com/b/DINGER) |
-| OKX | [Register](https://www.xqmnobxky.com/join/QUANTDINGER) |
+| OKX | [Register](https://www.xqmnobxky.com/join/QUANTUMQUANT) |
 | Gate.io | [Register](https://www.gateport.company/share/DINGER) |
 | HTX | [Register](https://www.htx.com/invite/zh-cn/1f?invite_code=dinger) |
 
@@ -589,9 +589,9 @@ The following links are available in-app under **Profile -> Open account** and m
 
 For commercial licensing, frontend source access, branding authorization, or deployment support:
 
-- Website: [quantdinger.com](https://quantdinger.com)
+- Website: [quantumquant.com](https://quantumquant.com)
 - Telegram: [t.me/worldinbroker](https://t.me/worldinbroker)
-- Email: [support@quantdinger.com](mailto:support@quantdinger.com)
+- Email: [support@quantumquant.com](mailto:support@quantumquant.com)
 
 ## Legal Notice and Compliance
 
@@ -604,23 +604,23 @@ For commercial licensing, frontend source access, branding authorization, or dep
 
 ## Start Here
 
-- **Want to see the product first?** Open the [Live Demo](https://ai.quantdinger.com) or watch the [Video Demo](https://www.youtube.com/watch?v=tNAZ9uMiUUw).
+- **Want to see the product first?** Open the [Live Demo](https://ai.quantumquant.com) or watch the [Video Demo](https://www.youtube.com/watch?v=tNAZ9uMiUUw).
 - **Want to self-host quickly?** Go straight to [Quick Start](#quick-start) and launch with Docker Compose.
 - **Want to build strategies?** Read the [Strategy Development Guide](docs/STRATEGY_DEV_GUIDE.md). Example scripts live in [`docs/examples/`](docs/examples/) and are kept aligned with the guide.
 - **Want cloud or production deployment?** Use the [Cloud Deployment Guide](docs/CLOUD_DEPLOYMENT_EN.md).
-- **Want to license or customize it for a business?** Contact the team through [quantdinger.com](https://quantdinger.com).
+- **Want to license or customize it for a business?** Contact the team through [quantumquant.com](https://quantumquant.com).
 
 ## Community and Support
 
 <p>
-  <a href="https://t.me/quantdinger"><img src="https://img.shields.io/badge/Telegram-Group-26A5E4?style=for-the-badge&logo=telegram" alt="Telegram"></a>
+  <a href="https://t.me/quantumquant"><img src="https://img.shields.io/badge/Telegram-Group-26A5E4?style=for-the-badge&logo=telegram" alt="Telegram"></a>
   <a href="https://discord.com/invite/tyx5B6TChr"><img src="https://img.shields.io/badge/Discord-Server-5865F2?style=for-the-badge&logo=discord" alt="Discord"></a>
-  <a href="https://youtube.com/@quantdinger"><img src="https://img.shields.io/badge/YouTube-Channel-FF0000?style=for-the-badge&logo=youtube" alt="YouTube"></a>
+  <a href="https://youtube.com/@quantumquant"><img src="https://img.shields.io/badge/YouTube-Channel-FF0000?style=for-the-badge&logo=youtube" alt="YouTube"></a>
 </p>
 
 - [Contributing Guide](CONTRIBUTING.md)
 - [Report Bugs / Request Features](https://github.com/brokermr810/QuantDinger/issues)
-- Email: [support@quantdinger.com](mailto:support@quantdinger.com)
+- Email: [support@quantumquant.com](mailto:support@quantumquant.com)
 
 ## Support the Project
 
