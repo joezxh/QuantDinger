@@ -645,4 +645,9 @@ QuantDinger 建立在优秀的开源生态之上，特别感谢以下项目：
 - [Capacitor](https://capacitorjs.com/)
 - [bip-utils](https://github.com/ebellocchia/bip_utils)
 
+## 本项目源自开源项目
+- [QuantDinger](https://github.com/brokermr810/QuantDinger)
+- [QuantDinger Frontend](https://github.com/brokermr810/QuantDinger-Vue)
+个人部署，个人使用真不错，修改了支持私有化部署的算力，推荐使用。
+- 
 <p align="center"><sub>如果 QuantDinger 对你有帮助，欢迎点一个 GitHub Star。</sub></p>

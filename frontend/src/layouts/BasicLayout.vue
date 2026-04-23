@@ -66,9 +66,6 @@
     <!-- 菜单底部 footer - 直接写，不依赖插槽 -->
     <div class="custom-menu-footer" :class="{ 'collapsed': collapsed, 'drawer-open': isMobile && isDrawerOpen, 'drawer-animating': isMobile && isDrawerAnimating }">
       <div v-if="!collapsed" class="menu-footer-content">
-
-
-
         <!-- 用户协议和隐私条例 -->
         <div class="footer-section">
           <div class="section-links">

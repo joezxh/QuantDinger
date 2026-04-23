@@ -4008,6 +4008,8 @@ const locale = {
   'settings.option.LLM_PROVIDER.google': 'Google Gemini',
   'settings.option.LLM_PROVIDER.deepseek': 'DeepSeek',
   'settings.option.LLM_PROVIDER.grok': 'xAI Grok',
+  'settings.option.LLM_PROVIDER.openai-compatible': 'OpenAI Compatible (Nvidia / Riêng tư)',
+  'settings.option.LLM_PROVIDER.ollama': 'Ollama (Local)',
   'settings.option.SEARCH_PROVIDER.tavily': 'Tavily',
   'settings.option.SEARCH_PROVIDER.google': 'Google',
   'settings.option.SEARCH_PROVIDER.bing': 'Bing',

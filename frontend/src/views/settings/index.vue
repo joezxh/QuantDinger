@@ -36,62 +36,10 @@
               </span>
             </template>
 
-            <!-- AI 组特殊：显示 OpenRouter 余额查询卡片 -->
-            <div v-if="groupKey === 'ai'" class="openrouter-balance-card">
-              <a-card size="small" :bordered="false">
-                <div class="balance-header">
-                  <span class="balance-title">
-                    <a-icon type="wallet" style="margin-right: 6px;" />
-                    {{ $t('settings.openrouterBalance') || 'OpenRouter 账户余额' }}
-                  </span>
-                  <a-button size="small" type="primary" ghost :loading="balanceLoading" @click="queryOpenRouterBalance">
-                    <a-icon type="sync" />
-                    {{ $t('settings.queryBalance') || '查询余额' }}
-                  </a-button>
-                </div>
-                <div v-if="openrouterBalance" class="balance-info">
-                  <a-row :gutter="16">
-                    <a-col :span="8">
-                      <a-statistic
-                        :title="$t('settings.balanceUsage') || '已使用'"
-                        :value="openrouterBalance.usage"
-                        prefix="$"
-                        :precision="4"
-                        :value-style="{ color: '#cf1322' }"
-                      />
-                    </a-col>
-                    <a-col :span="8">
-                      <a-statistic
-                        :title="$t('settings.balanceRemaining') || '剩余额度'"
-                        :value="openrouterBalance.limit_remaining !== null ? openrouterBalance.limit_remaining : '∞'"
-                        :prefix="openrouterBalance.limit_remaining !== null ? '$' : ''"
-                        :precision="openrouterBalance.limit_remaining !== null ? 4 : 0"
-                        :value-style="{ color: openrouterBalance.limit_remaining !== null && openrouterBalance.limit_remaining < 1 ? '#cf1322' : '#3f8600' }"
-                      />
-                    </a-col>
-                    <a-col :span="8">
-                      <a-statistic
-                        :title="$t('settings.balanceLimit') || '总限额'"
-                        :value="openrouterBalance.limit !== null ? openrouterBalance.limit : '∞'"
-                        :prefix="openrouterBalance.limit !== null ? '$' : ''"
-                        :precision="openrouterBalance.limit !== null ? 2 : 0"
-                      />
-                    </a-col>
-                  </a-row>
-                  <div v-if="openrouterBalance.is_free_tier" class="free-tier-badge">
-                    <a-tag color="blue">{{ $t('settings.freeTier') }}</a-tag>
-                  </div>
-                </div>
-                <div v-else class="balance-empty">
-                  <a-icon type="info-circle" style="margin-right: 6px;" />
-                  {{ $t('settings.balanceNotQueried') || '点击"查询余额"获取账户信息' }}
-                </div>
-              </a-card>
-            </div>
-
             <a-form :form="form" layout="vertical" class="settings-form">
               <a-row :gutter="24">
                 <a-col
+                  v-show="shouldShowAiItem(item, groupKey)"
                   :xs="24"
                   :sm="24"
                   :md="12"
@@ -170,6 +118,7 @@
                       <a-select
                         v-decorator="[item.key, { initialValue: getFieldValue(groupKey, item.key) || item.default }]"
                         :placeholder="item.default ? `${$t('settings.default')}: ${item.default}` : $t('settings.pleaseSelect')"
+                        @change="(value) => handleItemChange(item.key, value)"
                       >
                         <a-select-option
                           v-for="opt in getSelectOptions(item)"
@@ -188,6 +137,59 @@
                 </a-col>
               </a-row>
             </a-form>
+
+            <!-- AI 组特殊：显示 OpenRouter 余额查询卡片 -->
+            <div v-if="groupKey === 'ai' && currentAiProvider === 'openrouter'" class="openrouter-balance-card">
+              <a-card size="small" :bordered="false">
+                <div class="balance-header">
+                  <span class="balance-title">
+                    <a-icon type="wallet" style="margin-right: 6px;" />
+                    {{ $t('settings.openrouterBalance') || 'OpenRouter 账户余额' }}
+                  </span>
+                  <a-button size="small" type="primary" ghost :loading="balanceLoading" @click="queryOpenRouterBalance">
+                    <a-icon type="sync" />
+                    {{ $t('settings.queryBalance') || '查询余额' }}
+                  </a-button>
+                </div>
+                <div v-if="openrouterBalance" class="balance-info">
+                  <a-row :gutter="16">
+                    <a-col :span="8">
+                      <a-statistic
+                        :title="$t('settings.balanceUsage') || '已使用'"
+                        :value="openrouterBalance.usage"
+                        prefix="$"
+                        :precision="4"
+                        :value-style="{ color: '#cf1322' }"
+                      />
+                    </a-col>
+                    <a-col :span="8">
+                      <a-statistic
+                        :title="$t('settings.balanceRemaining') || '剩余额度'"
+                        :value="openrouterBalance.limit_remaining !== null ? openrouterBalance.limit_remaining : '∞'"
+                        :prefix="openrouterBalance.limit_remaining !== null ? '$' : ''"
+                        :precision="openrouterBalance.limit_remaining !== null ? 4 : 0"
+                        :value-style="{ color: openrouterBalance.limit_remaining !== null && openrouterBalance.limit_remaining < 1 ? '#cf1322' : '#3f8600' }"
+                      />
+                    </a-col>
+                    <a-col :span="8">
+                      <a-statistic
+                        :title="$t('settings.balanceLimit') || '总限额'"
+                        :value="openrouterBalance.limit !== null ? openrouterBalance.limit : '∞'"
+                        :prefix="openrouterBalance.limit !== null ? '$' : ''"
+                        :precision="openrouterBalance.limit !== null ? 2 : 0"
+                      />
+                    </a-col>
+                  </a-row>
+                  <div v-if="openrouterBalance.is_free_tier" class="free-tier-badge">
+                    <a-tag color="blue">{{ $t('settings.freeTier') }}</a-tag>
+                  </div>
+                </div>
+                <div v-else class="balance-empty">
+                  <a-icon type="info-circle" style="margin-right: 6px;" />
+                  {{ $t('settings.balanceNotQueried') || '点击"查询余额"获取账户信息' }}
+                </div>
+              </a-card>
+            </div>
           </a-collapse-panel>
         </a-collapse>
       </div>
@@ -224,7 +226,9 @@ export default {
       showRestartTip: false,
       // OpenRouter 余额
       balanceLoading: false,
-      openrouterBalance: null
+      openrouterBalance: null,
+      // 当前选中的 LLM provider
+      currentAiProvider: 'openai-compatible'
     }
   },
   computed: {
@@ -291,6 +295,9 @@ export default {
 
         if (valuesRes.code === 1) {
           this.values = valuesRes.data
+          // 初始化当前 LLM provider
+          const aiValues = this.values.ai || {}
+          this.currentAiProvider = aiValues.LLM_PROVIDER || 'openai-compatible'
         }
       } catch (error) {
         this.$message.error(this.$t('settings.loadFailed'))
@@ -391,6 +398,22 @@ export default {
         return defaultVal === 'True' || defaultVal === 'true' || defaultVal === true
       }
       return val === 'True' || val === 'true' || val === true
+    },
+
+    shouldShowAiItem (item, groupKey) {
+      if (groupKey !== 'ai') return true
+      // LLM provider selector always visible
+      if (item.key === 'LLM_PROVIDER') return true
+      // Common settings (no group) always visible
+      if (!item.group) return true
+      // Provider-specific settings only shown for selected provider
+      return item.group === this.currentAiProvider
+    },
+
+    handleItemChange (key, value) {
+      if (key === 'LLM_PROVIDER') {
+        this.currentAiProvider = value
+      }
     },
 
     handleReset () {

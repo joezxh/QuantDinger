@@ -124,14 +124,15 @@ CONFIG_SCHEMA = {
                 'key': 'LLM_PROVIDER',
                 'label': 'LLM Provider',
                 'type': 'select',
-                'default': 'openrouter',
+                'default': 'openai-compatible',
                 'options': [
+                    {'value': 'openai-compatible', 'label': 'OpenAI Compatible (Nvidia / Private)'},
                     {'value': 'openrouter', 'label': 'OpenRouter (Multi-model gateway)'},
                     {'value': 'openai', 'label': 'OpenAI Direct'},
-                    {'value': 'openai-compatible', 'label': 'OpenAI Compatible (Private / Self-hosted)'},
                     {'value': 'google', 'label': 'Google Gemini'},
                     {'value': 'deepseek', 'label': 'DeepSeek'},
                     {'value': 'grok', 'label': 'xAI Grok'},
+                    {'value': 'ollama', 'label': 'Ollama (Local)'},
                 ],
                 'description': 'Select your preferred LLM provider'
             },
@@ -204,7 +205,7 @@ CONFIG_SCHEMA = {
                 'key': 'OPENAI_COMPATIBLE_BASE_URL',
                 'label': 'OpenAI Compatible Base URL',
                 'type': 'text',
-                'default': 'http://localhost:8000/v1',
+                'default': 'https://integrate.api.nvidia.com/v1',
                 'description': 'Custom OpenAI-compatible API endpoint URL (supports private deployment)',
                 'group': 'openai-compatible'
             },
@@ -212,8 +213,8 @@ CONFIG_SCHEMA = {
                 'key': 'OPENAI_COMPATIBLE_MODEL',
                 'label': 'OpenAI Compatible Model',
                 'type': 'text',
-                'default': 'default',
-                'description': 'Model name for your private endpoint, e.g., qwen2.5, llama3.1, default',
+                'default': 'meta/llama-3.3-70b-instruct',
+                'description': 'Model name for your private endpoint, e.g., nvidia/llama-3.3-70b-instruct, qwen2.5, llama3.1',
                 'group': 'openai-compatible'
             },
             # Google Gemini
@@ -288,6 +289,23 @@ CONFIG_SCHEMA = {
                 'default': 'https://api.x.ai/v1',
                 'description': 'xAI Grok API endpoint',
                 'group': 'grok'
+            },
+            # Ollama (Local)
+            {
+                'key': 'OLLAMA_BASE_URL',
+                'label': 'Ollama Base URL',
+                'type': 'text',
+                'default': 'http://localhost:11434/v1',
+                'description': 'Local Ollama service URL with OpenAI-compatible endpoint path, e.g., http://localhost:11434/v1',
+                'group': 'ollama'
+            },
+            {
+                'key': 'OLLAMA_MODEL',
+                'label': 'Ollama Model',
+                'type': 'text',
+                'default': 'qwen2.5:7b',
+                'description': 'Model name pulled in Ollama, e.g., qwen2.5:7b, llama3.2, deepseek-r1:8b',
+                'group': 'ollama'
             },
             # Common settings
             {

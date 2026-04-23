@@ -24,6 +24,7 @@ class LLMProvider(Enum):
     GOOGLE = "google"
     DEEPSEEK = "deepseek"
     GROK = "grok"
+    OLLAMA = "ollama"
 
 
 # Provider configurations
@@ -39,9 +40,9 @@ PROVIDER_CONFIGS = {
         "fallback_model": "gpt-4o-mini",
     },
     LLMProvider.OPENAI_COMPATIBLE: {
-        "base_url": "",
-        "default_model": "default",
-        "fallback_model": "",
+        "base_url": "https://integrate.api.nvidia.com/v1",
+        "default_model": "z-ai/glm-5.1",
+        "fallback_model": "z-ai/glm-5.1",
     },
     LLMProvider.GOOGLE: {
         "base_url": "https://generativelanguage.googleapis.com/v1beta",
@@ -57,6 +58,11 @@ PROVIDER_CONFIGS = {
         "base_url": "https://api.x.ai/v1",
         "default_model": "grok-beta",
         "fallback_model": "grok-beta",
+    },
+    LLMProvider.OLLAMA: {
+        "base_url": "http://localhost:11434/v1",
+        "default_model": "qwen2.5:7b",
+        "fallback_model": "qwen2.5:7b",
     },
 }
 
@@ -126,6 +132,7 @@ class LLMService:
             LLMProvider.GOOGLE: APIKeys.GOOGLE_API_KEY,
             LLMProvider.DEEPSEEK: APIKeys.DEEPSEEK_API_KEY,
             LLMProvider.GROK: APIKeys.GROK_API_KEY,
+            LLMProvider.OLLAMA: "ollama",
         }
         return key_map.get(p, "") or ""
 
@@ -303,7 +310,7 @@ class LLMService:
         model = model.strip()
         
         # If using OpenRouter or a private OpenAI-compatible endpoint, keep the original format
-        if provider in (LLMProvider.OPENROUTER, LLMProvider.OPENAI_COMPATIBLE):
+        if provider in (LLMProvider.OPENROUTER, LLMProvider.OPENAI_COMPATIBLE, LLMProvider.OLLAMA):
             return model
 
         # For direct providers, extract the model name from OpenRouter format
