@@ -115,14 +115,30 @@ def _get_user_agent() -> str:
 @auth_bp.route('/security-config', methods=['GET'])
 def get_security_config():
     """
-    Get public security configuration for frontend.
-    
-    Returns:
-        turnstile_enabled: bool
-        turnstile_site_key: str
-        registration_enabled: bool
-        oauth_google_enabled: bool
-        oauth_github_enabled: bool
+    ---
+    tags:
+      - General
+    summary: "Get public security configuration for frontend."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from app.services.security_service import get_security_service
@@ -140,16 +156,46 @@ def get_security_config():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     """
-    User login endpoint.
-    
-    Request body:
-        username: str
-        password: str
-        turnstile_token: str (optional, required if Turnstile is enabled)
-    
-    Returns:
-        token: JWT token
-        userinfo: User information
+    ---
+    tags:
+      - Login
+    summary: "User login endpoint."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+            account:
+              type: string
+            password:
+              type: string
+            turnstile_token:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     ip_address = _get_client_ip()
     user_agent = _get_user_agent()
@@ -285,14 +331,46 @@ def login():
 @auth_bp.route('/login-code', methods=['POST'])
 def login_with_code():
     """
-    Login with email verification code (quick login / register).
-    If user doesn't exist, create a new account automatically.
-    
-    Request body:
-        email: str
-        code: str (verification code)
-        turnstile_token: str (optional)
-        referral_code: str (optional, referrer's user ID - only for new users)
+    ---
+    tags:
+      - Login
+    summary: "Login with email verification code (quick login / register)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            email:
+              type: string
+            code:
+              type: string
+            turnstile_token:
+              type: string
+            referral_code:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     ip_address = _get_client_ip()
     user_agent = _get_user_agent()
@@ -491,12 +569,44 @@ def login_with_code():
 @auth_bp.route('/send-code', methods=['POST'])
 def send_verification_code():
     """
-    Send verification code to email.
-    
-    Request body:
-        email: str
-        type: str (register, reset_password, change_password, change_email)
-        turnstile_token: str (optional)
+    ---
+    tags:
+      - Send
+    summary: "Send verification code to email."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            email:
+              type: string
+            type:
+              type: string
+            turnstile_token:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     ip_address = _get_client_ip()
     
@@ -581,15 +691,50 @@ def send_verification_code():
 @auth_bp.route('/register', methods=['POST'])
 def register():
     """
-    Register new user with email verification.
-    
-    Request body:
-        email: str
-        code: str (verification code)
-        username: str
-        password: str
-        turnstile_token: str (optional)
-        referral_code: str (optional, referrer's user ID)
+    ---
+    tags:
+      - Register
+    summary: "Register new user with email verification."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            email:
+              type: string
+            code:
+              type: string
+            username:
+              type: string
+            password:
+              type: string
+            turnstile_token:
+              type: string
+            referral_code:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     ip_address = _get_client_ip()
     user_agent = _get_user_agent()
@@ -754,13 +899,46 @@ def register():
 @auth_bp.route('/reset-password', methods=['POST'])
 def reset_password():
     """
-    Reset password with email verification.
-    
-    Request body:
-        email: str
-        code: str (verification code)
-        new_password: str
-        turnstile_token: str (optional)
+    ---
+    tags:
+      - Reset
+    summary: "Reset password with email verification."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            email:
+              type: string
+            code:
+              type: string
+            new_password:
+              type: string
+            turnstile_token:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     ip_address = _get_client_ip()
     user_agent = _get_user_agent()
@@ -829,11 +1007,46 @@ def reset_password():
 @login_required
 def change_password():
     """
-    Change password with email verification (for logged-in users).
-    
-    Request body:
-        code: str (verification code sent to user's email)
-        new_password: str
+    ---
+    tags:
+      - Change
+    summary: "Change password with email verification (for logged-in users)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            code:
+              type: string
+            new_password:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     ip_address = _get_client_ip()
     user_agent = _get_user_agent()
@@ -894,12 +1107,37 @@ def change_password():
 
 @auth_bp.route('/oauth/google', methods=['GET'])
 def oauth_google():
-    """Redirect to Google OAuth authorization page.
-
-    Query params:
-        redirect: optional front-end URL (must be allow-listed). When provided,
-                  after successful login the user is redirected there instead of
-                  the default FRONTEND_URL. Supports multi-frontend (PC + mobile).
+    """
+    ---
+    tags:
+      - Oauth
+    summary: "Redirect to Google OAuth authorization page."
+    produces:
+      - application/json
+    parameters:
+      - name: redirect
+        in: query
+        type: string
+        required: false
+        description: "Redirect"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from app.services.oauth_service import get_oauth_service
@@ -919,7 +1157,48 @@ def oauth_google():
 
 @auth_bp.route('/oauth/google/callback', methods=['GET'])
 def oauth_google_callback():
-    """Handle Google OAuth callback"""
+    """
+    ---
+    tags:
+      - Oauth
+    summary: "Handle Google OAuth callback"
+    produces:
+      - application/json
+    parameters:
+      - name: code
+        in: query
+        type: string
+        required: false
+        description: "Code"
+      - name: state
+        in: query
+        type: string
+        required: false
+        description: "State"
+      - name: error
+        in: query
+        type: string
+        required: false
+        description: "Error"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     ip_address = _get_client_ip()
     user_agent = _get_user_agent()
     
@@ -990,10 +1269,37 @@ def oauth_google_callback():
 
 @auth_bp.route('/oauth/github', methods=['GET'])
 def oauth_github():
-    """Redirect to GitHub OAuth authorization page.
-
-    Query params:
-        redirect: optional front-end URL (must be allow-listed), see oauth_google.
+    """
+    ---
+    tags:
+      - Oauth
+    summary: "Redirect to GitHub OAuth authorization page."
+    produces:
+      - application/json
+    parameters:
+      - name: redirect
+        in: query
+        type: string
+        required: false
+        description: "Redirect"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from app.services.oauth_service import get_oauth_service
@@ -1013,7 +1319,48 @@ def oauth_github():
 
 @auth_bp.route('/oauth/github/callback', methods=['GET'])
 def oauth_github_callback():
-    """Handle GitHub OAuth callback"""
+    """
+    ---
+    tags:
+      - Oauth
+    summary: "Handle GitHub OAuth callback"
+    produces:
+      - application/json
+    parameters:
+      - name: code
+        in: query
+        type: string
+        required: false
+        description: "Code"
+      - name: state
+        in: query
+        type: string
+        required: false
+        description: "State"
+      - name: error
+        in: query
+        type: string
+        required: false
+        description: "Error"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     ip_address = _get_client_ip()
     user_agent = _get_user_agent()
     
@@ -1086,14 +1433,90 @@ def oauth_github_callback():
 
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
-    """Logout (client removes token; server is stateless)."""
+    """
+    ---
+    tags:
+      - Logout
+    summary: "Logout (client removes token; server is stateless)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     return jsonify({'code': 1, 'msg': 'Logout successful', 'data': None})
 
 
 @auth_bp.route('/info', methods=['GET'])
 @login_required
 def get_user_info():
-    """Get current user info."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get current user info."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+            username:
+              type: string
+            nickname:
+              type: string
+            email:
+              type: string
+            avatar:
+              type: string
+            timezone:
+              type: string
+            role:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = getattr(g, 'user_id', 1)
         username = getattr(g, 'user', Config.ADMIN_USER)

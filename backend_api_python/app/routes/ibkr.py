@@ -31,9 +31,30 @@ def _get_client() -> IBKRClient:
 @ibkr_bp.route('/status', methods=['GET'])
 def get_status():
     """
-    Get connection status.
-    
-    GET /api/ibkr/status
+    ---
+    tags:
+      - General
+    summary: "Get connection status."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()
@@ -52,16 +73,48 @@ def get_status():
 @ibkr_bp.route('/connect', methods=['POST'])
 def connect():
     """
-    Connect to TWS / IB Gateway.
-    
-    POST /api/ibkr/connect
-    Body: {
-        "host": "127.0.0.1",      // Optional, default 127.0.0.1
-        "port": 7497,             // Optional, TWS Live:7497, TWS Paper:7496, Gateway Live:4001, Gateway Paper:4002
-        "clientId": 1,            // Optional, default 1
-        "account": "",            // Optional, specify for multi-account
-        "readonly": false         // Optional, readonly mode
-    }
+    ---
+    tags:
+      - Connect
+    summary: "Connect to TWS / IB Gateway."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            host:
+              type: string
+            port:
+              type: string
+            clientId:
+              type: string
+            account:
+              type: string
+            readonly:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     global _client
     
@@ -113,9 +166,32 @@ def connect():
 @ibkr_bp.route('/disconnect', methods=['POST'])
 def disconnect():
     """
-    Disconnect from IBKR.
-    
-    POST /api/ibkr/disconnect
+    ---
+    tags:
+      - Disconnect
+    summary: "Disconnect from IBKR."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     global _client
     
@@ -143,9 +219,30 @@ def disconnect():
 @ibkr_bp.route('/account', methods=['GET'])
 def get_account():
     """
-    Get account information.
-    
-    GET /api/ibkr/account
+    ---
+    tags:
+      - General
+    summary: "Get account information."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()
@@ -170,9 +267,30 @@ def get_account():
 @ibkr_bp.route('/positions', methods=['GET'])
 def get_positions():
     """
-    Get positions.
-    
-    GET /api/ibkr/positions
+    ---
+    tags:
+      - General
+    summary: "Get positions."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()
@@ -198,9 +316,30 @@ def get_positions():
 @ibkr_bp.route('/orders', methods=['GET'])
 def get_orders():
     """
-    Get open orders.
-    
-    GET /api/ibkr/orders
+    ---
+    tags:
+      - General
+    summary: "Get open orders."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()
@@ -228,17 +367,50 @@ def get_orders():
 @ibkr_bp.route('/order', methods=['POST'])
 def place_order():
     """
-    Place an order.
-    
-    POST /api/ibkr/order
-    Body: {
-        "symbol": "AAPL",         // Required, symbol code
-        "side": "buy",            // Required, buy or sell
-        "quantity": 10,           // Required, number of shares
-        "marketType": "USStock",  // Optional, default USStock
-        "orderType": "market",    // Optional, market or limit, default market
-        "price": 150.00           // Required for limit orders
-    }
+    ---
+    tags:
+      - Place
+    summary: "Place an order."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            symbol:
+              type: string
+            side:
+              type: string
+            quantity:
+              type: string
+            marketType:
+              type: string
+            orderType:
+              type: string
+            price:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()
@@ -315,9 +487,36 @@ def place_order():
 @ibkr_bp.route('/order/<int:order_id>', methods=['DELETE'])
 def cancel_order(order_id: int):
     """
-    Cancel an order.
-    
-    DELETE /api/ibkr/order/<order_id>
+    ---
+    tags:
+      - Cancel
+    summary: "Cancel an order."
+    produces:
+      - application/json
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: "Order Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()
@@ -353,9 +552,41 @@ def cancel_order(order_id: int):
 @ibkr_bp.route('/quote', methods=['GET'])
 def get_quote():
     """
-    Get real-time quote.
-    
-    GET /api/ibkr/quote?symbol=AAPL&marketType=USStock
+    ---
+    tags:
+      - General
+    summary: "Get real-time quote."
+    produces:
+      - application/json
+    parameters:
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+      - name: marketType
+        in: query
+        type: string
+        required: false
+        description: "Markettype"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()

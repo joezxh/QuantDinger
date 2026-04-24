@@ -69,26 +69,37 @@ def load_addon_config() -> Dict[str, Any]:
         ('OPENROUTER_MAX_TOKENS', 'openrouter.max_tokens', 'int'),
         ('OPENROUTER_TIMEOUT', 'openrouter.timeout', 'int'),
         ('OPENROUTER_CONNECT_TIMEOUT', 'openrouter.connect_timeout', 'int'),
-        
+        ('OPENROUTER_FALLBACK_MODEL', 'openrouter.fallback_model', 'string'),
+
         # OpenAI Direct
         ('OPENAI_API_KEY', 'openai.api_key', 'string'),
         ('OPENAI_BASE_URL', 'openai.base_url', 'string'),
         ('OPENAI_MODEL', 'openai.model', 'string'),
-        
+        ('OPENAI_FALLBACK_MODEL', 'openai.fallback_model', 'string'),
+
+        # OpenAI Compatible (自定义兼容接口，如 NVIDIA、GPUStack)
+        ('OPENAI_COMPATIBLE_API_KEY', 'openai-compatible.api_key', 'string'),
+        ('OPENAI_COMPATIBLE_BASE_URL', 'openai-compatible.base_url', 'string'),
+        ('OPENAI_COMPATIBLE_MODEL', 'openai-compatible.model', 'string'),
+        ('OPENAI_COMPATIBLE_FALLBACK_MODEL', 'openai-compatible.fallback_model', 'string'),
+
         # Google Gemini
         ('GOOGLE_API_KEY', 'google.api_key', 'string'),
         ('GOOGLE_MODEL', 'google.model', 'string'),
-        
+        ('GOOGLE_FALLBACK_MODEL', 'google.fallback_model', 'string'),
+
         # DeepSeek
         ('DEEPSEEK_API_KEY', 'deepseek.api_key', 'string'),
         ('DEEPSEEK_BASE_URL', 'deepseek.base_url', 'string'),
         ('DEEPSEEK_MODEL', 'deepseek.model', 'string'),
-        
+        ('DEEPSEEK_FALLBACK_MODEL', 'deepseek.fallback_model', 'string'),
+
         # xAI Grok
         ('GROK_API_KEY', 'grok.api_key', 'string'),
         ('GROK_BASE_URL', 'grok.base_url', 'string'),
         ('GROK_MODEL', 'grok.model', 'string'),
-        
+        ('GROK_FALLBACK_MODEL', 'grok.fallback_model', 'string'),
+
         # LLM Provider Selection
         ('LLM_PROVIDER', 'llm.provider', 'string'),
 

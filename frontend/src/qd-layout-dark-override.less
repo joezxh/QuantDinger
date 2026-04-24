@@ -28,16 +28,33 @@ body.realdark .basic-layout-wrapper .ant-pro-global-header {
 /* 页面容器（例如 dashboard / settings 等）去蓝灰 */
 .basic-layout-wrapper.dark .ant-pro-page-header-wrap,
 .basic-layout-wrapper.realdark .ant-pro-page-header-wrap,
+.basic-layout-wrapper.dark .ant-page-header,
+.basic-layout-wrapper.realdark .ant-page-header,
 .basic-layout-wrapper.dark .ant-pro-page-header-wrap-children-content,
 .basic-layout-wrapper.realdark .ant-pro-page-header-wrap-children-content,
 .basic-layout-wrapper.dark .ant-pro-basicLayout-content,
 .basic-layout-wrapper.realdark .ant-pro-basicLayout-content,
 body.dark .basic-layout-wrapper .ant-pro-page-header-wrap,
 body.realdark .basic-layout-wrapper .ant-pro-page-header-wrap,
+body.dark .basic-layout-wrapper .ant-page-header,
+body.realdark .basic-layout-wrapper .ant-page-header,
 body.dark .basic-layout-wrapper .ant-pro-page-header-wrap-children-content,
 body.realdark .basic-layout-wrapper .ant-pro-page-header-wrap-children-content {
   background: #141414 !important;
   background-color: #141414 !important;
+}
+
+/* PageHeader 文字颜色适配 */
+.basic-layout-wrapper.dark .ant-page-header-heading-title,
+.basic-layout-wrapper.realdark .ant-page-header-heading-title,
+body.dark .ant-page-header-heading-title {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.basic-layout-wrapper.dark .ant-page-header-content,
+.basic-layout-wrapper.realdark .ant-page-header-content,
+body.dark .ant-page-header-content {
+  color: rgba(255, 255, 255, 0.65) !important;
 }
 
 /* ========== 侧栏底部「联系我们」：深黑底 + 区块亮一层（去掉 opacity 发灰）========== */

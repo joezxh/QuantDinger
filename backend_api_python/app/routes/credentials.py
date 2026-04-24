@@ -32,7 +32,36 @@ def _api_key_hint(api_key: str) -> str:
 @credentials_bp.route('/list', methods=['GET'])
 @login_required
 def list_credentials():
-    """List all credentials for the current user."""
+    """
+    ---
+    tags:
+      - List
+    summary: "List all credentials for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
 
@@ -93,8 +122,34 @@ def _egress_ipify(url: str) -> str:
 @login_required
 def get_egress_ip():
     """
-    Public egress IPv4/IPv6 of this API server (for exchange API key IP whitelist).
-    Uses ipify's v4-only / v6-only endpoints so each family is detected independently.
+    ---
+    tags:
+      - General
+    summary: "Public egress IPv4/IPv6 of this API server (for exchange API key IP whitelist)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     ipv4 = _egress_ipify("https://api4.ipify.org?format=json")
     ipv6 = _egress_ipify("https://api6.ipify.org?format=json")
@@ -115,9 +170,71 @@ def get_egress_ip():
 @credentials_bp.route('/create', methods=['POST'])
 @login_required
 def create_credential():
-    """Create a new credential for the current user.
-
-    Supports crypto exchanges, IBKR (US stocks) and MT5 (Forex).
+    """
+    ---
+    tags:
+      - General
+    summary: "Create a new credential for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            exchange_id:
+              type: string
+            ibkr_host:
+              type: string
+            ibkr_port:
+              type: string
+            ibkr_client_id:
+              type: string
+            ibkr_account:
+              type: string
+            mt5_server:
+              type: string
+            mt5_login:
+              type: string
+            mt5_password:
+              type: string
+            mt5_terminal_path:
+              type: string
+            api_key:
+              type: string
+            secret_key:
+              type: string
+            passphrase:
+              type: string
+            enable_demo_trading:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -198,7 +315,42 @@ def create_credential():
 @credentials_bp.route('/delete', methods=['DELETE'])
 @login_required
 def delete_credential():
-    """Delete a credential for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Delete a credential for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         cred_id = request.args.get('id', type=int)
@@ -225,7 +377,40 @@ def delete_credential():
 @login_required
 def get_credential():
     """
-    Return decrypted credential for form auto-fill.
+    ---
+    tags:
+      - General
+    summary: "Return decrypted credential for form auto-fill."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id

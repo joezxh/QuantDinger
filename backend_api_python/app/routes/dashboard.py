@@ -308,7 +308,34 @@ def _compute_strategy_stats(trades: List[Dict[str, Any]], strategies: List[Dict[
 @login_required
 def summary():
     """
-    Return dashboard summary used by the frontend dashboard view (private Vue repo).
+    ---
+    tags:
+      - Summary
+    summary: "Return dashboard summary used by the frontend dashboard view (private Vue repo)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -595,7 +622,45 @@ def summary():
 @login_required
 def pending_orders():
     """
-    Return pending orders list for dashboard page.
+    ---
+    tags:
+      - Pending
+    summary: "Return pending orders list for dashboard page."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: string
+        required: false
+        description: "Page"
+      - name: pageSize
+        in: query
+        type: string
+        required: false
+        description: "Pagesize"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -714,7 +779,40 @@ def pending_orders():
 @login_required
 def delete_pending_order(order_id: int):
     """
-    Delete a pending order record (dashboard operation).
+    ---
+    tags:
+      - General
+    summary: "Delete a pending order record (dashboard operation)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: "Order Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id

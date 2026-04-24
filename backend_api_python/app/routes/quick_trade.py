@@ -349,22 +349,36 @@ def _record_quick_trade(
 @login_required
 def place_order():
     """
-    Place a quick market or limit order.
-
-    Body JSON:
-      credential_id  (int)    — saved exchange credential ID
-      symbol         (str)    — e.g. "BTC/USDT"
-      side           (str)    — "buy" or "sell"
-      order_type     (str)    — "market" or "limit"  (default: market)
-      amount         (float)  — USDT amount (always in USDT, will be converted to base qty)
-      price          (float)  — limit price (required for limit orders)
-      leverage       (int)    — leverage multiplier (default: 1)
-                                - leverage = 1: spot market
-                                - leverage > 1: swap (perpetual futures) market
-      market_type    (str)    — "swap" / "spot" (optional, auto-determined by leverage if not provided)
-      tp_price       (float)  — take-profit price (optional, for record only)
-      sl_price       (float)  — stop-loss price (optional, for record only)
-      source         (str)    — "ai_radar" / "ai_analysis" / "indicator" / "manual"
+    ---
+    tags:
+      - Place
+    summary: "Place a quick market or limit order."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -649,9 +663,54 @@ def _limit_order_kwargs(client, symbol, amount, price, side, market_type, client
 @login_required
 def get_balance():
     """
-    Get available balance from exchange.
-
-    Query: credential_id (int), market_type (str, default "swap")
+    ---
+    tags:
+      - General
+    summary: "Get available balance from exchange."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: credential_id
+        in: query
+        type: int
+        required: false
+        description: "Credential Id"
+      - name: market_type
+        in: query
+        type: string
+        required: false
+        description: "Market Type"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            available:
+              type: string
+            total:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -1046,9 +1105,50 @@ def _fetch_exchange_positions_raw(
 @login_required
 def get_position():
     """
-    Get current position for a symbol from exchange.
-
-    Query: credential_id (int), symbol (str), market_type (str)
+    ---
+    tags:
+      - General
+    summary: "Get current position for a symbol from exchange."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: credential_id
+        in: query
+        type: int
+        required: false
+        description: "Credential Id"
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+      - name: market_type
+        in: query
+        type: string
+        required: false
+        description: "Market Type"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -1257,16 +1357,36 @@ def _quick_trade_net_base_qty(
 @login_required
 def close_position():
     """
-    Close an existing position.
-    
-    Body JSON:
-      credential_id  (int)    — saved exchange credential ID
-      symbol         (str)    — e.g. "BTC/USDT"
-      market_type    (str)    — "swap" / "spot" (default: swap)
-      size            (float)  — position size to close (optional, defaults to full position)
-      close_scope    (str)    — "full" (default) or "system_tracked" (swap only: min(position, net from qd_quick_trades))
-      position_side  (str)    — optional "long" / "short"; required when both directions exist for the same symbol
-      source          (str)    — "ai_radar" / "ai_analysis" / "indicator" / "manual"
+    ---
+    tags:
+      - Close
+    summary: "Close an existing position."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -1494,9 +1614,45 @@ def close_position():
 @login_required
 def get_history():
     """
-    Get quick trade history for the current user.
-
-    Query: limit (int, default 50), offset (int, default 0)
+    ---
+    tags:
+      - General
+    summary: "Get quick trade history for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: limit
+        in: query
+        type: string
+        required: false
+        description: "Limit"
+      - name: offset
+        in: query
+        type: string
+        required: false
+        description: "Offset"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id

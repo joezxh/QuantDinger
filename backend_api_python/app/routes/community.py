@@ -23,14 +23,60 @@ community_bp = Blueprint("community", __name__)
 @login_required
 def get_market_indicators():
     """
-    获取市场指标列表
-    
-    Query params:
-        page: 页码 (default 1)
-        page_size: 每页数量 (default 12)
-        keyword: 搜索关键词
-        pricing_type: 'free' / 'paid' / 空(全部)
-        sort_by: 'newest' / 'hot' / 'price_asc' / 'price_desc' / 'rating'
+    ---
+    tags:
+      - General
+    summary: "获取市场指标列表"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: string
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: string
+        required: false
+        description: "Page Size"
+      - name: keyword
+        in: query
+        type: string
+        required: false
+        description: "Keyword"
+      - name: pricing_type
+        in: query
+        type: string
+        required: false
+        description: "Pricing Type"
+      - name: sort_by
+        in: query
+        type: string
+        required: false
+        description: "Sort By"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         page = int(request.args.get('page', 1))
@@ -62,7 +108,42 @@ def get_market_indicators():
 @community_bp.route("/indicators/<int:indicator_id>", methods=["GET"])
 @login_required
 def get_indicator_detail(indicator_id: int):
-    """获取指标详情"""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取指标详情"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         service = get_community_service()
         result = service.get_indicator_detail(indicator_id, user_id=g.user_id)
@@ -85,13 +166,42 @@ def get_indicator_detail(indicator_id: int):
 @login_required
 def purchase_indicator(indicator_id: int):
     """
-    购买指标
-    
-    会自动：
-    1. 检查积分是否充足
-    2. 扣除买家积分，增加卖家积分
-    3. 创建购买记录
-    4. 复制指标到买家账户
+    ---
+    tags:
+      - Purchase
+    summary: "购买指标"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         service = get_community_service()
@@ -114,15 +224,42 @@ def purchase_indicator(indicator_id: int):
 @login_required
 def sync_purchased_indicator(indicator_id: int):
     """
-    同步已购买指标的最新代码
-
-    适用场景：
-        发布者在上架后又更新了指标代码，已购用户需要
-        手动拉取最新版本到自己的本地副本。
-
-    前置条件：
-        - 调用者必须已购买该指标
-        - 原始指标仍处于已发布状态
+    ---
+    tags:
+      - Sync
+    summary: "同步已购买指标的最新代码"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         service = get_community_service()
@@ -150,7 +287,47 @@ def sync_purchased_indicator(indicator_id: int):
 @community_bp.route("/my-purchases", methods=["GET"])
 @login_required
 def get_my_purchases():
-    """获取我购买的指标列表"""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取我购买的指标列表"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: string
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: string
+        required: false
+        description: "Page Size"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         page = int(request.args.get('page', 1))
         page_size = int(request.args.get('page_size', 20))
@@ -177,7 +354,52 @@ def get_my_purchases():
 @community_bp.route("/indicators/<int:indicator_id>/comments", methods=["GET"])
 @login_required
 def get_comments(indicator_id: int):
-    """获取指标评论列表"""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取指标评论列表"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+      - name: page
+        in: query
+        type: string
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: string
+        required: false
+        description: "Page Size"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         page = int(request.args.get('page', 1))
         page_size = int(request.args.get('page_size', 20))
@@ -201,13 +423,51 @@ def get_comments(indicator_id: int):
 @login_required
 def add_comment(indicator_id: int):
     """
-    添加评论
-    
-    Request body:
-        rating: 1-5 星评分
-        content: 评论内容（可选，最多500字）
-    
-    注意：只有购买过的用户可以评论，且只能评论一次
+    ---
+    tags:
+      - Add
+    summary: "添加评论"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            rating:
+              type: string
+            content:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -236,11 +496,56 @@ def add_comment(indicator_id: int):
 @login_required
 def update_comment(indicator_id: int, comment_id: int):
     """
-    更新评论（只能修改自己的评论）
-    
-    Request body:
-        rating: 1-5 星评分
-        content: 评论内容（最多500字）
+    ---
+    tags:
+      - General
+    summary: "更新评论（只能修改自己的评论）"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+      - name: comment_id
+        in: path
+        type: integer
+        required: true
+        description: "Comment Id"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            rating:
+              type: string
+            content:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -269,7 +574,42 @@ def update_comment(indicator_id: int, comment_id: int):
 @community_bp.route("/indicators/<int:indicator_id>/my-comment", methods=["GET"])
 @login_required
 def get_my_comment(indicator_id: int):
-    """获取当前用户对指定指标的评论（用于编辑）"""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取当前用户对指定指标的评论（用于编辑）"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         service = get_community_service()
         result = service.get_user_comment(
@@ -291,7 +631,42 @@ def get_my_comment(indicator_id: int):
 @community_bp.route("/indicators/<int:indicator_id>/performance", methods=["GET"])
 @login_required
 def get_indicator_performance(indicator_id: int):
-    """获取指标的实盘表现统计"""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取指标的实盘表现统计"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         service = get_community_service()
         result = service.get_indicator_performance(indicator_id)
@@ -317,12 +692,50 @@ def _is_admin():
 @login_required
 def get_pending_indicators():
     """
-    获取待审核的指标列表（管理员专用）
-    
-    Query params:
-        page: 页码 (default 1)
-        page_size: 每页数量 (default 20)
-        review_status: 'pending' / 'approved' / 'rejected' / 'all'
+    ---
+    tags:
+      - General
+    summary: "获取待审核的指标列表（管理员专用）"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: string
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: string
+        required: false
+        description: "Page Size"
+      - name: review_status
+        in: query
+        type: string
+        required: false
+        description: "Review Status"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         if not _is_admin():
@@ -350,7 +763,36 @@ def get_pending_indicators():
 @community_bp.route("/admin/review-stats", methods=["GET"])
 @login_required
 def get_review_stats():
-    """获取审核统计数据（管理员专用）"""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取审核统计数据（管理员专用）"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         if not _is_admin():
             return jsonify({'code': 0, 'msg': 'admin_required', 'data': None}), 403
@@ -369,11 +811,51 @@ def get_review_stats():
 @login_required
 def review_indicator(indicator_id: int):
     """
-    审核指标（管理员专用）
-    
-    Request body:
-        action: 'approve' / 'reject'
-        note: 审核备注（可选）
+    ---
+    tags:
+      - Review
+    summary: "审核指标（管理员专用）"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            action:
+              type: string
+            note:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         if not _is_admin():
@@ -408,10 +890,49 @@ def review_indicator(indicator_id: int):
 @login_required
 def unpublish_indicator(indicator_id: int):
     """
-    下架指标（管理员专用）
-    
-    Request body:
-        note: 下架原因（可选）
+    ---
+    tags:
+      - Unpublish
+    summary: "下架指标（管理员专用）"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            note:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         if not _is_admin():
@@ -440,7 +961,42 @@ def unpublish_indicator(indicator_id: int):
 @community_bp.route("/admin/indicators/<int:indicator_id>", methods=["DELETE"])
 @login_required
 def admin_delete_indicator(indicator_id: int):
-    """删除指标（管理员专用）"""
+    """
+    ---
+    tags:
+      - Admin
+    summary: "删除指标（管理员专用）"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: path
+        type: integer
+        required: true
+        description: "Indicator Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         if not _is_admin():
             return jsonify({'code': 0, 'msg': 'admin_required', 'data': None}), 403

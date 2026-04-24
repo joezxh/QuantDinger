@@ -21,7 +21,36 @@ billing_bp = Blueprint("billing", __name__)
 @billing_bp.route("/plans", methods=["GET"])
 @login_required
 def get_membership_plans():
-    """Get membership plan configuration + current user's billing snapshot."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get membership plan configuration + current user's billing snapshot."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = getattr(g, "user_id", None)
         svc = get_billing_service()
@@ -37,10 +66,44 @@ def get_membership_plans():
 @login_required
 def purchase_membership():
     """
-    Purchase membership (mock: immediate activation).
-
-    Body:
-      { plan: "monthly" | "yearly" | "lifetime" }
+    ---
+    tags:
+      - Purchase
+    summary: "Purchase membership (mock: immediate activation)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            plan:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = getattr(g, "user_id", None)
@@ -67,10 +130,44 @@ def purchase_membership():
 @login_required
 def usdt_create_order():
     """
-    Create USDT order for membership plan (per-order address).
-
-    Body:
-      { plan: "monthly"|"yearly"|"lifetime" }
+    ---
+    tags:
+      - Usdt
+    summary: "Create USDT order for membership plan (per-order address)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            plan:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = getattr(g, "user_id", None)
@@ -91,7 +188,47 @@ def usdt_create_order():
 @billing_bp.route("/usdt/order/<int:order_id>", methods=["GET"])
 @login_required
 def usdt_get_order(order_id: int):
-    """Get my USDT order; refresh chain status by default."""
+    """
+    ---
+    tags:
+      - Usdt
+    summary: "Get my USDT order; refresh chain status by default."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: order_id
+        in: path
+        type: integer
+        required: true
+        description: "Order Id"
+      - name: refresh
+        in: query
+        type: string
+        required: false
+        description: "Refresh"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = getattr(g, "user_id", None)
         refresh = str(request.args.get("refresh", "1")).lower() in ("1", "true", "yes")

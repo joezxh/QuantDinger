@@ -21,7 +21,38 @@ experiment_runner = ExperimentRunnerService()
 @experiment_bp.route('/regime/detect', methods=['POST'])
 @login_required
 def detect_market_regime():
-    """Detect the current market regime for a symbol/timeframe/date range."""
+    """
+    ---
+    tags:
+      - Detect
+    summary: "Detect the current market regime for a symbol/timeframe/date range."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         payload = request.get_json() or {}
         regime = experiment_runner.detect_regime(payload)
@@ -42,7 +73,38 @@ def detect_market_regime():
 @experiment_bp.route('/pipeline/run', methods=['POST'])
 @login_required
 def run_experiment_pipeline():
-    """Legacy grid-search pipeline (kept for backward compat)."""
+    """
+    ---
+    tags:
+      - Run
+    summary: "Legacy grid-search pipeline (kept for backward compat)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         payload = request.get_json() or {}
         if not payload:
@@ -62,12 +124,36 @@ def run_experiment_pipeline():
 @login_required
 def ai_optimize():
     """
-    LLM-driven multi-round optimization pipeline with SSE progress streaming.
-
-    The endpoint returns an SSE stream. Each event is one of:
-      - event: progress   (partial update per round)
-      - event: done       (final result)
-      - event: error      (pipeline failure)
+    ---
+    tags:
+      - Ai
+    summary: "LLM-driven multi-round optimization pipeline with SSE progress streaming."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     payload = request.get_json() or {}
     if not payload:
@@ -118,7 +204,38 @@ def ai_optimize():
 @experiment_bp.route('/ai-optimize-sync', methods=['POST'])
 @login_required
 def ai_optimize_sync():
-    """Non-streaming version (simpler client integration)."""
+    """
+    ---
+    tags:
+      - Ai
+    summary: "Non-streaming version (simpler client integration)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     payload = request.get_json() or {}
     if not payload:
         return jsonify({'code': 0, 'msg': 'Request body is required', 'data': None}), 400
@@ -138,8 +255,36 @@ def ai_optimize_sync():
 @login_required
 def structured_tune():
     """
-    Grid or random search over explicit parameterSpace (no LLM).
-    Same response shape as ai-optimize-sync for IDE compatibility.
+    ---
+    tags:
+      - Structured
+    summary: "Grid or random search over explicit parameterSpace (no LLM)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     payload = request.get_json() or {}
     if not payload:
@@ -161,7 +306,38 @@ def structured_tune():
 @experiment_bp.route('/save-strategy', methods=['POST'])
 @login_required
 def save_experiment_strategy():
-    """Save the best experiment candidate as a strategy record."""
+    """
+    ---
+    tags:
+      - Save
+    summary: "Save the best experiment candidate as a strategy record."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         payload = request.get_json() or {}
         best_output = payload.get('bestOutput') or payload.get('bestStrategyOutput')

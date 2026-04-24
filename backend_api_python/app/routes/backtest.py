@@ -111,15 +111,46 @@ def _normalize_lang(lang: str | None) -> str:
 @backtest_bp.route('/backtest/precision-info', methods=['GET'])
 def get_precision_info():
     """
-    获取回测精度信息（用于前端提示）
-    
-    Params (Query String):
-        market: 市场类型
-        startDate: 开始日期 (YYYY-MM-DD)
-        endDate: 结束日期 (YYYY-MM-DD)
-        
-    Returns:
-        精度信息，包含推荐的执行时间框架和预估K线数量
+    ---
+    tags:
+      - General
+    summary: "获取回测精度信息（用于前端提示）"
+    produces:
+      - application/json
+    parameters:
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: startDate
+        in: query
+        type: string
+        required: false
+        description: "Startdate"
+      - name: endDate
+        in: query
+        type: string
+        required: false
+        description: "Enddate"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         # Use request.args for GET params
@@ -149,19 +180,72 @@ def get_precision_info():
 @login_required
 def run_backtest():
     """
-    Run indicator backtest for the current user.
-    
-    Params:
-        indicatorId: Indicator ID (optional)
-        indicatorCode: Indicator Python code
-        symbol: Symbol
-        market: Market type
-        timeframe: Timeframe
-        startDate: Start date (YYYY-MM-DD)
-        endDate: End date (YYYY-MM-DD)
-        initialCapital: Initial capital (default 10000)
-        commission: Commission rate (default 0.001)
-        enableMtf: Enable multi-timeframe backtest (default true, only for crypto)
+    ---
+    tags:
+      - Run
+    summary: "Run indicator backtest for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            indicatorCode:
+              type: string
+            indicatorId:
+              type: string
+            symbol:
+              type: string
+            market:
+              type: string
+            timeframe:
+              type: string
+            startDate:
+              type: string
+            endDate:
+              type: string
+            initialCapital:
+              type: string
+            commission:
+              type: string
+            slippage:
+              type: string
+            leverage:
+              type: string
+            tradeDirection:
+              type: string
+            strategyConfig:
+              type: string
+            enableMtf:
+              type: string
+            persist:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json()
@@ -376,15 +460,75 @@ def run_backtest():
 @login_required
 def get_backtest_history():
     """
-    Get backtest run history for the current user.
-
-    Params (Query String):
-        limit: Page size (default 50, max 200)
-        offset: Offset (default 0)
-        indicatorId: Optional indicator id filter
-        symbol: Optional symbol filter
-        market: Optional market filter
-        timeframe: Optional timeframe filter
+    ---
+    tags:
+      - General
+    summary: "Get backtest run history for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: limit
+        in: query
+        type: string
+        required: false
+        description: "Limit"
+      - name: offset
+        in: query
+        type: string
+        required: false
+        description: "Offset"
+      - name: indicatorId
+        in: query
+        type: string
+        required: false
+        description: "Indicatorid"
+      - name: strategyId
+        in: query
+        type: string
+        required: false
+        description: "Strategyid"
+      - name: runType
+        in: query
+        type: string
+        required: false
+        description: "Runtype"
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: timeframe
+        in: query
+        type: string
+        required: false
+        description: "Timeframe"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         # Use current user's ID
@@ -423,10 +567,40 @@ def get_backtest_history():
 @login_required
 def get_backtest_run():
     """
-    Get a backtest run detail by run id for the current user.
-
-    Params (Query String):
-        runId: Backtest run id (required)
+    ---
+    tags:
+      - General
+    summary: "Get a backtest run detail by run id for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: runId
+        in: query
+        type: string
+        required: false
+        description: "Runid"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -663,11 +837,46 @@ def _heuristic_ai_advice(runs: list[dict], lang: str) -> str:
 @login_required
 def ai_analyze_backtest_runs():
     """
-    AI analyze selected backtest runs and provide strategy_config tuning suggestions
-    for the current user.
-
-    Params:
-        runIds: list[int] (required)
+    ---
+    tags:
+      - Ai
+    summary: "AI analyze selected backtest runs and provide strategy_config tuning suggestions"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            lang:
+              type: string
+            runIds:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}

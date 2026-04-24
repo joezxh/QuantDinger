@@ -58,7 +58,36 @@ global_market_bp = Blueprint("global_market", __name__)
 @global_market_bp.route("/overview", methods=["GET"])
 @login_required
 def market_overview():
-    """Get global market overview including indices, forex, crypto, and commodities."""
+    """
+    ---
+    tags:
+      - Market
+    summary: "Get global market overview including indices, forex, crypto, and commodities."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         cached = get_cached("market_overview", 30)
         if cached:
@@ -115,7 +144,36 @@ def market_overview():
 @global_market_bp.route("/heatmap", methods=["GET"])
 @login_required
 def market_heatmap():
-    """Get market heatmap data for crypto, stock sectors, forex, and indices."""
+    """
+    ---
+    tags:
+      - Market
+    summary: "Get market heatmap data for crypto, stock sectors, forex, and indices."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         cached = get_cached("market_heatmap", 30)
         if cached:
@@ -134,7 +192,42 @@ def market_heatmap():
 @global_market_bp.route("/news", methods=["GET"])
 @login_required
 def market_news():
-    """Get financial news from various sources.  Query params: lang ('cn'|'en'|'all')."""
+    """
+    ---
+    tags:
+      - Market
+    summary: "Get financial news from various sources.  Query params: lang ('cn'|'en'|'all')."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: lang
+        in: query
+        type: string
+        required: false
+        description: "Lang"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         lang = request.args.get("lang", "all")
         cache_key = f"market_news_{lang}"
@@ -156,7 +249,36 @@ def market_news():
 @global_market_bp.route("/calendar", methods=["GET"])
 @login_required
 def economic_calendar():
-    """Get economic calendar events with impact indicators."""
+    """
+    ---
+    tags:
+      - Economic
+    summary: "Get economic calendar events with impact indicators."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         cached = get_cached("economic_calendar", 3600)
         if cached:
@@ -175,7 +297,36 @@ def economic_calendar():
 @global_market_bp.route("/sentiment", methods=["GET"])
 @login_required
 def market_sentiment():
-    """Get comprehensive market sentiment indicators."""
+    """
+    ---
+    tags:
+      - Market
+    summary: "Get comprehensive market sentiment indicators."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         MACRO_CACHE_TTL = 21600
         cached = get_cached("market_sentiment", MACRO_CACHE_TTL)
@@ -234,7 +385,61 @@ def market_sentiment():
 @global_market_bp.route("/adanos-sentiment", methods=["GET"])
 @login_required
 def adanos_market_sentiment():
-    """Get optional Adanos Market Sentiment for selected US stock tickers."""
+    """
+    ---
+    tags:
+      - Adanos
+    summary: "Get optional Adanos Market Sentiment for selected US stock tickers."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: tickers
+        in: query
+        type: string
+        required: false
+        description: "Tickers"
+      - name: source
+        in: query
+        type: string
+        required: false
+        description: "Source"
+      - name: days
+        in: query
+        type: string
+        required: false
+        description: "Days"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            enabled:
+              type: string
+            error:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         tickers = request.args.get("tickers", "")
         source = request.args.get("source")
@@ -261,7 +466,42 @@ def adanos_market_sentiment():
 @global_market_bp.route("/opportunities", methods=["GET"])
 @login_required
 def trading_opportunities():
-    """Scan for trading opportunities across Crypto, US/CN/HK Stocks, and Forex."""
+    """
+    ---
+    tags:
+      - Trading
+    summary: "Scan for trading opportunities across Crypto, US/CN/HK Stocks, and Forex."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: force
+        in: query
+        type: string
+        required: false
+        description: "Force"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         force = request.args.get("force", "").lower() in ("true", "1")
 
@@ -306,7 +546,38 @@ def trading_opportunities():
 @global_market_bp.route("/refresh", methods=["POST"])
 @login_required
 def refresh_data():
-    """Force refresh all market data (clears cache)."""
+    """
+    ---
+    tags:
+      - Refresh
+    summary: "Force refresh all market data (clears cache)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         clear_cache()
         return jsonify({"code": 1, "msg": "Cache cleared successfully", "data": None})

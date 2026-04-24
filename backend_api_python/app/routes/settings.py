@@ -973,7 +973,38 @@ def write_env_file(env_values):
 @login_required
 @admin_required
 def get_settings_schema():
-    """获取配置项定义 (admin only)"""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取配置项定义"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     return jsonify({
         'code': 1,
         'msg': 'success',
@@ -984,7 +1015,36 @@ def get_settings_schema():
 @settings_bp.route('/public-config', methods=['GET'])
 @login_required
 def get_public_config():
-    """Return non-sensitive config values needed by frontend widgets."""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取公共配置"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     from app.config.data_sources import CCXTConfig
     return jsonify({
         'code': 1,
@@ -998,7 +1058,38 @@ def get_public_config():
 @login_required
 @admin_required
 def get_settings_values():
-    """获取当前配置值 - 包括敏感信息（真实值）(admin only)"""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取当前配置值"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     env_values = read_env_file()
     
     # 构建返回数据，返回真实值
@@ -1024,7 +1115,40 @@ def get_settings_values():
 @login_required
 @admin_required
 def save_settings():
-    """保存配置 (admin only)"""
+    """
+    ---
+    tags:
+      - Save
+    summary: "保存配置"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         data = request.get_json()
         if not data:
@@ -1085,7 +1209,58 @@ def save_settings():
 @login_required
 @admin_required
 def get_openrouter_balance():
-    """查询 OpenRouter 账户余额 (admin only)"""
+    """
+    ---
+    tags:
+      - General
+    summary: "查询 OpenRouter 账户余额 (admin only)"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            data:
+              type: string
+            usage:
+              type: string
+            limit:
+              type: string
+            limit_remaining:
+              type: string
+            is_free_tier:
+              type: string
+            rate_limit:
+              type: string
+            label:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         import requests
         from app.config.api_keys import APIKeys
@@ -1163,7 +1338,50 @@ def get_openrouter_balance():
 @login_required
 @admin_required
 def test_connection():
-    """测试API连接 (admin only)"""
+    """
+    ---
+    tags:
+      - Test
+    summary: "测试API连接 (admin only)"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            service:
+              type: string
+            api_key:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         data = request.get_json()
         service = data.get('service')

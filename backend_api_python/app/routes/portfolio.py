@@ -142,7 +142,53 @@ def _get_single_price(market: str, symbol: str, force_refresh: bool = False) -> 
 @portfolio_bp.route('/positions', methods=['GET'])
 @login_required
 def get_positions():
-    """Get all manual positions with current prices for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get all manual positions with current prices for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: refresh
+        in: query
+        type: string
+        required: false
+        description: "Refresh"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            price:
+              type: string
+            change:
+              type: string
+            changePercent:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         # Check if force refresh (skip cache)
@@ -247,7 +293,64 @@ def get_positions():
 @portfolio_bp.route('/positions', methods=['POST'])
 @login_required
 def add_position():
-    """Add a new manual position for the current user."""
+    """
+    ---
+    tags:
+      - Add
+    summary: "Add a new manual position for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            market:
+              type: string
+            symbol:
+              type: string
+            name:
+              type: string
+            side:
+              type: string
+            quantity:
+              type: string
+            entry_price:
+              type: string
+            entry_time:
+              type: string
+            notes:
+              type: string
+            tags:
+              type: string
+            group_name:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json() or {}
@@ -310,7 +413,63 @@ def add_position():
 @portfolio_bp.route('/positions/<int:position_id>', methods=['PUT'])
 @login_required
 def update_position(position_id):
-    """Update an existing position for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Update an existing position for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: position_id
+        in: path
+        type: integer
+        required: true
+        description: "Position Id"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            quantity:
+              type: string
+            entry_price:
+              type: string
+            entry_time:
+              type: string
+            notes:
+              type: string
+            tags:
+              type: string
+            group_name:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json() or {}
@@ -379,7 +538,42 @@ def update_position(position_id):
 @portfolio_bp.route('/positions/<int:position_id>', methods=['DELETE'])
 @login_required
 def delete_position(position_id):
-    """Delete a position for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Delete a position for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: position_id
+        in: path
+        type: integer
+        required: true
+        description: "Position Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         with get_db_connection() as db:
@@ -401,7 +595,49 @@ def delete_position(position_id):
 @portfolio_bp.route('/summary', methods=['GET'])
 @login_required
 def get_portfolio_summary():
-    """Get portfolio summary with total value, PnL, and market distribution for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get portfolio summary with total value, PnL, and market distribution for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: refresh
+        in: query
+        type: string
+        required: false
+        description: "Refresh"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            price:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         # Check if force refresh
@@ -523,7 +759,36 @@ def get_portfolio_summary():
 @portfolio_bp.route('/monitors', methods=['GET'])
 @login_required
 def get_monitors():
-    """Get all position monitors for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get all position monitors for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         with get_db_connection() as db:
@@ -569,7 +834,56 @@ def get_monitors():
 @portfolio_bp.route('/monitors', methods=['POST'])
 @login_required
 def add_monitor():
-    """Add a new position monitor for the current user."""
+    """
+    ---
+    tags:
+      - Add
+    summary: "Add a new position monitor for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            position_ids:
+              type: string
+            monitor_type:
+              type: string
+            config:
+              type: string
+            notification_config:
+              type: string
+            is_active:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json() or {}
@@ -637,7 +951,61 @@ def add_monitor():
 @portfolio_bp.route('/monitors/<int:monitor_id>', methods=['PUT'])
 @login_required
 def update_monitor(monitor_id):
-    """Update an existing monitor for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Update an existing monitor for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: monitor_id
+        in: path
+        type: integer
+        required: true
+        description: "Monitor Id"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            position_ids:
+              type: string
+            monitor_type:
+              type: string
+            config:
+              type: string
+            notification_config:
+              type: string
+            is_active:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json() or {}
@@ -706,7 +1074,42 @@ def update_monitor(monitor_id):
 @portfolio_bp.route('/monitors/<int:monitor_id>', methods=['DELETE'])
 @login_required
 def delete_monitor(monitor_id):
-    """Delete a monitor for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Delete a monitor for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: monitor_id
+        in: path
+        type: integer
+        required: true
+        description: "Monitor Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         with get_db_connection() as db:
@@ -728,11 +1131,52 @@ def delete_monitor(monitor_id):
 @portfolio_bp.route('/monitors/<int:monitor_id>/run', methods=['POST'])
 @login_required
 def run_monitor_now(monitor_id):
-    """Manually trigger a monitor to run immediately.
-    
-    Supports two modes:
-    - async=true (default): Returns immediately, runs in background, notifies via notification system
-    - async=false: Waits for completion and returns result (may timeout for large portfolios)
+    """
+    ---
+    tags:
+      - Run
+    summary: "Manually trigger a monitor to run immediately."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: monitor_id
+        in: path
+        type: integer
+        required: true
+        description: "Monitor Id"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            language:
+              type: string
+            async:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from app.services.portfolio_monitor import run_single_monitor
@@ -793,7 +1237,36 @@ def run_monitor_now(monitor_id):
 @portfolio_bp.route('/alerts', methods=['GET'])
 @login_required
 def get_alerts():
-    """Get all position alerts for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get all position alerts for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         with get_db_connection() as db:
@@ -846,7 +1319,62 @@ def get_alerts():
 @portfolio_bp.route('/alerts', methods=['POST'])
 @login_required
 def add_alert():
-    """Add a new position alert for the current user."""
+    """
+    ---
+    tags:
+      - Add
+    summary: "Add a new position alert for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            position_id:
+              type: string
+            market:
+              type: string
+            symbol:
+              type: string
+            alert_type:
+              type: string
+            threshold:
+              type: string
+            notification_config:
+              type: string
+            is_active:
+              type: string
+            repeat_interval:
+              type: string
+            notes:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json() or {}
@@ -941,7 +1469,61 @@ def add_alert():
 @portfolio_bp.route('/alerts/<int:alert_id>', methods=['PUT'])
 @login_required
 def update_alert(alert_id):
-    """Update an existing alert for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Update an existing alert for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: alert_id
+        in: path
+        type: integer
+        required: true
+        description: "Alert Id"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            alert_type:
+              type: string
+            threshold:
+              type: string
+            notification_config:
+              type: string
+            is_active:
+              type: string
+            repeat_interval:
+              type: string
+            notes:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json() or {}
@@ -1004,7 +1586,42 @@ def update_alert(alert_id):
 @portfolio_bp.route('/alerts/<int:alert_id>', methods=['DELETE'])
 @login_required
 def delete_alert(alert_id):
-    """Delete an alert for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Delete an alert for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: alert_id
+        in: path
+        type: integer
+        required: true
+        description: "Alert Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         with get_db_connection() as db:
@@ -1028,7 +1645,36 @@ def delete_alert(alert_id):
 @portfolio_bp.route('/groups', methods=['GET'])
 @login_required
 def get_groups():
-    """Get list of all groups with position counts for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get list of all groups with position counts for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         with get_db_connection() as db:
@@ -1080,7 +1726,48 @@ def get_groups():
 @portfolio_bp.route('/groups/rename', methods=['POST'])
 @login_required
 def rename_group():
-    """Rename a group for the current user."""
+    """
+    ---
+    tags:
+      - Rename
+    summary: "Rename a group for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            old_name:
+              type: string
+            new_name:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json() or {}

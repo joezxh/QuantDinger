@@ -114,19 +114,54 @@ def _release_inflight(key: str):
 @login_required
 def analyze():
     """
-    Fast AI analysis for any symbol.
-    
-    POST /api/fast-analysis/analyze
-    Body: {
-        "market": "Crypto" | "USStock" | "Forex" | ...,
-        "symbol": "BTC/USDT" | "AAPL" | ...,
-        "language": "zh-CN" | "en-US" (optional),
-        "model": "openai/gpt-4o" (optional),
-        "timeframe": "1D" (optional)
-    }
-    
-    Returns:
-        Fast analysis result with actionable recommendations.
+    ---
+    tags:
+      - Analyze
+    summary: "Fast AI analysis for any symbol."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            market:
+              type: string
+            symbol:
+              type: string
+            language:
+              type: string
+            model:
+              type: string
+            timeframe:
+              type: string
+            async_submit:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -314,14 +349,52 @@ def analyze():
 @login_required
 def analyze_legacy():
     """
-    Fast analysis with legacy format output.
-    For backward compatibility with existing frontend.
-    
-    POST /api/fast-analysis/analyze-legacy
-    Body: Same as /analyze
-    
-    Returns:
-        Result in multi-agent format for frontend compatibility.
+    ---
+    tags:
+      - Analyze
+    summary: "Fast analysis with legacy format output."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            market:
+              type: string
+            symbol:
+              type: string
+            language:
+              type: string
+            model:
+              type: string
+            timeframe:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -455,9 +528,55 @@ def analyze_legacy():
 @login_required
 def get_history():
     """
-    Get analysis history for a symbol.
-    
-    GET /api/fast-analysis/history?market=Crypto&symbol=BTC/USDT&days=7&limit=10
+    ---
+    tags:
+      - General
+    summary: "Get analysis history for a symbol."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+      - name: days
+        in: query
+        type: string
+        required: false
+        description: "Days"
+      - name: limit
+        in: query
+        type: string
+        required: false
+        description: "Limit"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         market = request.args.get('market', '').strip()
@@ -497,9 +616,45 @@ def get_history():
 @login_required
 def get_all_history():
     """
-    Get all analysis history with pagination.
-    
-    GET /api/fast-analysis/history/all?page=1&pagesize=20
+    ---
+    tags:
+      - General
+    summary: "Get all analysis history with pagination."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: string
+        required: false
+        description: "Page"
+      - name: pagesize
+        in: query
+        type: string
+        required: false
+        description: "Pagesize"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         page = int(request.args.get('page', 1))
@@ -535,9 +690,40 @@ def get_all_history():
 @login_required
 def delete_history(memory_id: int):
     """
-    Delete a history record.
-    
-    DELETE /api/fast-analysis/history/123
+    ---
+    tags:
+      - General
+    summary: "Delete a history record."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: memory_id
+        in: path
+        type: integer
+        required: true
+        description: "Memory Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         # Get current user's ID to ensure they can only delete their own records
@@ -572,13 +758,46 @@ def delete_history(memory_id: int):
 @login_required
 def submit_feedback():
     """
-    Submit user feedback on an analysis.
-    
-    POST /api/fast-analysis/feedback
-    Body: {
-        "memory_id": 123,
-        "feedback": "helpful" | "not_helpful" | "accurate" | "inaccurate"
-    }
+    ---
+    tags:
+      - Submit
+    summary: "Submit user feedback on an analysis."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            memory_id:
+              type: string
+            feedback:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -623,9 +842,50 @@ def submit_feedback():
 @login_required
 def get_performance():
     """
-    Get AI analysis performance statistics.
-    
-    GET /api/fast-analysis/performance?market=Crypto&symbol=BTC/USDT&days=30
+    ---
+    tags:
+      - General
+    summary: "Get AI analysis performance statistics."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+      - name: days
+        in: query
+        type: string
+        required: false
+        description: "Days"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         market = request.args.get('market', '').strip() or None
@@ -654,9 +914,52 @@ def get_performance():
 @login_required
 def get_similar_patterns():
     """
-    Get similar historical patterns for current market conditions.
-    
-    GET /api/fast-analysis/similar-patterns?market=Crypto&symbol=BTC/USDT
+    ---
+    tags:
+      - General
+    summary: "Get similar historical patterns for current market conditions."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            indicators:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         market = request.args.get('market', '').strip()

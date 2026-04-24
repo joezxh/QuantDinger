@@ -23,20 +23,46 @@ polymarket_source = PolymarketDataSource()
 @login_required
 def analyze_polymarket():
     """
-    分析Polymarket预测市场（用户输入链接或标题）
-    
-    POST /api/polymarket/analyze
-    Body: {
-        "input": "https://polymarket.com/event/xxx" 或 "市场标题",
-        "language": "zh-CN" (optional)
-    }
-    
-    流程：
-    1. 从输入中解析market_id或slug
-    2. 从API获取市场数据
-    3. 检查计费并扣除积分
-    4. 调用AI分析
-    5. 返回分析结果
+    ---
+    tags:
+      - Analyze
+    summary: "分析Polymarket预测市场（用户输入链接或标题）"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            input:
+              type: string
+            language:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from app.services.billing_service import BillingService
@@ -232,9 +258,70 @@ def analyze_polymarket():
 @login_required
 def get_polymarket_history():
     """
-    Get user's Polymarket analysis history.
-    
-    GET /api/polymarket/history?page=1&page_size=20
+    ---
+    tags:
+      - General
+    summary: "Get user's Polymarket analysis history."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: int
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: int
+        required: false
+        description: "Page Size"
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            market:
+              type: string
+            analysis:
+              type: string
+            question:
+              type: string
+            title:
+              type: string
+            polymarket_url:
+              type: string
+            ai_predicted_probability:
+              type: string
+            market_probability:
+              type: string
+            recommendation:
+              type: string
+            opportunity_score:
+              type: string
+            confidence_score:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id

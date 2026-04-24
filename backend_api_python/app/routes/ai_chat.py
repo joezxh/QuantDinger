@@ -15,8 +15,40 @@ ai_chat_bp = Blueprint('ai_chat', __name__)
 @ai_chat_bp.route('/chat/message', methods=['POST'])
 def chat_message():
     """
-    Minimal placeholder for legacy chat.
-    Return a friendly message instead of 404, so the UI can evolve gradually.
+    ---
+    tags:
+      - Chat
+    summary: "Minimal placeholder for legacy chat."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     data = request.get_json() or {}
     msg = (data.get('message') or '').strip()
@@ -34,13 +66,65 @@ def chat_message():
 
 @ai_chat_bp.route('/chat/history', methods=['GET'])
 def get_chat_history():
-    """Return empty history (compatibility stub)."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Return empty history (compatibility stub)."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     return jsonify({'code': 1, 'msg': 'success', 'data': []})
 
 
 @ai_chat_bp.route('/chat/history/save', methods=['POST'])
 def save_chat_history():
-    """No-op save (compatibility stub)."""
+    """
+    ---
+    tags:
+      - Save
+    summary: "No-op save (compatibility stub)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     return jsonify({'code': 1, 'msg': 'success', 'data': None})
 
 

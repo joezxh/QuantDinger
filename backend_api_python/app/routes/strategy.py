@@ -251,7 +251,47 @@ def _load_templates():
 @strategy_bp.route('/templates', methods=['GET'])
 @login_required
 def list_strategy_templates():
-    """Return pre-built strategy templates for one-click import."""
+    """
+    ---
+    tags:
+      - List
+    summary: "Return pre-built strategy templates for one-click import."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: category
+        in: query
+        type: string
+        required: false
+        description: "Category"
+      - name: difficulty
+        in: query
+        type: string
+        required: false
+        description: "Difficulty"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     templates = _load_templates()
     category = request.args.get('category')
     difficulty = request.args.get('difficulty')
@@ -265,7 +305,42 @@ def list_strategy_templates():
 @strategy_bp.route('/templates/<key>', methods=['GET'])
 @login_required
 def get_strategy_template(key):
-    """Return a single strategy template by key."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Return a single strategy template by key."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: key
+        in: path
+        type: string
+        required: true
+        description: "Key"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     templates = _load_templates()
     for t in templates:
         if t.get('key') == key:
@@ -296,7 +371,34 @@ def get_backtest_service() -> BacktestService:
 @login_required
 def list_strategies():
     """
-    List strategies for the current user.
+    ---
+    tags:
+      - List
+    summary: "List strategies for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -311,6 +413,42 @@ def list_strategies():
 @strategy_bp.route('/strategies/detail', methods=['GET'])
 @login_required
 def get_strategy_detail():
+    """
+    ---
+    tags:
+      - General
+    summary: "Get Strategy Detail"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         strategy_id = request.args.get('id', type=int)
@@ -329,6 +467,38 @@ def get_strategy_detail():
 @strategy_bp.route('/strategies/backtest', methods=['POST'])
 @login_required
 def run_strategy_backtest():
+    """
+    ---
+    tags:
+      - Run
+    summary: "Run Strategy Backtest"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         payload = request.get_json() or {}
         user_id = g.user_id
@@ -443,6 +613,72 @@ def run_strategy_backtest():
 @strategy_bp.route('/strategies/backtest/history', methods=['GET'])
 @login_required
 def get_strategy_backtest_history():
+    """
+    ---
+    tags:
+      - General
+    summary: "Get Strategy Backtest History"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: strategyId
+        in: query
+        type: string
+        required: false
+        description: "Strategyid"
+      - name: id
+        in: query
+        type: string
+        required: false
+        description: "Id"
+      - name: limit
+        in: query
+        type: string
+        required: false
+        description: "Limit"
+      - name: offset
+        in: query
+        type: string
+        required: false
+        description: "Offset"
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: timeframe
+        in: query
+        type: string
+        required: false
+        description: "Timeframe"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         strategy_id = int(request.args.get('strategyId') or request.args.get('id') or 0)
@@ -473,6 +709,42 @@ def get_strategy_backtest_history():
 @strategy_bp.route('/strategies/backtest/get', methods=['GET'])
 @login_required
 def get_strategy_backtest_run():
+    """
+    ---
+    tags:
+      - General
+    summary: "Get Strategy Backtest Run"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: runId
+        in: query
+        type: string
+        required: false
+        description: "Runid"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         run_id = int(request.args.get('runId') or 0)
@@ -491,6 +763,38 @@ def get_strategy_backtest_run():
 @strategy_bp.route('/strategies/create', methods=['POST'])
 @login_required
 def create_strategy():
+    """
+    ---
+    tags:
+      - General
+    summary: "Create Strategy"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         payload = request.get_json() or {}
@@ -509,12 +813,36 @@ def create_strategy():
 @login_required
 def batch_create_strategies():
     """
-    Batch create strategies (multiple symbols)
-    
-    Request body:
-        strategy_name: Base strategy name
-        symbols: Array of symbols, e.g. ["Crypto:BTC/USDT", "Crypto:ETH/USDT"]
-        ... other strategy config
+    ---
+    tags:
+      - Batch
+    summary: "Batch create strategies (multiple symbols)"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -546,12 +874,36 @@ def batch_create_strategies():
 @login_required
 def batch_start_strategies():
     """
-    Batch start strategies
-    
-    Request body:
-        strategy_ids: Array of strategy IDs
-        or
-        strategy_group_id: Strategy group ID
+    ---
+    tags:
+      - Batch
+    summary: "Batch start strategies"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -592,12 +944,36 @@ def batch_start_strategies():
 @login_required
 def batch_stop_strategies():
     """
-    Batch stop strategies
-    
-    Request body:
-        strategy_ids: Array of strategy IDs
-        or
-        strategy_group_id: Strategy group ID
+    ---
+    tags:
+      - Batch
+    summary: "Batch stop strategies"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -637,12 +1013,34 @@ def batch_stop_strategies():
 @login_required
 def batch_delete_strategies():
     """
-    Batch delete strategies
-    
-    Request body:
-        strategy_ids: Array of strategy IDs
-        or
-        strategy_group_id: Strategy group ID
+    ---
+    tags:
+      - Batch
+    summary: "Batch delete strategies"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -681,6 +1079,44 @@ def batch_delete_strategies():
 @strategy_bp.route('/strategies/update', methods=['PUT'])
 @login_required
 def update_strategy():
+    """
+    ---
+    tags:
+      - General
+    summary: "Update Strategy"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         strategy_id = request.args.get('id', type=int)
@@ -700,6 +1136,42 @@ def update_strategy():
 @strategy_bp.route('/strategies/delete', methods=['DELETE'])
 @login_required
 def delete_strategy():
+    """
+    ---
+    tags:
+      - General
+    summary: "Delete Strategy"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         strategy_id = request.args.get('id', type=int)
@@ -716,7 +1188,42 @@ def delete_strategy():
 @strategy_bp.route('/strategies/trades', methods=['GET'])
 @login_required
 def get_trades():
-    """Get trade records for the current user's strategy."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get trade records for the current user's strategy."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         strategy_id = request.args.get('id', type=int)
@@ -778,7 +1285,42 @@ def get_trades():
 @strategy_bp.route('/strategies/positions', methods=['GET'])
 @login_required
 def get_positions():
-    """Get position records for the current user's strategy."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get position records for the current user's strategy."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         strategy_id = request.args.get('id', type=int)
@@ -952,7 +1494,42 @@ def _build_strategy_equity_curve(user_id: int, strategy_id: int):
 @strategy_bp.route('/strategies/equityCurve', methods=['GET'])
 @login_required
 def get_equity_curve():
-    """Get equity curve for the current user's strategy."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get equity curve for the current user's strategy."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         strategy_id = request.args.get('id', type=int)
@@ -977,10 +1554,42 @@ def get_equity_curve():
 @login_required
 def stop_strategy():
     """
-    Stop a strategy for the current user.
-    
-    Params:
-        id: Strategy ID
+    ---
+    tags:
+      - Stop
+    summary: "Stop a strategy for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -1031,10 +1640,42 @@ def stop_strategy():
 @login_required
 def start_strategy():
     """
-    Start a strategy for the current user.
-    
-    Params:
-        id: Strategy ID
+    ---
+    tags:
+      - Start
+    summary: "Start a strategy for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -1095,10 +1736,44 @@ def start_strategy():
 @login_required
 def test_connection():
     """
-    Test exchange connection.
-    
-    Request body:
-        exchange_config: Exchange configuration (may contain credential_id or inline keys)
+    ---
+    tags:
+      - Test
+    summary: "Test exchange connection."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            exchange_config:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -1174,10 +1849,44 @@ def test_connection():
 @login_required
 def get_symbols():
     """
-    Get exchange trading pairs list.
-    
-    Request body:
-        exchange_config: Exchange configuration
+    ---
+    tags:
+      - General
+    summary: "Get exchange trading pairs list."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            exchange_config:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -1218,7 +1927,44 @@ def get_symbols():
 @login_required
 def preview_compile():
     """
-    Preview compiled strategy result.
+    ---
+    tags:
+      - Preview
+    summary: "Preview compiled strategy result."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            config:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -1265,12 +2011,50 @@ def preview_compile():
 @login_required
 def get_strategy_notifications():
     """
-    Strategy signal notifications for the current user.
-
-    Query:
-      - id: strategy id (optional)
-      - limit: default 50, max 200
-      - since_id: return rows with id > since_id (optional)
+    ---
+    tags:
+      - General
+    summary: "Strategy signal notifications for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+      - name: limit
+        in: query
+        type: int
+        required: false
+        description: "Limit"
+      - name: since_id
+        in: query
+        type: int
+        required: false
+        description: "Since Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -1361,8 +2145,34 @@ def get_strategy_notifications():
 @login_required
 def get_unread_notification_count():
     """
-    Get unread notification count for the current user.
-    Used by frontend header badge (cap at 99+ on UI).
+    ---
+    tags:
+      - General
+    summary: "Get unread notification count for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -1407,7 +2217,46 @@ def get_unread_notification_count():
 @strategy_bp.route('/strategies/notifications/read', methods=['POST'])
 @login_required
 def mark_notification_read():
-    """Mark a single notification as read for the current user."""
+    """
+    ---
+    tags:
+      - Mark
+    summary: "Mark a single notification as read for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json(force=True, silent=True) or {}
@@ -1440,7 +2289,38 @@ def mark_notification_read():
 @strategy_bp.route('/strategies/notifications/read-all', methods=['POST'])
 @login_required
 def mark_all_notifications_read():
-    """Mark all notifications as read for the current user."""
+    """
+    ---
+    tags:
+      - Mark
+    summary: "Mark all notifications as read for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         with get_db_connection() as db:
@@ -1465,7 +2345,36 @@ def mark_all_notifications_read():
 @strategy_bp.route('/strategies/notifications/clear', methods=['DELETE'])
 @login_required
 def clear_notifications():
-    """Clear all notifications for the current user."""
+    """
+    ---
+    tags:
+      - Clear
+    summary: "Clear all notifications for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         with get_db_connection() as db:
@@ -1492,7 +2401,38 @@ def clear_notifications():
 @strategy_bp.route('/strategies/verify-code', methods=['POST'])
 @login_required
 def verify_strategy_code():
-    """Verify script strategy code syntax and safety."""
+    """
+    ---
+    tags:
+      - Verify
+    summary: "Verify script strategy code syntax and safety."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         payload = request.get_json() or {}
         code = payload.get('code', '')
@@ -1509,7 +2449,38 @@ def verify_strategy_code():
 @strategy_bp.route('/strategies/ai-generate', methods=['POST'])
 @login_required
 def ai_generate_strategy():
-    """Generate strategy code or suggest template parameter updates using AI."""
+    """
+    ---
+    tags:
+      - Ai
+    summary: "Generate strategy code or suggest template parameter updates using AI."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         payload = request.get_json() or {}
         lang = _request_lang()
@@ -1912,7 +2883,42 @@ Quality rules:
 @strategy_bp.route('/strategies/performance', methods=['GET'])
 @login_required
 def get_strategy_performance():
-    """Get strategy performance metrics (aggregated from equity curve and trades)."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get strategy performance metrics (aggregated from equity curve and trades)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         strategy_id = request.args.get('id', type=int)
@@ -1944,7 +2950,47 @@ def get_strategy_performance():
 @strategy_bp.route('/strategies/logs', methods=['GET'])
 @login_required
 def get_strategy_logs():
-    """Get strategy running logs."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get strategy running logs."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: false
+        description: "Id"
+      - name: limit
+        in: query
+        type: string
+        required: false
+        description: "Limit"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         strategy_id = request.args.get('id')

@@ -412,10 +412,34 @@ def _indicator_human_summary(
 @login_required
 def get_indicators():
     """
-    Get indicator list for the current user.
-
-    Response:
-      { code: 1, data: [ ... ] }
+    ---
+    tags:
+      - General
+    summary: "Get indicator list for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = g.user_id
@@ -454,16 +478,68 @@ def get_indicators():
 @login_required
 def save_indicator():
     """
-    Create or update an indicator for the current user.
-
-    Request (frontend sends many extra fields; we store only the essentials):
-      {
-        id: number (0 for create),
-        name: string,
-        code: string,
-        description?: string,
-        ...
-      }
+    ---
+    tags:
+      - Save
+    summary: "Create or update an indicator for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+            code:
+              type: string
+            name:
+              type: string
+            description:
+              type: string
+            publishToCommunity:
+              type: string
+            publish_to_community:
+              type: string
+            pricingType:
+              type: string
+            pricing_type:
+              type: string
+            vipFree:
+              type: string
+            vip_free:
+              type: string
+            price:
+              type: string
+            previewImage:
+              type: string
+            preview_image:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -605,7 +681,46 @@ def save_indicator():
 @indicator_bp.route("/deleteIndicator", methods=["POST"])
 @login_required
 def delete_indicator():
-    """Delete an indicator by id for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Delete an indicator by id for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         data = request.get_json() or {}
         user_id = g.user_id
@@ -632,23 +747,40 @@ def delete_indicator():
 @login_required
 def get_indicator_params():
     """
-    获取指标的参数声明
-    
-    用于前端在策略创建时显示可配置的参数表单。
-    
-    Query params:
-        indicator_id: 指标ID
-        
-    Returns:
-        params: [
-            {
-                "name": "ma_fast",
-                "type": "int",
-                "default": 5,
-                "description": "短期均线周期"
-            },
-            ...
-        ]
+    ---
+    tags:
+      - General
+    summary: "获取指标的参数声明"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: indicator_id
+        in: query
+        type: string
+        required: false
+        description: "Indicator Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from app.services.indicator_params import get_indicator_params as get_params
@@ -674,11 +806,46 @@ def get_indicator_params():
 @login_required
 def verify_code():
     """
-    Verify/Dry-run indicator code with mock data.
-    Checks for:
-    - Syntax errors
-    - Runtime errors
-    - Output format (must define 'output' dict)
+    ---
+    tags:
+      - Verify
+    summary: "Verify/Dry-run indicator code with mock data."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            code:
+              type: string
+            params:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -718,14 +885,46 @@ def verify_code():
 @login_required
 def ai_generate():
     """
-    SSE endpoint to generate indicator code.
-
-    Frontend expects 'text/event-stream' with chunks:
-      data: {"content":"..."}\n\n
-    then:
-      data: [DONE]\n\n
-
-    Local-first: if OpenRouter key is not configured, we return a reasonable template.
+    ---
+    tags:
+      - Ai
+    summary: "SSE endpoint to generate indicator code."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            prompt:
+              type: string
+            existingCode:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     data = request.get_json() or {}
     lang = _request_lang()
@@ -864,9 +1063,10 @@ Return **only** valid Python source: **no** markdown fences, **no** ` ``` `, **n
 
     def _template_code() -> str:
         # Fallback template that follows the project expectations.
+        _desc = (prompt or '').replace('\n', ' ')[:200]
         header = (
             f"my_indicator_name = \"Custom Indicator\"\n"
-            f"my_indicator_description = \"{(prompt or '').replace('\n', ' ')[:200]}\"\n\n"
+            f"my_indicator_description = \"{_desc}\"\n\n"
         )
         body = (
             "# @param rsi_len int 14 RSI period\n\n"
@@ -1186,10 +1386,44 @@ Return **only** valid Python source: **no** markdown fences, **no** ` ``` `, **n
 @login_required
 def code_quality_hints():
     """
-    Heuristic hints for indicator code (structure, @strategy risk/position).
-    POST /api/indicator/codeQualityHints
-    Body: { "code": "..." }
-    Returns: { "code": 1, "data": { "hints": [ { "severity", "code", "params" } ] } }
+    ---
+    tags:
+      - Code
+    summary: "Heuristic hints for indicator code (structure, @strategy risk/position)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            code:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     from app.services.indicator_code_quality import analyze_indicator_code_quality
 
@@ -1203,10 +1437,44 @@ def code_quality_hints():
 @login_required
 def parse_strategy_config():
     """
-    Parse @strategy annotations from indicator code and return strategy config.
-    POST /api/indicator/parseStrategyConfig
-    Body: { "code": "..." }
-    Returns: { "code": 1, "data": { "strategyConfig": {...}, "indicatorParams": [...] } }
+    ---
+    tags:
+      - Parse
+    summary: "Parse @strategy annotations from indicator code and return strategy config."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            code:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     from app.services.indicator_params import StrategyConfigParser, IndicatorParamsParser
     data = request.get_json() or {}
@@ -1226,24 +1494,50 @@ def parse_strategy_config():
 @login_required
 def call_indicator():
     """
-    调用另一个指标（供前端 Pyodide 环境使用）
-    
-    POST /api/indicator/callIndicator
-    Body: {
-        "indicatorRef": int | str,  # 指标ID或名称
-        "klineData": List[Dict],      # K线数据
-        "params": Dict,              # 传递给被调用指标的参数（可选）
-        "currentIndicatorId": int     # 当前指标ID（用于循环依赖检测，可选）
-    }
-    
-    Returns:
-        {
-            "code": 1,
-            "data": {
-                "df": List[Dict],    # 执行后的DataFrame（转换为JSON）
-                "columns": List[str]  # DataFrame的列名
-            }
-        }
+    ---
+    tags:
+      - Call
+    summary: "调用另一个指标（供前端 Pyodide 环境使用）"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            indicatorRef:
+              type: string
+            klineData:
+              type: string
+            params:
+              type: string
+            currentIndicatorId:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}

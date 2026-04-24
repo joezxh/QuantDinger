@@ -8,6 +8,7 @@ import traceback
 from flask import Flask
 from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
+from flasgger import Swagger
 
 from app.utils.logger import setup_logger, get_logger
 
@@ -227,6 +228,26 @@ def create_app(config_name='default'):
     
     CORS(app)
     
+    # Initialize Flasgger for API documentation
+    Swagger(app, template={
+        "swagger": "2.0",
+        "info": {
+            "title": "QuantDinger API",
+            "description": "QuantDinger Python API Documentation",
+            "version": "2.2.2"
+        },
+        "basePath": "/",
+        "schemes": ["http", "https"],
+        "securityDefinitions": {
+            "BearerAuth": {
+                "type": "apiKey",
+                "name": "Authorization",
+                "in": "header",
+                "description": "Enter your Bearer token in the format: Bearer <token>"
+            }
+        }
+    })
+    
     setup_logger()
     
     # Initialize database and ensure admin user exists
@@ -265,4 +286,3 @@ def create_app(config_name='default'):
         restore_running_strategies()
     
     return app
-

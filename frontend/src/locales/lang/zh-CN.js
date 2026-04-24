@@ -22,6 +22,8 @@ const locale = {
   'common.noData': '暂无数据',
   'common.yes': '是',
   'common.no': '否',
+  'common.stats': '统计',
+  'common.confirmDelete': '确定要删除吗？',
   'submit': '提交',
   'save': '保存',
   'submit.ok': '提交成功',
@@ -4445,7 +4447,36 @@ const locale = {
   'indicatorIde.editor.editParams': '编辑指标参数',
   'indicatorIde.editor.fastLessThanSlow': '快线参数必须小于慢线参数',
   // AI资产分析 - Polymarket标签页
-  'aiAssetAnalysis.tabs.polymarket': '预测市场'
+  'aiAssetAnalysis.tabs.polymarket': '预测市场',
+  // LLM 设置
+  'menu.llmSettings': 'LLM 设置',
+  'llm.pageTitle': 'LLM 设置',
+  'llm.pageSubtitle': '管理 LLM 供应商、API 密钥和模型路由策略',
+  'llm.provider': '供应商',
+  'llm.providerName': '供应商名称',
+  'llm.baseUrl': '基础 URL',
+  'llm.apiKey': 'API 密钥',
+  'llm.model': '模型',
+  'llm.modelName': '模型名称',
+  'llm.strategy': '负载均衡策略',
+  'llm.weight': '权重',
+  'llm.status': '状态',
+  'llm.latency': '延迟',
+  'llm.calls': '调用次数',
+  'llm.successRate': '成功率',
+  'llm.lastUsed': '最后使用',
+  'llm.actions': '操作',
+  'llm.addProvider': '添加供应商',
+  'llm.addKey': '添加密钥',
+  'llm.addModel': '添加模型',
+  'llm.strategy.round_robin': '轮询',
+  'llm.strategy.weighted_round_robin': '加权轮询',
+  'llm.strategy.random': '随机',
+  'llm.strategy.least_connections': '最少连接',
+  'llm.strategy.consistent_hash': '一致性哈希',
+  'llm.status.active': '启用',
+  'llm.status.disabled': '禁用',
+  'llm.status.broken': '熔断'
 }
 
 export default {

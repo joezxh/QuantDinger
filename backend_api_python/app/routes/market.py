@@ -53,8 +53,30 @@ def _ensure_watchlist_table():
 @market_bp.route('/config', methods=['GET'])
 def get_public_config():
     """
-    Public config for frontend (local mode).
-    Mirrors the old PHP `/addons/quantdinger/index/getConfig` shape.
+    ---
+    tags:
+      - General
+    summary: "Public config for frontend (local mode)."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         cfg = load_addon_config()
@@ -92,7 +114,32 @@ def get_public_config():
 
 @market_bp.route('/types', methods=['GET'])
 def get_market_types():
-    """Return supported market types for the add-watchlist modal."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Return supported market types for the add-watchlist modal."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     # Keep a stable UX order; add CN/HK stocks near US stocks.
     desired_order = ['USStock', 'CNStock', 'HKStock', 'Crypto', 'Forex', 'Futures']
     order_rank = {v: i for i, v in enumerate(desired_order)}
@@ -138,8 +185,30 @@ def get_market_types():
 @market_bp.route('/menuFooterConfig', methods=['GET'])
 def get_menu_footer_config():
     """
-    Compatibility stub for old PHP `getMenuFooterConfig`.
-    Frontend can also hardcode this locally; this endpoint remains for completeness.
+    ---
+    tags:
+      - General
+    summary: "Compatibility stub for old PHP `getMenuFooterConfig`."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     data = {
         'contact': {
@@ -163,8 +232,46 @@ def get_menu_footer_config():
 @market_bp.route('/symbols/search', methods=['GET'])
 def search_symbols():
     """
-    Lightweight symbol search.
-    DB seed first; for Crypto, falls back to exchange market list when DB yields few results.
+    ---
+    tags:
+      - Search
+    summary: "Lightweight symbol search."
+    produces:
+      - application/json
+    parameters:
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: keyword
+        in: query
+        type: string
+        required: false
+        description: "Keyword"
+      - name: limit
+        in: query
+        type: string
+        required: false
+        description: "Limit"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         market = (request.args.get('market') or '').strip()
@@ -242,7 +349,43 @@ def _search_crypto_exchange(keyword: str, limit: int, existing: set) -> list:
 
 @market_bp.route('/symbols/hot', methods=['GET'])
 def get_hot_symbols():
-    """Return a small curated hot list per market (local-only)."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Return a small curated hot list per market (local-only)."
+    produces:
+      - application/json
+    parameters:
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: limit
+        in: query
+        type: string
+        required: false
+        description: "Limit"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         market = (request.args.get('market') or '').strip()
         limit = int(request.args.get('limit') or 10)
@@ -255,7 +398,36 @@ def get_hot_symbols():
 @market_bp.route('/watchlist/get', methods=['GET'])
 @login_required
 def get_watchlist():
-    """Get watchlist for the current user."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get watchlist for the current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         _ensure_watchlist_table()
@@ -298,7 +470,50 @@ def get_watchlist():
 @market_bp.route('/watchlist/add', methods=['POST'])
 @login_required
 def add_watchlist():
-    """Add a symbol to watchlist for the current user."""
+    """
+    ---
+    tags:
+      - Add
+    summary: "Add a symbol to watchlist for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            market:
+              type: string
+            symbol:
+              type: string
+            name:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json() or {}
@@ -337,7 +552,46 @@ def add_watchlist():
 @market_bp.route('/watchlist/remove', methods=['POST'])
 @login_required
 def remove_watchlist():
-    """Remove a symbol from watchlist for the current user."""
+    """
+    ---
+    tags:
+      - Remove
+    summary: "Remove a symbol from watchlist for the current user."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            symbol:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = g.user_id
         data = request.get_json() or {}
@@ -388,11 +642,36 @@ def get_single_price(market: str, symbol: str) -> dict:
 @market_bp.route('/watchlist/prices', methods=['GET'])
 def get_watchlist_prices():
     """
-    批量获取自选股价格
-    
-    Params (Query String):
-        watchlist: JSON string of list of {market, symbol} objects
-        e.g. ?watchlist=[{"market":"USStock","symbol":"AAPL"}]
+    ---
+    tags:
+      - General
+    summary: "批量获取自选股价格"
+    produces:
+      - application/json
+    parameters:
+      - name: watchlist
+        in: query
+        type: string
+        required: false
+        description: "Watchlist"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         watchlist_str = request.args.get('watchlist', '[]')
@@ -476,11 +755,41 @@ def get_watchlist_prices():
 @market_bp.route('/price', methods=['GET'])
 def get_price():
     """
-    获取单个标的价格
-    
-    参数:
-        market: 市场类型
-        symbol: 交易标的
+    ---
+    tags:
+      - General
+    summary: "获取单个标的价格"
+    produces:
+      - application/json
+    parameters:
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         market = request.args.get('market', '')
@@ -513,22 +822,42 @@ def get_price():
 @market_bp.route('/stock/name', methods=['POST'])
 def get_stock_name():
     """
-    获取股票名称
-    
-    请求体:
-    {
-        "market": "USStock",
-        "symbol": "AAPL"
-    }
-    
-    响应:
-    {
-        "code": 1,
-        "msg": "success",
-        "data": {
-            "name": "Apple Inc."
-        }
-    }
+    ---
+    tags:
+      - General
+    summary: "获取股票名称"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            market:
+              type: string
+            symbol:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json()

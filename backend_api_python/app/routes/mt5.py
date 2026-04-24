@@ -47,7 +47,32 @@ def _get_client():
 
 @mt5_bp.route("/status", methods=["GET"])
 def get_status():
-    """Get MT5 connection status."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get MT5 connection status."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         _ensure_mt5_imports()
         client = _get_client()
@@ -67,15 +92,54 @@ def get_status():
 @mt5_bp.route("/connect", methods=["POST"])
 def connect():
     """
-    Connect to MT5 terminal.
-    
-    Request body:
-    {
-        "login": 12345678,      // MT5 account number
-        "password": "xxx",      // MT5 password
-        "server": "ICMarkets-Demo",  // Broker server
-        "terminal_path": ""     // Optional: path to terminal64.exe
-    }
+    ---
+    tags:
+      - Connect
+    summary: "Connect to MT5 terminal."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            login:
+              type: string
+            mt5_login:
+              type: string
+            password:
+              type: string
+            mt5_password:
+              type: string
+            server:
+              type: string
+            mt5_server:
+              type: string
+            terminal_path:
+              type: string
+            mt5_terminal_path:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     global _client
     
@@ -139,7 +203,34 @@ def connect():
 
 @mt5_bp.route("/disconnect", methods=["POST"])
 def disconnect():
-    """Disconnect from MT5 terminal."""
+    """
+    ---
+    tags:
+      - Disconnect
+    summary: "Disconnect from MT5 terminal."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     global _client
     
     try:
@@ -156,7 +247,32 @@ def disconnect():
 
 @mt5_bp.route("/account", methods=["GET"])
 def get_account():
-    """Get account information."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get account information."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         client = _get_client()
         if not client.connected:
@@ -171,7 +287,38 @@ def get_account():
 
 @mt5_bp.route("/positions", methods=["GET"])
 def get_positions():
-    """Get open positions."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get open positions."
+    produces:
+      - application/json
+    parameters:
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         client = _get_client()
         if not client.connected:
@@ -187,7 +334,38 @@ def get_positions():
 
 @mt5_bp.route("/orders", methods=["GET"])
 def get_orders():
-    """Get pending orders."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get pending orders."
+    produces:
+      - application/json
+    parameters:
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         client = _get_client()
         if not client.connected:
@@ -203,7 +381,38 @@ def get_orders():
 
 @mt5_bp.route("/symbols", methods=["GET"])
 def get_symbols():
-    """Get available symbols."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get available symbols."
+    produces:
+      - application/json
+    parameters:
+      - name: group
+        in: query
+        type: string
+        required: false
+        description: "Group"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         client = _get_client()
         if not client.connected:
@@ -222,16 +431,52 @@ def get_symbols():
 @mt5_bp.route("/order", methods=["POST"])
 def place_order():
     """
-    Place an order.
-    
-    Request body:
-    {
-        "symbol": "EURUSD",
-        "side": "buy",          // "buy" or "sell"
-        "volume": 0.1,          // Lot size
-        "orderType": "market",  // "market" or "limit"
-        "price": 1.0800         // Required for limit orders
-    }
+    ---
+    tags:
+      - Place
+    summary: "Place an order."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            symbol:
+              type: string
+            side:
+              type: string
+            volume:
+              type: string
+            quantity:
+              type: string
+            orderType:
+              type: string
+            price:
+              type: string
+            comment:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()
@@ -298,13 +543,42 @@ def place_order():
 @mt5_bp.route("/close", methods=["POST"])
 def close_position():
     """
-    Close a position.
-    
-    Request body:
-    {
-        "ticket": 123456789,    // Position ticket
-        "volume": 0.1           // Optional: partial close volume
-    }
+    ---
+    tags:
+      - Close
+    summary: "Close a position."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            ticket:
+              type: string
+            volume:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()
@@ -349,7 +623,38 @@ def close_position():
 
 @mt5_bp.route("/order/<int:ticket>", methods=["DELETE"])
 def cancel_order(ticket: int):
-    """Cancel a pending order."""
+    """
+    ---
+    tags:
+      - Cancel
+    summary: "Cancel a pending order."
+    produces:
+      - application/json
+    parameters:
+      - name: ticket
+        in: path
+        type: integer
+        required: true
+        description: "Ticket"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         client = _get_client()
         if not client.connected:
@@ -370,10 +675,36 @@ def cancel_order(ticket: int):
 @mt5_bp.route("/quote", methods=["GET"])
 def get_quote():
     """
-    Get real-time quote.
-    
-    Query params:
-    - symbol: Trading symbol (e.g., EURUSD)
+    ---
+    tags:
+      - General
+    summary: "Get real-time quote."
+    produces:
+      - application/json
+    parameters:
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         client = _get_client()

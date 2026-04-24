@@ -17,14 +17,61 @@ kline_service = KlineService()
 @kline_bp.route('/kline', methods=['GET'])
 def get_kline():
     """
-    获取K线数据
-    
-    参数:
-        market: 市场类型 (Crypto, USStock, Forex, Futures)
-        symbol: 交易对/股票代码
-        timeframe: 时间周期 (1m, 5m, 15m, 30m, 1H, 4H, 1D, 1W)
-        limit: 数据条数 (默认300)
-        before_time: 获取此时间之前的数据 (可选，Unix时间戳)
+    ---
+    tags:
+      - General
+    summary: "获取K线数据"
+    produces:
+      - application/json
+    parameters:
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+      - name: timeframe
+        in: query
+        type: string
+        required: false
+        description: "Timeframe"
+      - name: limit
+        in: query
+        type: string
+        required: false
+        description: "Limit"
+      - name: before_time
+        in: query
+        type: string
+        required: false
+        description: "Before Time"
+      - name: beforeTime
+        in: query
+        type: string
+        required: false
+        description: "Beforetime"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         # 强制 GET, 使用 request.args
@@ -86,7 +133,43 @@ def get_kline():
 
 @kline_bp.route('/price', methods=['GET'])
 def get_price():
-    """获取最新价格"""
+    """
+    ---
+    tags:
+      - General
+    summary: "获取最新价格"
+    produces:
+      - application/json
+    parameters:
+      - name: market
+        in: query
+        type: string
+        required: false
+        description: "Market"
+      - name: symbol
+        in: query
+        type: string
+        required: false
+        description: "Symbol"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         market = request.args.get('market', 'USStock')
         symbol = request.args.get('symbol', '')

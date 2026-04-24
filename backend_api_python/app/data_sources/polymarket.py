@@ -476,7 +476,7 @@ class PolymarketDataSource:
                 pass
             
             logger.info(f"Fetching from Gamma API: {url} with params: {params}")
-            response = self.session.get(url, params=params, timeout=15)
+            response = self.session.get(url, params=params, timeout=120)
             
             logger.info(f"Gamma API response status: {response.status_code}")
             

@@ -136,6 +136,13 @@ export const asyncRouterMap = [
         component: () => import('@/views/user-manage'),
         meta: { title: 'menu.userManage', keepAlive: false, icon: 'team', permission: ['admin'] }
       },
+      // LLM 设置
+      {
+        path: '/llm-settings',
+        name: 'LLMSettings',
+        component: () => import('@/views/llm'),
+        meta: { title: 'menu.llmSettings', keepAlive: false, icon: 'api', permission: ['dashboard'] }
+      },
       // 系统设置 (admin only) - 放在最后
       {
         path: '/settings',

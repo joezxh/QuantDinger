@@ -6,12 +6,15 @@ Kept separate from AnalysisService to avoid circular imports.
 import json
 import os
 import requests
+import time
 from typing import Dict, Any, Optional, List
 from enum import Enum
 
 from app.utils.logger import get_logger
 from app.config import APIKeys
 from app.utils.config_loader import load_addon_config
+from app.services.llm_lb import LLMLBService
+from app.services.llm_registry import LLMRegistry
 
 logger = get_logger(__name__)
 
@@ -187,8 +190,23 @@ class LLMService:
 
     def _call_openai_compatible(self, messages: list, model: str, temperature: float, 
                                  api_key: str, base_url: str, timeout: int,
-                                 use_json_mode: bool = True) -> str:
-        """Call OpenAI-compatible API (OpenAI, DeepSeek, Grok, OpenRouter)."""
+                                 use_json_mode: bool = True, stream: bool = False) -> str:
+        """
+        Call OpenAI-compatible API (OpenAI, DeepSeek, Grok, OpenRouter).
+        
+        Args:
+            messages: List of message dicts
+            model: Model name
+            temperature: Sampling temperature
+            api_key: API key
+            base_url: Base URL for the API
+            timeout: Request timeout in seconds
+            use_json_mode: Whether to request JSON output
+            stream: Whether to use streaming mode (default False)
+        
+        Returns:
+            Generated text content
+        """
         url = f"{base_url}/chat/completions"
         
         headers = {
@@ -205,10 +223,23 @@ class LLMService:
             "model": model,
             "messages": messages,
             "temperature": temperature,
+            "stream": stream,  # Add stream parameter
         }
         
         if use_json_mode:
-            data["response_format"] = {"type": "json_object"}
+            # Use json_schema format for better compatibility with OpenAI-compatible APIs
+            # Some providers (gemma, glm, etc.) only support 'json_schema' or 'text'
+            data["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "response",
+                    "schema": {
+                        "type": "object",
+                        "description": "JSON response object"
+                    },
+                    "strict": False
+                }
+            }
 
         response = requests.post(url, headers=headers, json=data, timeout=timeout)
         
@@ -242,6 +273,11 @@ class LLMService:
 
             raise ValueError(error_msg)
         
+        # Handle streaming response
+        if stream:
+            return self._process_streaming_response(response, model)
+        
+        # Handle non-streaming response
         result = response.json()
         if "choices" in result and len(result["choices"]) > 0:
             content = result["choices"][0]["message"]["content"]
@@ -296,6 +332,69 @@ class LLMService:
                     return text
         
         raise ValueError("Gemini API response is missing content")
+
+    def _process_streaming_response(self, response: requests.Response, model: str) -> str:
+        """
+        Process streaming response from LLM API.
+        
+        Args:
+            response: HTTP response object with streaming data
+            model: Model name for error messages
+        
+        Returns:
+            Complete accumulated text content
+        """
+        content_buffer = []
+        
+        try:
+            # Process Server-Sent Events (SSE) stream
+            for line in response.iter_lines(decode_unicode=True):
+                if not line:
+                    continue
+                
+                # SSE format: "data: {...}"
+                if line.startswith('data: '):
+                    data_str = line[6:]  # Remove 'data: ' prefix
+                    
+                    # Check for end of stream
+                    if data_str.strip() == '[DONE]':
+                        break
+                    
+                    try:
+                        chunk = json.loads(data_str)
+                        
+                        # Extract content from chunk
+                        if 'choices' in chunk and len(chunk['choices']) > 0:
+                            choice = chunk['choices'][0]
+                            delta = choice.get('delta', {})
+                            content = delta.get('content')
+                            
+                            if content:
+                                content_buffer.append(content)
+                    except json.JSONDecodeError as e:
+                        logger.debug(f"Failed to parse streaming chunk: {e}")
+                        continue
+            
+            # Combine all content
+            full_content = ''.join(content_buffer)
+            
+            if not full_content:
+                raise ValueError(f"Model {model} returned empty content in streaming mode")
+            
+            logger.debug(f"Streaming response completed: {len(full_content)} characters")
+            return full_content
+            
+        except Exception as e:
+            error_msg = f"Error processing streaming response: {str(e)}"
+            logger.error(error_msg)
+            
+            # If we have partial content, return it
+            if content_buffer:
+                partial_content = ''.join(content_buffer)
+                logger.warning(f"Returning partial streaming content: {len(partial_content)} characters")
+                return partial_content
+            
+            raise ValueError(error_msg)
 
     def _normalize_model_for_provider(self, model: str, provider: LLMProvider) -> str:
         """
@@ -370,7 +469,8 @@ class LLMService:
 
     def call_llm_api(self, messages: list, model: str = None, temperature: float = 0.7, 
                      use_fallback: bool = True, provider: LLMProvider = None,
-                     use_json_mode: bool = True, try_alternative_providers: bool = True) -> str:
+                     use_json_mode: bool = True, try_alternative_providers: bool = True,
+                     stream: bool = False, user_id: int = 0) -> str:
         """
         Call LLM API with the specified or default provider.
         
@@ -382,16 +482,81 @@ class LLMService:
             provider: Override the service's default provider
             use_json_mode: Whether to request JSON output format (default True for analysis, False for code generation)
             try_alternative_providers: Whether to try alternative providers when current provider fails with 403/402
+            stream: Whether to use streaming mode (default False for backward compatibility)
         
         Returns:
             Generated text content
         
         Model Resolution Priority:
+            0. Check Load Balancer registry in DB. If configured, use LB strategy across multiple keys.
             1. If model is specified and matches a direct provider (openai/, google/, deepseek/, x-ai/),
                use that provider directly if its API key is configured
             2. Otherwise, use the configured LLM_PROVIDER with normalized model name
             3. Fall back to provider's default model if model name is incompatible
         """
+        # 0. Load Balancer Integration
+        if model:
+            lb_nodes = LLMRegistry.get_available_nodes(model, user_id)
+            if lb_nodes:
+                model_cfg = LLMRegistry.get_model_config(model)
+                strategy = model_cfg.get('lb_strategy', 'weighted_round_robin')
+                max_retries = model_cfg.get('retries', 3)
+                timeout = model_cfg.get('timeout', 120)
+                
+                logger.info(f"Using Load Balancer for model '{model}' with strategy '{strategy}' ({len(lb_nodes)} nodes)")
+                
+                last_err = None
+                for attempt in range(max_retries + 1):
+                    node = LLMLBService.select_node(model_cfg['id'], strategy, lb_nodes, {'user_id': user_id})
+                    if not node:
+                        break
+                    
+                    node_details = LLMRegistry.get_node_details(node.key_id)
+                    if not node_details:
+                        continue
+                    
+                    p_code = node_details['provider_code']
+                    try:
+                        p_enum = LLMProvider(p_code)
+                    except ValueError:
+                        p_enum = LLMProvider.OPENAI_COMPATIBLE
+                        
+                    api_key = node_details['api_key']
+                    base_url = node_details['base_url']
+                    
+                    start_time = time.time()
+                    try:
+                        node.active_connections += 1
+                        if p_enum == LLMProvider.GOOGLE:
+                            result = self._call_google_gemini(
+                                messages, model, temperature, api_key, base_url, timeout
+                            )
+                        else:
+                            result = self._call_openai_compatible(
+                                messages, model, temperature, api_key, base_url, timeout,
+                                use_json_mode=use_json_mode, stream=stream
+                            )
+                        
+                        latency = int((time.time() - start_time) * 1000)
+                        LLMRegistry.record_call_result(node.key_id, model_cfg['id'], user_id, latency, 200)
+                        return result
+                    except Exception as e:
+                        latency = int((time.time() - start_time) * 1000)
+                        status_code = 500
+                        if hasattr(e, 'response') and e.response:
+                            status_code = e.response.status_code
+                        
+                        LLMRegistry.record_call_result(node.key_id, model_cfg['id'], user_id, latency, status_code, str(e))
+                        logger.error(f"LB attempt {attempt + 1} failed on node {node.key_id}: {e}")
+                        last_err = e
+                    finally:
+                        node.active_connections -= 1
+                
+                if last_err:
+                    raise last_err
+                raise ValueError(f"All {len(lb_nodes)} nodes failed for model {model}")
+
+        # --- Original Logic Starts Here (Fallback) ---
         # Smart provider detection: if model specifies a provider and we have its API key, use it
         if model and not provider:
             detected_provider = self._detect_provider_from_model(model)
@@ -454,6 +619,9 @@ class LLMService:
         for current_model in models_to_try:
             try:
                 if p == LLMProvider.GOOGLE:
+                    # Note: Google Gemini streaming not yet implemented
+                    if stream:
+                        logger.warning("Streaming mode not supported for Google Gemini, falling back to non-streaming")
                     return self._call_google_gemini(
                         messages, current_model, temperature,
                         api_key, base_url, timeout
@@ -463,7 +631,8 @@ class LLMService:
                     return self._call_openai_compatible(
                         messages, current_model, temperature,
                         api_key, base_url, timeout,
-                        use_json_mode=use_json_mode
+                        use_json_mode=use_json_mode,
+                        stream=stream
                     )
                     
             except requests.exceptions.HTTPError as e:
@@ -480,7 +649,8 @@ class LLMService:
                     logger.warning(f"{p.value} returned {status_code} (likely API key issue). Trying alternative providers...")
                     return self._try_alternative_providers(
                         messages, original_model, temperature, 
-                        use_json_mode, excluded_provider=p
+                        use_json_mode, excluded_provider=p,
+                        stream=stream
                     )
                 
                 # Check for recoverable errors - try fallback model
@@ -513,7 +683,8 @@ class LLMService:
         raise Exception(error_msg)
     
     def _try_alternative_providers(self, messages: list, model: str, temperature: float,
-                                  use_json_mode: bool, excluded_provider: LLMProvider = None) -> str:
+                                  use_json_mode: bool, excluded_provider: LLMProvider = None,
+                                  stream: bool = False) -> str:
         """
         Try alternative providers when current provider fails.
         
@@ -541,7 +712,8 @@ class LLMService:
                     messages, model, temperature,
                     use_fallback=True, provider=alt_provider,
                     use_json_mode=use_json_mode,
-                    try_alternative_providers=False  # Prevent infinite recursion
+                    try_alternative_providers=False,  # Prevent infinite recursion
+                    stream=stream
                 )
             except Exception as e:
                 logger.warning(f"Alternative provider {alt_provider.value} also failed: {str(e)}")
@@ -553,6 +725,30 @@ class LLMService:
     def call_openrouter_api(self, messages: list, model: str = None, temperature: float = 0.7, use_fallback: bool = True) -> str:
         """Call LLM API (legacy method name for backward compatibility)."""
         return self.call_llm_api(messages, model, temperature, use_fallback)
+
+    def call_llm_streaming(self, messages: list, model: str = None, temperature: float = 0.7,
+                          provider: LLMProvider = None, use_json_mode: bool = True) -> str:
+        """
+        Call LLM API with streaming mode enabled.
+        
+        This is a convenience method that wraps call_llm_api with stream=True.
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            model: Model name
+            temperature: Sampling temperature
+            provider: Override the service's default provider
+            use_json_mode: Whether to request JSON output format
+        
+        Returns:
+            Generated text content (accumulated from streaming chunks)
+        """
+        return self.call_llm_api(
+            messages, model, temperature,
+            provider=provider,
+            use_json_mode=use_json_mode,
+            stream=True
+        )
 
     def safe_call_llm(self, system_prompt: str, user_prompt: str, default_structure: Dict[str, Any], 
                       model: str = None, provider: LLMProvider = None) -> Dict[str, Any]:

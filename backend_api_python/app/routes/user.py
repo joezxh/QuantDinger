@@ -43,12 +43,52 @@ user_bp = Blueprint('user_manage', __name__)
 @admin_required
 def list_users():
     """
-    List all users (admin only).
-    
-    Query params:
-        page: int (default 1)
-        page_size: int (default 20, max 100)
-        search: str (optional, search by username/email/nickname)
+    ---
+    tags:
+      - List
+    summary: "List all users (admin only)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: int
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: int
+        required: false
+        description: "Page Size"
+      - name: search
+        in: query
+        type: str
+        required: false
+        description: "Search"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         page = request.args.get('page', 1, type=int)
@@ -72,7 +112,44 @@ def list_users():
 @login_required
 @admin_required
 def export_users():
-    """Export all users as an Excel-friendly CSV file (admin only)."""
+    """
+    ---
+    tags:
+      - Export
+    summary: "Export all users as an Excel-friendly CSV file (admin only)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: search
+        in: query
+        type: str
+        required: false
+        description: "Search"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         search = request.args.get('search', '', type=str)
         users = get_user_service().list_all_users_for_export(search=search)
@@ -120,7 +197,44 @@ def export_users():
 @login_required
 @admin_required
 def get_user_detail():
-    """Get user detail by ID (admin only)"""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get user detail by ID (admin only)"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = request.args.get('id', type=int)
         if not user_id:
@@ -145,14 +259,38 @@ def get_user_detail():
 @admin_required
 def create_user():
     """
-    Create a new user (admin only).
-    
-    Request body:
-        username: str (required)
-        password: str (required)
-        email: str (optional)
-        nickname: str (optional)
-        role: str (optional, default 'user')
+    ---
+    tags:
+      - General
+    summary: "Create a new user (admin only)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -176,16 +314,44 @@ def create_user():
 @admin_required
 def update_user():
     """
-    Update user information (admin only).
-    
-    Query params:
-        id: int (required)
-    
-    Request body:
-        email: str (optional)
-        nickname: str (optional)
-        role: str (optional)
-        status: str (optional)
+    ---
+    tags:
+      - General
+    summary: "Update user information (admin only)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = request.args.get('id', type=int)
@@ -209,7 +375,44 @@ def update_user():
 @login_required
 @admin_required
 def delete_user():
-    """Delete a user (admin only)"""
+    """
+    ---
+    tags:
+      - General
+    summary: "Delete a user (admin only)"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: query
+        type: int
+        required: false
+        description: "Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = request.args.get('id', type=int)
         if not user_id:
@@ -235,11 +438,48 @@ def delete_user():
 @admin_required
 def reset_user_password():
     """
-    Reset a user's password (admin only).
-    
-    Request body:
-        user_id: int (required)
-        new_password: str (required)
+    ---
+    tags:
+      - Reset
+    summary: "Reset a user's password (admin only)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            user_id:
+              type: string
+            new_password:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         data = request.get_json() or {}
@@ -269,7 +509,38 @@ def reset_user_password():
 @login_required
 @admin_required
 def get_roles():
-    """Get available roles and their permissions"""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get available roles and their permissions"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     service = get_user_service()
     
     roles = []
@@ -294,12 +565,50 @@ def get_roles():
 @admin_required
 def set_user_credits():
     """
-    Set user credits (admin only).
-    
-    Request body:
-        user_id: int (required)
-        credits: int (required)
-        remark: str (optional)
+    ---
+    tags:
+      - Set
+    summary: "Set user credits (admin only)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            user_id:
+              type: string
+            credits:
+              type: string
+            remark:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from app.services.billing_service import get_billing_service
@@ -332,13 +641,52 @@ def set_user_credits():
 @admin_required
 def set_user_vip():
     """
-    Set user VIP status (admin only).
-    
-    Request body:
-        user_id: int (required)
-        vip_days: int (optional, 0 to cancel VIP, positive number to grant VIP for days)
-        vip_expires_at: str (optional, ISO format datetime, overrides vip_days if provided)
-        remark: str (optional)
+    ---
+    tags:
+      - Set
+    summary: "Set user VIP status (admin only)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            user_id:
+              type: string
+            vip_days:
+              type: string
+            vip_expires_at:
+              type: string
+            remark:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from datetime import datetime, timedelta, timezone
@@ -389,12 +737,52 @@ def set_user_vip():
 @admin_required
 def get_user_credits_log():
     """
-    Get user credits log (admin only).
-    
-    Query params:
-        user_id: int (required)
-        page: int (default 1)
-        page_size: int (default 20)
+    ---
+    tags:
+      - General
+    summary: "Get user credits log (admin only)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: user_id
+        in: query
+        type: int
+        required: false
+        description: "User Id"
+      - name: page
+        in: query
+        type: int
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: int
+        required: false
+        description: "Page Size"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from app.services.billing_service import get_billing_service
@@ -420,7 +808,36 @@ def get_user_credits_log():
 @user_bp.route('/profile', methods=['GET'])
 @login_required
 def get_profile():
-    """Get current user's profile with billing info and notification settings"""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get current user's profile with billing info and notification settings"
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         import json
         from app.services.billing_service import get_billing_service
@@ -476,15 +893,44 @@ def get_profile():
 @login_required
 def update_profile():
     """
-    Update current user's profile (limited fields).
-    
-    Request body:
-        nickname: str (optional)
-        avatar: str (optional)
-        timezone: str (optional, IANA id; empty = follow client)
-    
-    Note: Email cannot be changed after registration (for security).
-          Only admin can change user email via User Management.
+    ---
+    tags:
+      - General
+    summary: "Update current user's profile (limited fields)."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            timezone:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = getattr(g, 'user_id', None)
@@ -528,11 +974,45 @@ def update_profile():
 @login_required
 def get_my_credits_log():
     """
-    Get current user's credits log.
-    
-    Query params:
-        page: int (default 1)
-        page_size: int (default 20)
+    ---
+    tags:
+      - General
+    summary: "Get current user's credits log."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: int
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: int
+        required: false
+        description: "Page Size"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         from app.services.billing_service import get_billing_service
@@ -557,18 +1037,45 @@ def get_my_credits_log():
 @login_required
 def get_my_referrals():
     """
-    Get list of users referred by current user.
-    
-    Query params:
-        page: int (default 1)
-        page_size: int (default 20)
-    
-    Returns:
-        list: Users referred by current user (id, username, nickname, avatar, created_at)
-        total: Total count of referrals
-        referral_code: Current user's referral code (user ID)
-        referral_bonus: Credits earned per referral
-        register_bonus: Credits new users get on registration
+    ---
+    tags:
+      - General
+    summary: "Get list of users referred by current user."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: int
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: int
+        required: false
+        description: "Page Size"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         import os
@@ -639,15 +1146,34 @@ def get_my_referrals():
 @login_required
 def get_notification_settings():
     """
-    Get current user's notification settings.
-    
-    Returns:
-        notification_settings: {
-            default_channels: ['browser', 'telegram', ...],
-            telegram_chat_id: str,
-            email: str (optional, override for notifications),
-            discord_webhook: str (optional)
-        }
+    ---
+    tags:
+      - General
+    summary: "Get current user's notification settings."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         import json
@@ -695,14 +1221,58 @@ def get_notification_settings():
 @login_required
 def update_notification_settings():
     """
-    Update current user's notification settings.
-    
-    Request body:
-        default_channels: list of str (optional, e.g. ['browser', 'telegram'])
-        telegram_bot_token: str (optional, user's own Telegram bot token)
-        telegram_chat_id: str (optional)
-        email: str (optional, for notification override)
-        discord_webhook: str (optional)
+    ---
+    tags:
+      - General
+    summary: "Update current user's notification settings."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            default_channels:
+              type: string
+            telegram_bot_token:
+              type: string
+            telegram_chat_id:
+              type: string
+            email:
+              type: string
+            discord_webhook:
+              type: string
+            webhook_url:
+              type: string
+            webhook_token:
+              type: string
+            phone:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         import json
@@ -762,7 +1332,36 @@ def update_notification_settings():
 @user_bp.route('/chart-templates', methods=['GET'])
 @login_required
 def get_chart_templates():
-    """Get current user's indicator chart templates."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Get current user's indicator chart templates."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = getattr(g, 'user_id', None)
         if not user_id:
@@ -799,7 +1398,50 @@ def get_chart_templates():
 @user_bp.route('/chart-templates', methods=['POST'])
 @login_required
 def save_chart_template():
-    """Create or update a user's indicator chart template."""
+    """
+    ---
+    tags:
+      - Save
+    summary: "Create or update a user's indicator chart template."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+            template_id:
+              type: string
+            indicators:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = getattr(g, 'user_id', None)
         if not user_id:
@@ -902,7 +1544,42 @@ def save_chart_template():
 @user_bp.route('/chart-templates', methods=['DELETE'])
 @login_required
 def delete_chart_template():
-    """Delete a user's chart template by id."""
+    """
+    ---
+    tags:
+      - General
+    summary: "Delete a user's chart template by id."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: template_id
+        in: query
+        type: string
+        required: false
+        description: "Template Id"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
+    """
     try:
         user_id = getattr(g, 'user_id', None)
         if not user_id:
@@ -948,8 +1625,36 @@ def delete_chart_template():
 @login_required
 def test_notification_settings():
     """
-    Send a test notification using the current user's saved notification_settings
-    (save settings first via PUT /notification-settings).
+    ---
+    tags:
+      - Test
+    summary: "Send a test notification using the current user's saved notification_settings"
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         import json
@@ -1027,11 +1732,46 @@ def test_notification_settings():
 @login_required
 def change_password():
     """
-    Change current user's password.
-    
-    Request body:
-        old_password: str (required)
-        new_password: str (required)
+    ---
+    tags:
+      - Change
+    summary: "Change current user's password."
+    produces:
+      - application/json
+    consumes:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        schema:
+          type: object
+          properties:
+            old_password:
+              type: string
+            new_password:
+              type: string
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         user_id = getattr(g, 'user_id', None)
@@ -1118,17 +1858,72 @@ def _safe_json_loads(s, default=None):
 @admin_required
 def get_system_strategies():
     """
-    Get all strategies across the entire system (admin only).
-    Returns strategy details with user info, positions, PnL, indicators, etc.
-
-    Query params:
-        page: int (default 1)
-        page_size: int (default 20, max 100)
-        status: str (optional, filter by status: running/stopped/all)
-        execution_mode: str (optional, live/signal — omit or all for any)
-        search: str (optional, search by strategy name/symbol/username)
-        sort_by: str (optional, whitelist; default status+updated_at)
-        sort_order: str (optional, asc or desc; default desc when sort_by set)
+    ---
+    tags:
+      - General
+    summary: "Get all strategies across the entire system (admin only)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: int
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: int
+        required: false
+        description: "Page Size"
+      - name: status
+        in: query
+        type: str
+        required: false
+        description: "Status"
+      - name: execution_mode
+        in: query
+        type: str
+        required: false
+        description: "Execution Mode"
+      - name: search
+        in: query
+        type: str
+        required: false
+        description: "Search"
+      - name: sort_by
+        in: query
+        type: str
+        required: false
+        description: "Sort By"
+      - name: sort_order
+        in: query
+        type: str
+        required: false
+        description: "Sort Order"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         page = request.args.get('page', 1, type=int)
@@ -1480,14 +2275,57 @@ def get_system_strategies():
 @admin_required
 def get_admin_orders():
     """
-    Get all orders across the system (admin only).
-    Merges qd_membership_orders and qd_usdt_orders into a unified list.
-
-    Query params:
-        page: int (default 1)
-        page_size: int (default 20, max 100)
-        status: str (optional, filter by status: paid/pending/confirmed/expired/all)
-        search: str (optional, search by username/email)
+    ---
+    tags:
+      - General
+    summary: "Get all orders across the system (admin only)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: int
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: int
+        required: false
+        description: "Page Size"
+      - name: status
+        in: query
+        type: str
+        required: false
+        description: "Status"
+      - name: search
+        in: query
+        type: str
+        required: false
+        description: "Search"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         page = request.args.get('page', 1, type=int)
@@ -1686,13 +2524,52 @@ def get_admin_orders():
 @admin_required
 def get_admin_ai_stats():
     """
-    Get AI analysis usage statistics across the system (admin only).
-    Does NOT expose analysis results, only aggregated counts/stats.
-
-    Query params:
-        page: int (default 1)
-        page_size: int (default 20, max 100)
-        search: str (optional, search by username)
+    ---
+    tags:
+      - General
+    summary: "Get AI analysis usage statistics across the system (admin only)."
+    produces:
+      - application/json
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: page
+        in: query
+        type: int
+        required: false
+        description: "Page"
+      - name: page_size
+        in: query
+        type: int
+        required: false
+        description: "Page Size"
+      - name: search
+        in: query
+        type: str
+        required: false
+        description: "Search"
+    responses:
+      200:
+        description: Success
+        schema:
+          type: object
+          properties:
+            code:
+              type: integer
+              example: 1
+            msg:
+              type: string
+              example: success
+            data:
+              type: object
+      401:
+        description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
+      400:
+        description: Bad Request
+      500:
+        description: Internal Server Error
     """
     try:
         page = request.args.get('page', 1, type=int)
