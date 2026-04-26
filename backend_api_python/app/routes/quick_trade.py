@@ -22,7 +22,9 @@ from typing import Any, Dict
 
 from flask import Blueprint, g, jsonify, request
 
-from app.utils.db import get_db_connection
+from sqlalchemy import text
+
+from app.database.session import get_session
 from app.utils.logger import get_logger
 from app.utils.auth import login_required
 from app.utils.credential_crypto import decrypt_credential_blob
@@ -258,14 +260,12 @@ def _safe_json(v, default=None):
 
 def _load_credential(credential_id: int, user_id: int) -> Dict[str, Any]:
     """Load exchange credential JSON for the given user."""
-    with get_db_connection() as db:
-        cur = db.cursor()
-        cur.execute(
-            "SELECT encrypted_config FROM qd_exchange_credentials WHERE id = %s AND user_id = %s",
-            (int(credential_id), int(user_id)),
+    with get_session() as session:
+        result = session.execute(
+            text("SELECT encrypted_config FROM trade_exchange_credentials WHERE id = :cid AND user_id = :uid"),
+            {"cid": int(credential_id), "uid": int(user_id)},
         )
-        row = cur.fetchone() or {}
-        cur.close()
+        row = result.mappings().fetchone() or {}
     try:
         plain = decrypt_credential_blob(row.get("encrypted_config"))
     except ValueError as e:
@@ -315,28 +315,43 @@ def _record_quick_trade(
 ):
     """Insert a quick trade record into the database."""
     try:
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                """
-                INSERT INTO qd_quick_trades
-                    (user_id, credential_id, exchange_id, symbol, side, order_type,
-                     amount, price, leverage, market_type, tp_price, sl_price,
-                     status, exchange_order_id, filled_amount, avg_fill_price,
-                     error_msg, source, raw_result, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                RETURNING id
-                """,
-                (
-                    user_id, credential_id, exchange_id, symbol, side, order_type,
-                    amount, price, leverage, market_type, tp_price, sl_price,
-                    status, exchange_order_id, filled, avg_price,
-                    error_msg, source, json.dumps(raw_result or {}),
-                ),
+        with get_session() as session:
+            result = session.execute(
+                text("""
+                    INSERT INTO trade_quick_trades
+                        (user_id, credential_id, exchange_id, symbol, side, order_type,
+                         amount, price, leverage, market_type, tp_price, sl_price,
+                         status, exchange_order_id, filled_amount, avg_fill_price,
+                         error_msg, source, raw_result, created_at)
+                    VALUES (:user_id, :credential_id, :exchange_id, :symbol, :side, :order_type,
+                            :amount, :price, :leverage, :market_type, :tp_price, :sl_price,
+                            :status, :exchange_order_id, :filled, :avg_price,
+                            :error_msg, :source, :raw_result, NOW())
+                    RETURNING id
+                """),
+                {
+                    "user_id": user_id,
+                    "credential_id": credential_id,
+                    "exchange_id": exchange_id,
+                    "symbol": symbol,
+                    "side": side,
+                    "order_type": order_type,
+                    "amount": amount,
+                    "price": price,
+                    "leverage": leverage,
+                    "market_type": market_type,
+                    "tp_price": tp_price,
+                    "sl_price": sl_price,
+                    "status": status,
+                    "exchange_order_id": exchange_order_id,
+                    "filled": filled,
+                    "avg_price": avg_price,
+                    "error_msg": error_msg,
+                    "source": source,
+                    "raw_result": json.dumps(raw_result or {}),
+                },
             )
-            row = cur.fetchone()
-            db.commit()
-            cur.close()
+            row = result.mappings().fetchone()
             return (row or {}).get("id")
     except Exception as e:
         logger.error(f"Failed to record quick trade: {e}")
@@ -351,8 +366,9 @@ def place_order():
     """
     ---
     tags:
-      - Place
-    summary: "Place a quick market or limit order."
+      - Trading/Quick Trade
+    summary: "Place quick order"
+    description: "Place a market or limit order directly without creating a strategy first."
     produces:
       - application/json
     consumes:
@@ -665,8 +681,9 @@ def get_balance():
     """
     ---
     tags:
-      - General
-    summary: "Get available balance from exchange."
+      - Trading/Quick Trade
+    summary: "Get exchange balance"
+    description: "Retrieve available balance from the connected exchange."
     produces:
       - application/json
     security:
@@ -1107,8 +1124,9 @@ def get_position():
     """
     ---
     tags:
-      - General
+      - Trading/Quick Trade
     summary: "Get current position for a symbol from exchange."
+    description: "Retrieve the current open position for a trading symbol from the connected exchange."
     produces:
       - application/json
     security:
@@ -1116,22 +1134,23 @@ def get_position():
     parameters:
       - name: credential_id
         in: query
-        type: int
-        required: false
-        description: "Credential Id"
+        type: integer
+        required: true
+        description: "Exchange credential ID"
       - name: symbol
         in: query
         type: string
-        required: false
-        description: "Symbol"
+        required: true
+        description: "Trading symbol (e.g. ETH/USDT)"
       - name: market_type
         in: query
         type: string
         required: false
-        description: "Market Type"
+        default: swap
+        description: "Market type (spot or swap)"
     responses:
       200:
-        description: Success
+        description: Success - returns position data
         schema:
           type: object
           properties:
@@ -1143,6 +1162,11 @@ def get_position():
               example: success
             data:
               type: object
+              properties:
+                positions:
+                  type: array
+                  items:
+                    type: object
       401:
         description: Unauthorized - Invalid or missing token
       400:
@@ -1327,21 +1351,19 @@ def _quick_trade_net_base_qty(
     mt = (market_type or "swap").strip().lower()
     ps = (position_side or "").strip().lower()
     sym = str(symbol or "").strip()
-    with get_db_connection() as db:
-        cur = db.cursor()
-        cur.execute(
-            """
-            SELECT
-              COALESCE(SUM(CASE WHEN side = 'buy' THEN filled_amount ELSE 0 END), 0) AS b,
-              COALESCE(SUM(CASE WHEN side = 'sell' THEN filled_amount ELSE 0 END), 0) AS s
-            FROM qd_quick_trades
-            WHERE user_id = %s AND credential_id = %s AND symbol = %s AND market_type = %s
-              AND status = 'filled' AND COALESCE(filled_amount, 0) > 0
-            """,
-            (int(user_id), int(credential_id), sym, mt),
+    with get_session() as session:
+        result = session.execute(
+            text("""
+                SELECT
+                  COALESCE(SUM(CASE WHEN side = 'buy' THEN filled_amount ELSE 0 END), 0) AS b,
+                  COALESCE(SUM(CASE WHEN side = 'sell' THEN filled_amount ELSE 0 END), 0) AS s
+                FROM trade_quick_trades
+                WHERE user_id = :user_id AND credential_id = :credential_id AND symbol = :symbol AND market_type = :market_type
+                  AND status = 'filled' AND COALESCE(filled_amount, 0) > 0
+            """),
+            {"user_id": int(user_id), "credential_id": int(credential_id), "symbol": sym, "market_type": mt},
         )
-        row = cur.fetchone() or {}
-        cur.close()
+        row = result.mappings().fetchone() or {}
     buy_sum = float(row.get("b") or 0)
     sell_sum = float(row.get("s") or 0)
     if ps == "long":
@@ -1359,17 +1381,52 @@ def close_position():
     """
     ---
     tags:
-      - Close
+      - Trading/Quick Trade
     summary: "Close an existing position."
+    description: "Close an open position for a given symbol via market order. Supports full close, partial close, and system-tracked close scopes."
     produces:
       - application/json
     consumes:
       - application/json
     security:
       - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - credential_id
+            - symbol
+          properties:
+            credential_id:
+              type: integer
+              description: "Exchange credential ID"
+            symbol:
+              type: string
+              description: "Trading symbol to close (e.g. ETH/USDT)"
+            market_type:
+              type: string
+              default: swap
+              description: "Market type (spot or swap)"
+            size:
+              type: number
+              description: "Close size in base asset (0 = close full position)"
+            position_side:
+              type: string
+              description: "Position side to close (long or short)"
+            close_scope:
+              type: string
+              default: full
+              description: "Close scope - full or system_tracked"
+            source:
+              type: string
+              default: manual
+              description: "Source identifier"
     responses:
       200:
-        description: Success
+        description: Success - position closed
         schema:
           type: object
           properties:
@@ -1378,13 +1435,32 @@ def close_position():
               example: 1
             msg:
               type: string
-              example: success
+              example: Position closed successfully
             data:
               type: object
+              properties:
+                trade_id:
+                  type: integer
+                exchange_order_id:
+                  type: string
+                filled:
+                  type: number
+                avg_price:
+                  type: number
+                closed_size:
+                  type: number
+                position_side:
+                  type: string
+                close_scope:
+                  type: string
+                status:
+                  type: string
       401:
         description: Unauthorized - Invalid or missing token
       400:
         description: Bad Request
+      404:
+        description: Position not found
       500:
         description: Internal Server Error
     """
@@ -1616,8 +1692,9 @@ def get_history():
     """
     ---
     tags:
-      - General
-    summary: "Get quick trade history for the current user."
+      - Trading/Quick Trade
+    summary: "Get quick trade history"
+    description: "Retrieve the current user's quick trade execution history with pagination."
     produces:
       - application/json
     security:
@@ -1625,17 +1702,19 @@ def get_history():
     parameters:
       - name: limit
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Limit"
+        default: 50
+        description: "Max number of records to return (max 200)"
       - name: offset
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Offset"
+        default: 0
+        description: "Number of records to skip"
     responses:
       200:
-        description: Success
+        description: Success - returns trade history
         schema:
           type: object
           properties:
@@ -1647,10 +1726,13 @@ def get_history():
               example: success
             data:
               type: object
+              properties:
+                trades:
+                  type: array
+                  items:
+                    type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -1659,23 +1741,21 @@ def get_history():
         limit = min(int(request.args.get("limit") or 50), 200)
         offset = int(request.args.get("offset") or 0)
 
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                """
-                SELECT id, exchange_id, symbol, side, order_type, amount, price,
-                       leverage, market_type, tp_price, sl_price, status,
-                       exchange_order_id, filled_amount, avg_fill_price,
-                       error_msg, source, created_at
-                FROM qd_quick_trades
-                WHERE user_id = %s
-                ORDER BY created_at DESC
-                LIMIT %s OFFSET %s
-                """,
-                (user_id, limit, offset),
+        with get_session() as session:
+            result = session.execute(
+                text("""
+                    SELECT id, exchange_id, symbol, side, order_type, amount, price,
+                           leverage, market_type, tp_price, sl_price, status,
+                           exchange_order_id, filled_amount, avg_fill_price,
+                           error_msg, source, created_at
+                    FROM trade_quick_trades
+                    WHERE user_id = :user_id
+                    ORDER BY created_at DESC
+                    LIMIT :limit OFFSET :offset
+                """),
+                {"user_id": user_id, "limit": limit, "offset": offset},
             )
-            rows = cur.fetchall() or []
-            cur.close()
+            rows = result.mappings().fetchall() or []
 
         trades = []
         for r in rows:

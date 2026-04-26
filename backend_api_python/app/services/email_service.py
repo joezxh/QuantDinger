@@ -9,7 +9,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import Tuple, Optional
-from app.utils.db import get_db_connection
+from app.database.session import get_session
+from app.database.repositories.verification_repository import VerificationRepository
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -68,50 +69,36 @@ class EmailService:
         """Generate a random numeric verification code"""
         return ''.join(random.choices(string.digits, k=self.code_length))
     
-    def create_verification_code(self, email: str, code_type: str, 
+    def create_verification_code(self, email: str, code_type: str,
                                   ip_address: str = None) -> Tuple[bool, str]:
         """
         Create and store a new verification code.
-        
+
         Args:
             email: Email address
             code_type: Type of verification (register, reset_password, change_password, change_email)
             ip_address: Requester's IP address
-        
+
         Returns:
             (success, code_or_message)
         """
         try:
             code = self.generate_code()
             expires_at = datetime.now() + timedelta(minutes=self.code_expire_minutes)
-            
-            with get_db_connection() as db:
-                cur = db.cursor()
-                
-                # Invalidate any existing unused codes of the same type for this email
-                cur.execute(
-                    """
-                    UPDATE qd_verification_codes 
-                    SET used_at = NOW() 
-                    WHERE email = ? AND type = ? AND used_at IS NULL
-                    """,
-                    (email, code_type)
+
+            with get_session() as session:
+                repo = VerificationRepository(session)
+                repo.invalidate_old_codes(email, code_type)
+                repo.create_code(
+                    email=email,
+                    code=code,
+                    code_type=code_type,
+                    expires_at=expires_at,
+                    ip_address=ip_address,
                 )
-                
-                # Insert new code
-                cur.execute(
-                    """
-                    INSERT INTO qd_verification_codes 
-                    (email, code, type, expires_at, ip_address)
-                    VALUES (?, ?, ?, ?, ?)
-                    """,
-                    (email, code, code_type, expires_at, ip_address)
-                )
-                db.commit()
-                cur.close()
-            
+
             return True, code
-            
+
         except Exception as e:
             logger.error(f"Failed to create verification code: {e}")
             return False, 'Failed to generate verification code'
@@ -119,94 +106,51 @@ class EmailService:
     def verify_code(self, email: str, code: str, code_type: str) -> Tuple[bool, str]:
         """
         Verify a submitted code with brute-force protection.
-        
+
         Args:
             email: Email address
             code: The code to verify
             code_type: Type of verification
-        
+
         Returns:
             (valid, message)
         """
         try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                
+            with get_session() as session:
+                repo = VerificationRepository(session)
+
                 # Check if locked due to too many failed attempts
                 lock_window = datetime.now() - timedelta(minutes=self.code_lock_minutes)
-                cur.execute(
-                    """
-                    SELECT COUNT(*) as cnt FROM qd_verification_codes
-                    WHERE email = ? AND type = ?
-                    AND attempts >= ? AND last_attempt_at > ?
-                    AND used_at IS NULL
-                    """,
-                    (email, code_type, self.code_max_attempts, lock_window.isoformat())
+                locked_count = repo.count_locked(
+                    email, code_type, self.code_max_attempts, lock_window
                 )
-                lock_row = cur.fetchone()
-                if lock_row and lock_row['cnt'] > 0:
-                    cur.close()
+                if locked_count > 0:
                     return False, f'Too many failed attempts. Please try again in {self.code_lock_minutes} minutes'
-                
+
                 # Find latest unused code for this email/type
-                cur.execute(
-                    """
-                    SELECT id, code as stored_code, expires_at, attempts FROM qd_verification_codes
-                    WHERE email = ? AND type = ? AND used_at IS NULL
-                    ORDER BY created_at DESC
-                    LIMIT 1
-                    """,
-                    (email, code_type)
-                )
-                row = cur.fetchone()
-                
-                if not row:
-                    cur.close()
+                record = repo.get_latest_unused(email, code_type)
+                if not record:
                     return False, 'Invalid verification code'
-                
-                code_id = row['id']
-                stored_code = row['stored_code']
-                attempts = row['attempts'] or 0
-                
+
                 # Check if code matches
-                if stored_code != code:
-                    # Increment attempt counter
-                    new_attempts = attempts + 1
-                    cur.execute(
-                        """
-                        UPDATE qd_verification_codes 
-                        SET attempts = ?, last_attempt_at = NOW()
-                        WHERE id = ?
-                        """,
-                        (new_attempts, code_id)
-                    )
-                    db.commit()
-                    cur.close()
-                    
+                if record.code != code:
+                    new_attempts = repo.increment_attempts(record.id)
                     remaining = self.code_max_attempts - new_attempts
                     if remaining <= 0:
                         return False, f'Too many failed attempts. Please try again in {self.code_lock_minutes} minutes'
                     return False, f'Invalid verification code. {remaining} attempts remaining'
-                
+
                 # Check expiration
-                expires_at = row['expires_at']
+                expires_at = record.expires_at
                 if isinstance(expires_at, str):
                     expires_at = datetime.fromisoformat(expires_at)
-                
                 if datetime.now() > expires_at:
-                    cur.close()
                     return False, 'Verification code has expired'
-                
+
                 # Mark as used
-                cur.execute(
-                    "UPDATE qd_verification_codes SET used_at = NOW() WHERE id = ?",
-                    (code_id,)
-                )
-                db.commit()
-                cur.close()
-                
+                repo.mark_used(record.id)
                 return True, 'verified'
-                
+
         except Exception as e:
             logger.error(f"Failed to verify code: {e}")
             return False, 'Verification failed'

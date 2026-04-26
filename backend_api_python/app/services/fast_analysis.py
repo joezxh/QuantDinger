@@ -197,6 +197,20 @@ class FastAnalysisService:
         self.llm_service = LLMService()
         self.data_collector = get_market_data_collector()
         self._memory_db = None  # Lazy init
+        self._graph_builder = None  # Graph context builder (lazy init)
+    
+    def _get_graph_builder(self):
+        """Lazy load graph context builder with graceful degradation"""
+        if self._graph_builder is None:
+            try:
+                if os.getenv("GRAPHITI_ENABLED", "false").lower() == "true":
+                    from app.graph.context_builder import GraphContextBuilder
+                    self._graph_builder = GraphContextBuilder()
+                    logger.info("Graph context builder initialized")
+            except Exception as e:
+                logger.warning(f"Graph context builder init failed (non-critical): {e}")
+                self._graph_builder = False  # Mark as failed
+        return self._graph_builder if self._graph_builder else None
     
     # ==================== Data Collection Layer ====================
     
@@ -228,6 +242,7 @@ class FastAnalysisService:
             include_macro=include_macro,
             include_news=include_news,
             include_polymarket=include_polymarket,  # 包含预测市场数据
+            include_graph_context=True,
             timeout=timeout,  # 增加超时时间，确保数据收集完成
         )
     
@@ -483,7 +498,7 @@ class FastAnalysisService:
     
     # ==================== Prompt Engineering ====================
     
-    def _build_analysis_prompt(self, data: Dict[str, Any], language: str) -> tuple:
+    def _build_analysis_prompt(self, data: Dict[str, Any], language: str, graph_ctx_text: str = "") -> tuple:
         """
         Build the single, comprehensive analysis prompt.
         Key: Strong constraints to prevent absurd recommendations.
@@ -727,6 +742,9 @@ When the score is neutral (-20 to +20), you can use your judgment, but still con
 🎯 PREDICTION MARKETS ({len(polymarket_events)} related events):
 {self._format_polymarket_summary(polymarket_events)}
 
+🔗 KNOWLEDGE GRAPH ENHANCEMENT:
+{graph_ctx_text if graph_ctx_text else "暂无图谱增强数据"}
+
 💼 FUNDAMENTALS / MARKET STRUCTURE:
 - Company: {company.get('name', data['symbol'])}
 - Industry: {company.get('industry', 'N/A')}
@@ -921,8 +939,9 @@ IMPORTANT:
     
     # ==================== Main Analysis ====================
     
-    def analyze(self, market: str, symbol: str, language: str = 'en-US', 
-                model: str = None, timeframe: str = "1D", user_id: int = None) -> Dict[str, Any]:
+    def analyze(self, market: str, symbol: str, language: str = 'en-US',
+                model: str = None, timeframe: str = "1D", user_id: int = None,
+                use_dify: bool = False, workflow_code: str = None) -> Dict[str, Any]:
         """
         Run fast single-call analysis.
         
@@ -1190,7 +1209,18 @@ IMPORTANT:
                 return result
             
             # Phase 2: Build prompt
-            system_prompt, user_prompt = self._build_analysis_prompt(data, language)
+            # Inject graph context (knowledge graph enhancement)
+            from app.services.fast_analysis_graph_patch import build_graph_enhanced_prompt_state
+
+            data, graph_ctx, graph_ctx_text = build_graph_enhanced_prompt_state(
+                data,
+                market,
+                symbol,
+                self._get_graph_builder(),
+                logger,
+            )
+
+            system_prompt, user_prompt = self._build_analysis_prompt(data, language, graph_ctx_text=graph_ctx_text)
 
             default_struct = {
                 "decision": "HOLD",
@@ -1208,37 +1238,94 @@ IMPORTANT:
                 "sentiment_score": 50,
             }
 
-            # Phase 3: LLM call(s) - single or ensemble voting
-            logger.info("Calling LLM for analysis...")
-            llm_start = time.time()
-            ensemble_models = []
-            if os.getenv("ENABLE_AI_ENSEMBLE", "false").lower() == "true":
-                env_models = (os.getenv("AI_ENSEMBLE_MODELS") or "").strip()
-                if env_models:
-                    ensemble_models = [m.strip() for m in env_models.split(",") if m.strip()]
+            # ------------------------------------------------------------------
+            # Phase 2.5: Optional Dify workflow analysis
+            # ------------------------------------------------------------------
+            analysis: Dict[str, Any] | None = None
+            llm_time = 0
+            if use_dify and workflow_code:
+                try:
+                    logger.info(f"Using Dify workflow '{workflow_code}' for analysis")
+                    import asyncio
+                    from app.services.dify.workflow_executor import DifyWorkflowExecutor
 
-            if len(ensemble_models) >= 2:
-                analyses_list = []
-                for em in ensemble_models[:3]:
-                    a = self.llm_service.safe_call_llm(
-                        system_prompt, user_prompt, default_structure=default_struct, model=em
+                    dify_executor = DifyWorkflowExecutor()
+                    dify_inputs = {
+                        "market": market,
+                        "symbol": symbol,
+                        "language": language,
+                        "current_price": current_price,
+                        "system_prompt": system_prompt,
+                        "user_prompt": user_prompt,
+                    }
+                    dify_raw = asyncio.run(
+                        dify_executor.run_batch(workflow_code, dify_inputs, user_id or 0)
                     )
-                    analyses_list.append(a)
-                decisions = [str(a.get("decision", "HOLD") or "HOLD").upper() for a in analyses_list]
-                from collections import Counter
-                vote = Counter(decisions).most_common(1)[0][0]
-                idx = decisions.index(vote)
-                analysis = analyses_list[idx].copy()
-                analysis["decision"] = vote
-                analysis["_ensemble_vote"] = dict(Counter(decisions))
-                analysis["_ensemble_models"] = ensemble_models[:3]
-            else:
-                analysis = self.llm_service.safe_call_llm(
-                    system_prompt, user_prompt, default_structure=default_struct, model=model
-                )
+                    analysis = self._parse_dify_analysis_result(
+                        dify_raw,
+                        default_struct={
+                            "decision": "HOLD",
+                            "confidence": 50,
+                            "summary": "Dify analysis",
+                            "entry_price": current_price,
+                            "stop_loss": current_price * 0.95,
+                            "take_profit": current_price * 1.05,
+                            "position_size_pct": 10,
+                            "timeframe": "medium",
+                            "key_reasons": ["Dify workflow analysis"],
+                            "risks": [],
+                            "technical_score": 50,
+                            "fundamental_score": 50,
+                            "sentiment_score": 50,
+                        },
+                    )
+                    if analysis and not analysis.get("error"):
+                        logger.info("Dify workflow analysis succeeded")
+                        llm_time = 0
+                    else:
+                        logger.warning("Dify workflow returned empty/invalid result, falling back to direct LLM")
+                        analysis = None
+                except Exception as e:
+                    logger.warning(f"Dify workflow analysis failed: {e}, falling back to direct LLM")
+                    analysis = None
 
-            llm_time = int((time.time() - llm_start) * 1000)
-            logger.info(f"LLM call completed in {llm_time}ms")
+            # ------------------------------------------------------------------
+            # Phase 3: LLM call(s) - single or ensemble voting
+            # ------------------------------------------------------------------
+            if analysis is None:
+                logger.info("Calling LLM for analysis...")
+                llm_start = time.time()
+                ensemble_models = []
+                if os.getenv("ENABLE_AI_ENSEMBLE", "false").lower() == "true":
+                    env_models = (os.getenv("AI_ENSEMBLE_MODELS") or "").strip()
+                    if env_models:
+                        ensemble_models = [m.strip() for m in env_models.split(",") if m.strip()]
+
+                if len(ensemble_models) >= 2:
+                    analyses_list = []
+                    for em in ensemble_models[:3]:
+                        a = self.llm_service.safe_call_llm(
+                            system_prompt, user_prompt, default_structure=default_struct, model=em
+                        )
+                        analyses_list.append(a)
+                    decisions = [str(a.get("decision", "HOLD") or "HOLD").upper() for a in analyses_list]
+                    from collections import Counter
+                    vote = Counter(decisions).most_common(1)[0][0]
+                    idx = decisions.index(vote)
+                    analysis = analyses_list[idx].copy()
+                    analysis["decision"] = vote
+                    analysis["_ensemble_vote"] = dict(Counter(decisions))
+                    analysis["_ensemble_models"] = ensemble_models[:3]
+                else:
+                    analysis = self.llm_service.safe_call_llm(
+                        system_prompt, user_prompt, default_structure=default_struct, model=model
+                    )
+
+                llm_time = int((time.time() - llm_start) * 1000)
+                logger.info(f"LLM call completed in {llm_time}ms")
+            else:
+                # Dify already provided analysis; skip direct LLM
+                pass
             
             # Phase 4: Objective score (primary tf) + consensus calibration
             objective_score = self._calculate_objective_score(data, current_price)
@@ -1488,7 +1575,114 @@ IMPORTANT:
             result["error"] = str(e)
         
         return result
-    
+
+    # ------------------------------------------------------------------
+    # Dify result parsing
+    # ------------------------------------------------------------------
+
+    def _parse_dify_analysis_result(
+        self,
+        dify_raw: Dict[str, Any],
+        default_struct: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Parse Dify workflow output into the standard analysis dict.
+
+        Dify responses vary by workflow type.  We try several common
+        shapes and fall back to ``default_struct`` if nothing matches.
+        """
+        if not dify_raw or not isinstance(dify_raw, dict):
+            return {**default_struct, "error": "Empty Dify response"}
+
+        # Shape 1: Dify chat/workflow blocking mode — answer is a JSON string
+        answer = dify_raw.get("answer") or ""
+        if not answer:
+            # Shape 2: workflow completion — outputs nested under data
+            outputs = (
+                dify_raw.get("data", {}).get("outputs")
+                or dify_raw.get("outputs")
+                or {}
+            )
+            if outputs:
+                answer = outputs.get("answer") or outputs.get("result") or ""
+
+        if answer and isinstance(answer, str):
+            # Try to extract JSON from markdown code blocks
+            cleaned = answer.strip()
+            if cleaned.startswith("```"):
+                # Remove markdown fences
+                lines = cleaned.splitlines()
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                cleaned = "\n".join(lines).strip()
+            try:
+                parsed = json.loads(cleaned)
+                if isinstance(parsed, dict):
+                    return self._merge_dify_parsed(parsed, default_struct)
+            except json.JSONDecodeError:
+                # Not valid JSON — treat as summary text
+                return {
+                    **default_struct,
+                    "summary": cleaned[:500],
+                }
+
+        # Shape 3: already a dict (some Dify responses return raw dict)
+        if isinstance(dify_raw, dict) and "decision" in dify_raw:
+            return self._merge_dify_parsed(dify_raw, default_struct)
+
+        return {**default_struct, "error": "Unrecognised Dify response shape"}
+
+    def _merge_dify_parsed(
+        self,
+        parsed: Dict[str, Any],
+        default_struct: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Merge a parsed Dify dict into the standard analysis shape."""
+        result = dict(default_struct)
+
+        # Direct field mappings
+        for key in [
+            "decision",
+            "confidence",
+            "summary",
+            "entry_price",
+            "stop_loss",
+            "take_profit",
+            "position_size_pct",
+            "timeframe",
+            "technical_score",
+            "fundamental_score",
+            "sentiment_score",
+        ]:
+            if key in parsed and parsed[key] is not None:
+                result[key] = parsed[key]
+
+        # Nested reasons / risks
+        if "key_reasons" in parsed:
+            result["key_reasons"] = parsed["key_reasons"]
+        elif "reasons" in parsed:
+            result["key_reasons"] = parsed["reasons"]
+
+        if "risks" in parsed:
+            result["risks"] = parsed["risks"]
+
+        # Nested analysis sections
+        if "analysis" in parsed and isinstance(parsed["analysis"], dict):
+            result["analysis"] = parsed["analysis"]
+
+        # Normalise decision to uppercase
+        if result.get("decision"):
+            result["decision"] = str(result["decision"]).upper()
+
+        # Ensure numeric fields are within sane bounds
+        try:
+            result["confidence"] = max(0, min(100, int(result.get("confidence", 50) or 50)))
+        except Exception:
+            result["confidence"] = 50
+
+        return result
+
     def _build_decision_guidance(self, rsi_value: float, macd_signal: str, ma_trend: str, change_24h: float) -> str:
         """
         根据技术指标构建决策指导，帮助AI做出更合理的决策。
@@ -2635,7 +2829,9 @@ IMPORTANT:
             Task ID or None if failed
         """
         try:
-            from app.utils.db import get_db_connection
+            from app.database.session import get_session
+            from app.database.repositories.analysis_task_repository import AnalysisTaskRepository
+            from datetime import datetime, timezone
             
             market = result.get("market", "")
             symbol = result.get("symbol", "")
@@ -2654,32 +2850,22 @@ IMPORTANT:
                 logger.warning(f"Cannot save analysis task: missing market or symbol")
                 return None
             
-            with get_db_connection() as db:
-                cur = db.cursor()
-                # PostgreSQL: Use RETURNING to get the inserted ID
-                cur.execute(
-                    """
-                    INSERT INTO qd_analysis_tasks
-                    (user_id, market, symbol, model, language, status, result_json, error_message, created_at, completed_at)
-                    VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-                    RETURNING id
-                    """,
-                    (
-                        int(user_id) if user_id else 1,  # Default to user 1 if not provided
-                        str(market),
-                        str(symbol),
-                        str(model) if model else '',
-                        str(language),
-                        str(status),
-                        str(result_json),
-                        str(error_message) if error_message else ''
-                    )
+            with get_session() as session:
+                repo = AnalysisTaskRepository(session)
+                now = datetime.now(timezone.utc)
+                task = repo.create_task(
+                    user_id=int(user_id) if user_id else 1,
+                    market=str(market),
+                    symbol=str(symbol),
+                    model=str(model) if model else '',
+                    language=str(language),
+                    status=str(status),
+                    result_json=str(result_json),
+                    error_message=str(error_message) if error_message else '',
+                    created_at=now,
+                    completed_at=now,
                 )
-                row = cur.fetchone()
-                task_id = row['id'] if row else None
-                db.commit()
-                cur.close()
+                task_id = task.id if task else None
                 
                 if task_id:
                     logger.debug(f"Saved analysis task {task_id} for user {user_id}: {market}:{symbol}")

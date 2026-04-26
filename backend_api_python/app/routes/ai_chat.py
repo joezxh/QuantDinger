@@ -17,8 +17,9 @@ def chat_message():
     """
     ---
     tags:
-      - Chat
-    summary: "Minimal placeholder for legacy chat."
+      - AI/Chat
+    summary: "Send chat message"
+    description: "Minimal placeholder for legacy chat compatibility."
     produces:
       - application/json
     consumes:
@@ -69,8 +70,9 @@ def get_chat_history():
     """
     ---
     tags:
-      - General
-    summary: "Return empty history (compatibility stub)."
+      - AI/Chat
+    summary: "Get chat history"
+    description: "Return empty chat history (compatibility stub)."
     produces:
       - application/json
     responses:
@@ -100,8 +102,9 @@ def save_chat_history():
     """
     ---
     tags:
-      - Save
-    summary: "No-op save (compatibility stub)."
+      - AI/Chat
+    summary: "Save chat history"
+    description: "No-op save for chat history (compatibility stub)."
     produces:
       - application/json
     consumes:

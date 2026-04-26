@@ -20,7 +20,8 @@ import pandas as pd
 import numpy as np
 
 from app.utils.logger import get_logger
-from app.utils.db import get_db_connection
+from app.database.session import get_session
+from app.database.repositories.strategy_repository import StrategyRepository
 from app.utils.strategy_runtime_logs import append_strategy_log
 from app.data_sources import DataSourceFactory
 from app.services.kline import KlineService
@@ -69,34 +70,10 @@ class TradingExecutor:
     def _ensure_db_columns(self):
         """确保必要的数据库字段存在（PostgreSQL）"""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                col_names = set()
-
-                # PostgreSQL: 使用 information_schema 查询列
-                try:
-                    cursor.execute("""
-                        SELECT column_name FROM information_schema.columns 
-                        WHERE table_name = 'qd_strategy_positions'
-                    """)
-                    cols = cursor.fetchall() or []
-                    col_names = {c.get('column_name') or c.get('COLUMN_NAME') for c in cols if isinstance(c, dict)}
-                except Exception:
-                    col_names = set()
-
-                if 'highest_price' not in col_names:
-                    logger.info("Adding highest_price column to qd_strategy_positions...")
-                    cursor.execute("ALTER TABLE qd_strategy_positions ADD COLUMN IF NOT EXISTS highest_price DOUBLE PRECISION DEFAULT 0")
-                    db.commit()
-                    logger.info("highest_price column added")
-
-                if 'lowest_price' not in col_names:
-                    logger.info("Adding lowest_price column to qd_strategy_positions...")
-                    cursor.execute("ALTER TABLE qd_strategy_positions ADD COLUMN IF NOT EXISTS lowest_price DOUBLE PRECISION DEFAULT 0")
-                    db.commit()
-                    logger.info("lowest_price column added")
-
-                cursor.close()
+            # Columns highest_price and lowest_price are defined in the model;
+                # runtime schema checks are delegated to Alembic migrations.
+                # Skipping dynamic ALTER TABLE for production safety.
+                pass
         except Exception as e:
             logger.error(f"Failed to check/ensure DB columns: {str(e)}")
 
@@ -460,14 +437,9 @@ class TradingExecutor:
                     return False
                 
                 # 标记策略为停止状态
-                with get_db_connection() as db:
-                    cursor = db.cursor()
-                    cursor.execute(
-                        "UPDATE qd_strategies_trading SET status = 'stopped' WHERE id = %s",
-                        (strategy_id,)
-                    )
-                    db.commit()
-                    cursor.close()
+                with get_session() as session:
+                    repo = StrategyRepository(session)
+                    repo.set_status(strategy_id, 'stopped')
                 
                 # 从运行列表中移除（线程会在下次循环检查状态时退出）
                 del self.running_strategies[strategy_id]
@@ -572,28 +544,11 @@ class TradingExecutor:
             ts_str = ''
         state = {'last_closed_bar_ts': ts_str, 'params': safe_params}
         try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                cur.execute("SELECT trading_config FROM qd_strategies_trading WHERE id = %s", (strategy_id,))
-                row = cur.fetchone()
-                if not row:
-                    cur.close()
-                    return
-                tc = row.get('trading_config')
-                if isinstance(tc, str) and tc.strip():
-                    try:
-                        tc = json.loads(tc)
-                    except Exception:
-                        tc = {}
-                elif not isinstance(tc, dict):
-                    tc = {}
+            with get_session() as session:
+                repo = StrategyRepository(session)
+                tc = repo.get_trading_config(strategy_id) or {}
                 tc['script_runtime_state'] = state
-                cur.execute(
-                    "UPDATE qd_strategies_trading SET trading_config = %s WHERE id = %s",
-                    (json.dumps(tc, ensure_ascii=False), strategy_id),
-                )
-                db.commit()
-                cur.close()
+                repo.update_trading_config(strategy_id, tc)
         except Exception as e:
             logger.warning(f"Persist script runtime state failed: {e}")
 
@@ -1489,45 +1444,9 @@ class TradingExecutor:
     def _load_strategy(self, strategy_id: int) -> Optional[Dict[str, Any]]:
         """Load strategy config (local deployment: no encryption/decryption)."""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                query = """
-                    SELECT 
-                        id, strategy_name, strategy_type, status,
-                        initial_capital, leverage, decide_interval,
-                        execution_mode, notification_config,
-                        indicator_config, exchange_config, trading_config, ai_model_config,
-                        market_category, strategy_mode, strategy_code
-                    FROM qd_strategies_trading
-                    WHERE id = %s
-                """
-                cursor.execute(query, (strategy_id,))
-                strategy = cursor.fetchone()
-                cursor.close()
-            
-            if strategy:
-                # 解析JSON字段
-                for field in ['indicator_config', 'trading_config', 'notification_config', 'ai_model_config']:
-                    if isinstance(strategy.get(field), str):
-                        try:
-                            strategy[field] = json.loads(strategy[field])
-                        except:
-                            strategy[field] = {}
-                
-                # exchange_config: local deployment stores plaintext JSON
-                exchange_config_str = strategy.get('exchange_config', '{}')
-                if isinstance(exchange_config_str, str) and exchange_config_str:
-                    try:
-                        strategy['exchange_config'] = json.loads(exchange_config_str)
-                    except Exception as e:
-                        logger.error(f"Strategy {strategy_id} failed to parse exchange_config: {str(e)}")
-                        # 尝试直接解析 JSON（向后兼容）
-                        try:
-                            strategy['exchange_config'] = json.loads(exchange_config_str)
-                        except:
-                            strategy['exchange_config'] = {}
-                else:
-                    strategy['exchange_config'] = {}
+            with get_session() as session:
+                repo = StrategyRepository(session)
+                strategy = repo.load_strategy_config(strategy_id)
             
             return strategy
             
@@ -1542,15 +1461,9 @@ class TradingExecutor:
         """
         try:
             # 1. 检查数据库状态
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                cursor.execute(
-                    "SELECT status FROM qd_strategies_trading WHERE id = %s",
-                    (strategy_id,)
-                )
-                result = cursor.fetchone()
-                cursor.close()
-                db_status = result and result.get('status') == 'running'
+            with get_session() as session:
+                repo = StrategyRepository(session)
+                db_status = repo.get_status(strategy_id) == 'running'
             
             # 2. 检查线程是否真的在运行
             with self.lock:
@@ -1562,14 +1475,9 @@ class TradingExecutor:
                 logger.warning(f"Strategy {strategy_id} status mismatch: DB=running but thread not running. Updating DB status to stopped.")
                 # 更新数据库状态为stopped，避免策略"僵尸"状态
                 try:
-                    with get_db_connection() as db:
-                        cursor = db.cursor()
-                        cursor.execute(
-                            "UPDATE qd_strategies_trading SET status = 'stopped' WHERE id = %s",
-                            (strategy_id,)
-                        )
-                        db.commit()
-                        cursor.close()
+                    with get_session() as session:
+                        repo = StrategyRepository(session)
+                        repo.set_status(strategy_id, 'stopped')
                 except Exception as e:
                     logger.error(f"Failed to update strategy {strategy_id} status to stopped: {e}")
                 return False
@@ -2427,23 +2335,25 @@ class TradingExecutor:
     def _get_current_positions(self, strategy_id: int, symbol: str) -> List[Dict[str, Any]]:
         """获取当前持仓（支持symbol规范化匹配）"""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                query = """
-                    SELECT id, symbol, side, size, entry_price, highest_price, lowest_price
-                    FROM qd_strategy_positions
-                    WHERE strategy_id = %s
-                """
-                cursor.execute(query, (strategy_id,))
-                all_positions = cursor.fetchall()
+            from app.database.repositories.position_repository import PositionRepository
+            with get_session() as session:
+                repo = PositionRepository(session)
+                all_positions = repo.list_strategy_positions_by_strategy(strategy_id)
                 
                 matched_positions = []
                 for pos in all_positions:
                     # 简化匹配逻辑：只匹配前缀
-                    if pos['symbol'].split(':')[0] == symbol.split(':')[0]:
-                        matched_positions.append(pos)
-                
-                cursor.close()
+                    pos_symbol = pos.symbol or ''
+                    if pos_symbol.split(':')[0] == symbol.split(':')[0]:
+                        matched_positions.append({
+                            'id': pos.id,
+                            'symbol': pos.symbol,
+                            'side': pos.side,
+                            'size': float(pos.size) if pos.size else 0,
+                            'entry_price': float(pos.entry_price) if pos.entry_price else 0,
+                            'highest_price': float(pos.highest_price) if pos.highest_price else 0,
+                            'lowest_price': float(pos.lowest_price) if pos.lowest_price else 0,
+                        })
                 return matched_positions
         except Exception as e:
             logger.error(f"Failed to fetch positions: {str(e)}")
@@ -2853,12 +2763,10 @@ class TradingExecutor:
             if billing.is_billing_enabled():
                 user_id = 1
                 try:
-                    with get_db_connection() as db:
-                        cur = db.cursor()
-                        cur.execute("SELECT user_id FROM qd_strategies_trading WHERE id = ?", (strategy_id,))
-                        row = cur.fetchone()
-                        cur.close()
-                    user_id = int((row or {}).get('user_id') or 1)
+                    from app.database.repositories.strategy_repository import StrategyRepository
+                    with get_session() as sess:
+                        repo = StrategyRepository(sess)
+                        user_id = repo.get_user_id(strategy_id)
                 except Exception:
                     pass
                 ok, msg = billing.check_and_consume(
@@ -2952,35 +2860,25 @@ class TradingExecutor:
             # Get user_id from strategy if not provided
             if user_id is None:
                 try:
-                    with get_db_connection() as db:
-                        cur = db.cursor()
-                        cur.execute("SELECT user_id FROM qd_strategies_trading WHERE id = ?", (strategy_id,))
-                        row = cur.fetchone()
-                        cur.close()
-                    user_id = int((row or {}).get('user_id') or 1)
+                    from app.database.repositories.strategy_repository import StrategyRepository
+                    with get_session() as sess:
+                        repo = StrategyRepository(sess)
+                        user_id = repo.get_user_id(strategy_id)
                 except Exception:
                     user_id = 1
-            with get_db_connection() as db:
-                cur = db.cursor()
-                cur.execute(
-                    """
-                    INSERT INTO qd_strategy_notifications
-                    (user_id, strategy_id, symbol, signal_type, channels, title, message, payload_json, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                    """,
-                    (
-                        int(user_id),
-                        int(strategy_id),
-                        str(symbol or ""),
-                        str(signal_type or ""),
-                        "browser",
-                        str(title or ""),
-                        str(message or ""),
-                        json.dumps(payload or {}, ensure_ascii=False),
-                    ),
+            from app.database.repositories.notification_repository import NotificationRepository
+            with get_session() as sess:
+                repo = NotificationRepository(sess)
+                repo.create_notification(
+                    user_id=int(user_id),
+                    strategy_id=int(strategy_id),
+                    symbol=str(symbol or ""),
+                    signal_type=str(signal_type or ""),
+                    channels="browser",
+                    title=str(title or ""),
+                    message=str(message or ""),
+                    payload_json=json.dumps(payload or {}, ensure_ascii=False),
                 )
-                db.commit()
-                cur.close()
         except Exception as e:
             logger.warning(f"persist_browser_notification failed: {e}")
 
@@ -3110,8 +3008,11 @@ class TradingExecutor:
             if extra_payload and isinstance(extra_payload, dict):
                 payload.update(extra_payload)
 
-            with get_db_connection() as db:
-                cur = db.cursor()
+            from app.database.repositories.order_repository import OrderRepository
+            from app.database.repositories.strategy_repository import StrategyRepository
+            with get_session() as db:
+                order_repo = OrderRepository(db)
+                strategy_repo = StrategyRepository(db)
 
                 # Extra dedup/cooldown guard (DB-based, more rigorous than local position state):
                 # The indicator recompute runs on a fixed tick cadence, and some strategies may keep emitting the same
@@ -3134,34 +3035,12 @@ class TradingExecutor:
                     sig_norm = str(signal_type or "").strip().lower()
                     strict_candle_dedup = stsig > 0 and sig_norm in ("open_long", "open_short", "close_long", "close_short")
 
-                    if strict_candle_dedup:
-                        cur.execute(
-                            """
-                            SELECT id, status, created_at
-                            FROM pending_orders
-                            WHERE strategy_id = %s
-                              AND symbol = %s
-                              AND signal_type = %s
-                              AND signal_ts = %s
-                            ORDER BY id DESC
-                            LIMIT 1
-                            """,
-                            (int(strategy_id), str(symbol), str(signal_type), int(stsig)),
-                        )
-                    else:
-                        cur.execute(
-                            """
-                            SELECT id, status, created_at
-                            FROM pending_orders
-                            WHERE strategy_id = %s
-                              AND symbol = %s
-                              AND signal_type = %s
-                            ORDER BY id DESC
-                            LIMIT 1
-                            """,
-                            (int(strategy_id), str(symbol), str(signal_type)),
-                        )
-                    last = cur.fetchone() or {}
+                    last = order_repo.find_last_pending_order(
+                        strategy_id=int(strategy_id),
+                        symbol=str(symbol),
+                        signal_type=str(signal_type),
+                        signal_ts=int(stsig) if strict_candle_dedup else None,
+                    ) or {}
                     last_id = int(last.get("id") or 0)
                     last_status = str(last.get("status") or "").strip().lower()
                     last_created = int(last.get("created_at") or 0)
@@ -3171,14 +3050,12 @@ class TradingExecutor:
                                 f"enqueue_pending_order skipped (same candle): existing id={last_id} "
                                 f"strategy_id={strategy_id} symbol={symbol} signal={signal_type} signal_ts={stsig} status={last_status}"
                             )
-                            cur.close()
                             return None
                         if last_status in ("pending", "processing"):
                             logger.info(
                                 f"enqueue_pending_order skipped: existing_inflight id={last_id} "
                                 f"strategy_id={strategy_id} symbol={symbol} signal={signal_type} status={last_status}"
                             )
-                            cur.close()
                             return None
                         if last_created > 0 and (now - last_created) < cooldown_sec:
                             logger.info(
@@ -3186,54 +3063,34 @@ class TradingExecutor:
                                 f"age_sec={now - last_created} (<{cooldown_sec}) "
                                 f"strategy_id={strategy_id} symbol={symbol} signal={signal_type}"
                             )
-                            cur.close()
                             return None
                 except Exception:
                     # Best-effort only; do not block enqueue on dedup query errors.
                     pass
 
                 # Get user_id from strategy
-                user_id = 1
-                try:
-                    cur.execute("SELECT user_id FROM qd_strategies_trading WHERE id = %s", (strategy_id,))
-                    row = cur.fetchone()
-                    user_id = int((row or {}).get('user_id') or 1)
-                except Exception:
-                    pass
+                user_id = strategy_repo.get_user_id(int(strategy_id))
 
-                cur.execute(
-                    """
-                    INSERT INTO pending_orders
-                    (user_id, strategy_id, symbol, signal_type, signal_ts, market_type, order_type, amount, price,
-                     execution_mode, status, priority, attempts, max_attempts, last_error, payload_json,
-                     created_at, updated_at, processed_at, sent_at)
-                    VALUES
-                    (%s, %s, %s, %s, %s, %s, %s, %s, %s,
-                     %s, %s, %s, %s, %s, %s, %s,
-                     NOW(), NOW(), NULL, NULL)
-                    """,
-                    (
-                        int(user_id),
-                        int(strategy_id),
-                        symbol,
-                        signal_type,
-                        int(signal_ts or 0),
-                        market_type or 'swap',
-                        'market',
-                        float(amount or 0.0),
-                        float(price or 0.0),
-                        mode,
-                        'pending',
-                        0,
-                        0,
-                        10,
-                        '',
-                        json.dumps(payload, ensure_ascii=False),
-                    ),
+                order = order_repo.create_pending_order_full(
+                    user_id=int(user_id),
+                    strategy_id=int(strategy_id),
+                    symbol=symbol,
+                    signal_type=signal_type,
+                    signal_ts=int(signal_ts or 0),
+                    market_type=market_type or 'swap',
+                    order_type='market',
+                    amount=float(amount or 0.0),
+                    price=float(price or 0.0),
+                    execution_mode=mode,
+                    status='pending',
+                    priority=0,
+                    attempts=0,
+                    max_attempts=10,
+                    last_error='',
+                    payload_json=json.dumps(payload, ensure_ascii=False),
                 )
-                pending_id = cur.lastrowid
-                db.commit()
-                cur.close()
+                db.flush()
+                pending_id = order.id
             return int(pending_id) if pending_id is not None else None
         except Exception as e:
             logger.error(f"enqueue_pending_order failed: {e}")
@@ -3294,19 +3151,10 @@ class TradingExecutor:
         realized_pnl = 0.0
         unrealized_pnl = 0.0
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                cursor.execute(
-                    """
-                    SELECT COALESCE(SUM(COALESCE(profit, 0) - COALESCE(commission, 0)), 0) AS realized_pnl
-                    FROM qd_strategy_trades
-                    WHERE strategy_id = %s
-                    """,
-                    (strategy_id,)
-                )
-                row = cursor.fetchone() or {}
-                realized_pnl = float(row.get('realized_pnl') or 0.0)
-                cursor.close()
+            from app.database.repositories.trade_repository import TradeRepository
+            with get_session() as session:
+                repo = TradeRepository(session)
+                realized_pnl = repo.get_realized_pnl(strategy_id)
         except Exception as e:
             logger.warning(f"Failed to calculate realized pnl for strategy {strategy_id}: {e}")
 
@@ -3365,19 +3213,10 @@ class TradingExecutor:
     def _get_daily_pnl(self, strategy_id: int) -> float:
         """Get today's realized PnL (profit minus fees) for the strategy."""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                cursor.execute(
-                    """
-                    SELECT COALESCE(SUM(COALESCE(profit, 0) - COALESCE(commission, 0)), 0) AS daily_pnl
-                    FROM qd_strategy_trades
-                    WHERE strategy_id = %s AND DATE(created_at) = CURDATE()
-                    """,
-                    (strategy_id,),
-                )
-                row = cursor.fetchone() or {}
-                cursor.close()
-                return float(row.get("daily_pnl") or 0.0)
+            from app.database.repositories.trade_repository import TradeRepository
+            with get_session() as session:
+                repo = TradeRepository(session)
+                return repo.get_daily_pnl(strategy_id)
         except Exception as e:
             logger.warning(f"Failed to get daily pnl for strategy {strategy_id}: {e}")
             return 0.0
@@ -3385,26 +3224,23 @@ class TradingExecutor:
     def _record_trade(self, strategy_id: int, symbol: str, type: str, price: float, amount: float, value: float, profit: float = None, commission: float = None):
         """记录交易到数据库"""
         try:
-            # Get user_id from strategy
-            user_id = 1
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                try:
-                    cursor.execute("SELECT user_id FROM qd_strategies_trading WHERE id = %s", (strategy_id,))
-                    row = cursor.fetchone()
-                    user_id = int((row or {}).get('user_id') or 1)
-                except Exception:
-                    pass
-                query = """
-                    INSERT INTO qd_strategy_trades (
-                        user_id, strategy_id, symbol, type, price, amount, value, commission, profit, created_at
-                    ) VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW()
-                    )
-                """
-                cursor.execute(query, (user_id, strategy_id, symbol, type, price, amount, value, commission or 0, profit))
-                db.commit()
-                cursor.close()
+            from app.database.repositories.strategy_repository import StrategyRepository
+            from app.database.repositories.trade_repository import TradeRepository
+            with get_session() as session:
+                strategy_repo = StrategyRepository(session)
+                trade_repo = TradeRepository(session)
+                user_id = strategy_repo.get_user_id(int(strategy_id))
+                trade_repo.create_trade(
+                    user_id=user_id,
+                    strategy_id=strategy_id,
+                    symbol=symbol,
+                    type=type,
+                    price=price,
+                    amount=amount,
+                    value=value,
+                    commission=commission or 0,
+                    profit=profit,
+                )
         except Exception as e:
             logger.error(f"Failed to record trade: {e}")
 
@@ -3421,46 +3257,34 @@ class TradingExecutor:
     ):
         """更新持仓状态"""
         try:
-            # Get user_id from strategy
-            user_id = 1
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                try:
-                    cursor.execute("SELECT user_id FROM qd_strategies_trading WHERE id = %s", (strategy_id,))
-                    row = cursor.fetchone()
-                    user_id = int((row or {}).get('user_id') or 1)
-                except Exception:
-                    pass
-                # 简化：直接 Update 或 Insert
-                upsert_query = """
-                    INSERT INTO qd_strategy_positions (
-                        user_id, strategy_id, symbol, side, size, entry_price, current_price, highest_price, lowest_price, updated_at
-                    ) VALUES (
-                        %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW()
-                    ) ON CONFLICT(strategy_id, symbol, side) DO UPDATE SET
-                        size = excluded.size,
-                        entry_price = excluded.entry_price,
-                        current_price = excluded.current_price,
-                        highest_price = CASE WHEN excluded.highest_price > 0 THEN excluded.highest_price ELSE qd_strategy_positions.highest_price END,
-                        lowest_price = CASE WHEN excluded.lowest_price > 0 THEN excluded.lowest_price ELSE qd_strategy_positions.lowest_price END,
-                        updated_at = NOW()
-                """
-                cursor.execute(upsert_query, (
-                    user_id, strategy_id, symbol, side, size, entry_price, current_price, highest_price, lowest_price
-                ))
-                db.commit()
-                cursor.close()
+            from app.database.repositories.strategy_repository import StrategyRepository
+            from app.database.repositories.position_repository import PositionRepository
+            from decimal import Decimal
+            with get_session() as session:
+                strategy_repo = StrategyRepository(session)
+                pos_repo = PositionRepository(session)
+                user_id = strategy_repo.get_user_id(int(strategy_id))
+                pos_repo.upsert_position(
+                    strategy_id=int(strategy_id),
+                    user_id=user_id,
+                    symbol=symbol,
+                    side=side,
+                    size=Decimal(str(size)),
+                    entry_price=Decimal(str(entry_price)),
+                    current_price=Decimal(str(current_price)),
+                    highest_price=Decimal(str(highest_price or 0)),
+                    lowest_price=Decimal(str(lowest_price or 0)),
+                )
         except Exception as e:
             logger.error(f"Failed to update position: {e}")
 
     def _close_position(self, strategy_id: int, symbol: str, side: str):
         """平仓：删除持仓记录"""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                cursor.execute("DELETE FROM qd_strategy_positions WHERE strategy_id = %s AND symbol = %s AND side = %s", (strategy_id, symbol, side))
-                db.commit()
-                cursor.close()
+            from app.database.repositories.position_repository import PositionRepository
+            with get_session() as session:
+                repo = PositionRepository(session)
+                repo.delete_position(strategy_id, symbol, side)
         except Exception as e:
             logger.error(f"Failed to close position: {e}")
     
@@ -3470,35 +3294,44 @@ class TradingExecutor:
     def _update_positions(self, strategy_id: int, symbol: str, current_price: float):
         """更新所有持仓的当前价格"""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                cursor.execute("UPDATE qd_strategy_positions SET current_price = %s WHERE strategy_id = %s AND symbol = %s", (current_price, strategy_id, symbol))
-                db.commit()
-                cursor.close()
+            from app.database.repositories.position_repository import PositionRepository
+            from decimal import Decimal
+            with get_session() as session:
+                repo = PositionRepository(session)
+                repo.update_positions_price(strategy_id, symbol, Decimal(str(current_price)))
         except Exception:
             pass
             
     def _get_indicator_code_from_db(self, indicator_id: int) -> Optional[str]:
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                cursor.execute("SELECT code FROM qd_indicator_codes WHERE id = %s", (indicator_id,))
-                result = cursor.fetchone()
-                return result['code'] if result else None
+            from app.database.repositories.indicator_repository import IndicatorRepository
+            with get_session() as session:
+                repo = IndicatorRepository(session)
+                indicator = repo.get_by_id(indicator_id)
+                return indicator.code if indicator else None
         except:
             return None
     
     def _get_all_positions(self, strategy_id: int) -> List[Dict[str, Any]]:
         """获取策略的所有持仓（截面策略使用）"""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                cursor.execute("""
-                    SELECT id, symbol, side, size, entry_price, current_price, highest_price, lowest_price
-                    FROM qd_strategy_positions
-                    WHERE strategy_id = %s
-                """, (strategy_id,))
-                return cursor.fetchall() or []
+            from app.database.repositories.position_repository import PositionRepository
+            with get_session() as session:
+                repo = PositionRepository(session)
+                positions = repo.list_strategy_positions_by_strategy(strategy_id)
+                result = []
+                for pos in positions:
+                    result.append({
+                        'id': pos.id,
+                        'symbol': pos.symbol,
+                        'side': pos.side,
+                        'size': float(pos.size) if pos.size else 0,
+                        'entry_price': float(pos.entry_price) if pos.entry_price else 0,
+                        'current_price': float(pos.current_price) if pos.current_price else 0,
+                        'highest_price': float(pos.highest_price) if pos.highest_price else 0,
+                        'lowest_price': float(pos.lowest_price) if pos.lowest_price else 0,
+                    })
+                return result
         except Exception as e:
             logger.error(f"Failed to get all positions: {e}")
             return []
@@ -3506,16 +3339,13 @@ class TradingExecutor:
     def _should_rebalance(self, strategy_id: int, rebalance_frequency: str) -> bool:
         """检查是否应该调仓"""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                cursor.execute("""
-                    SELECT last_rebalance_at FROM qd_strategies_trading WHERE id = %s
-                """, (strategy_id,))
-                result = cursor.fetchone()
-                if not result or not result.get('last_rebalance_at'):
+            from app.database.repositories.strategy_repository import StrategyRepository
+            with get_session() as session:
+                repo = StrategyRepository(session)
+                last_rebalance = repo.get_last_rebalance(strategy_id)
+                if not last_rebalance:
                     return True
                 
-                last_rebalance = result['last_rebalance_at']
                 if isinstance(last_rebalance, str):
                     from datetime import datetime
                     last_rebalance = datetime.fromisoformat(last_rebalance.replace('Z', '+00:00'))
@@ -3537,20 +3367,10 @@ class TradingExecutor:
     def _update_last_rebalance(self, strategy_id: int):
         """更新上次调仓时间"""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                # Try to update, if column doesn't exist, ignore
-                try:
-                    cursor.execute("""
-                        UPDATE qd_strategies_trading 
-                        SET last_rebalance_at = NOW() 
-                        WHERE id = %s
-                    """, (strategy_id,))
-                    db.commit()
-                except Exception:
-                    # Column may not exist, that's OK
-                    pass
-                cursor.close()
+            from app.database.repositories.strategy_repository import StrategyRepository
+            with get_session() as session:
+                repo = StrategyRepository(session)
+                repo.update_last_rebalance(strategy_id)
         except Exception as e:
             logger.warning(f"Failed to update last_rebalance_at: {e}")
     

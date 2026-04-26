@@ -33,8 +33,9 @@ def get_status():
     """
     ---
     tags:
-      - General
-    summary: "Get connection status."
+      - Trading/IBKR
+    summary: "Get IBKR connection status"
+    description: "Check the current connection status to TWS/IB Gateway."
     produces:
       - application/json
     responses:
@@ -75,8 +76,9 @@ def connect():
     """
     ---
     tags:
-      - Connect
-    summary: "Connect to TWS / IB Gateway."
+      - Trading/IBKR
+    summary: "Connect to TWS/IB Gateway"
+    description: "Establish a connection to Interactive Brokers TWS or IB Gateway."
     produces:
       - application/json
     consumes:
@@ -168,8 +170,9 @@ def disconnect():
     """
     ---
     tags:
-      - Disconnect
-    summary: "Disconnect from IBKR."
+      - Trading/IBKR
+    summary: "Disconnect from IBKR"
+    description: "Disconnect the current session from Interactive Brokers."
     produces:
       - application/json
     consumes:
@@ -221,8 +224,9 @@ def get_account():
     """
     ---
     tags:
-      - General
-    summary: "Get account information."
+      - Trading/IBKR
+    summary: "Get account information"
+    description: "Retrieve account summary from the connected IBKR session."
     produces:
       - application/json
     responses:
@@ -269,8 +273,9 @@ def get_positions():
     """
     ---
     tags:
-      - General
-    summary: "Get positions."
+      - Trading/IBKR
+    summary: "Get positions"
+    description: "Retrieve current open positions from the connected IBKR session."
     produces:
       - application/json
     responses:
@@ -318,8 +323,9 @@ def get_orders():
     """
     ---
     tags:
-      - General
-    summary: "Get open orders."
+      - Trading/IBKR
+    summary: "Get open orders"
+    description: "Retrieve all open orders from the connected IBKR session."
     produces:
       - application/json
     responses:
@@ -369,8 +375,9 @@ def place_order():
     """
     ---
     tags:
-      - Place
-    summary: "Place an order."
+      - Trading/IBKR
+    summary: "Place an order"
+    description: "Place a market or limit order through the connected IBKR session."
     produces:
       - application/json
     consumes:
@@ -489,8 +496,9 @@ def cancel_order(order_id: int):
     """
     ---
     tags:
-      - Cancel
-    summary: "Cancel an order."
+      - Trading/IBKR
+    summary: "Cancel an order"
+    description: "Cancel an open order by its order ID."
     produces:
       - application/json
     parameters:
@@ -554,8 +562,9 @@ def get_quote():
     """
     ---
     tags:
-      - General
-    summary: "Get real-time quote."
+      - Trading/IBKR
+    summary: "Get real-time quote"
+    description: "Retrieve a real-time quote for a given symbol from IBKR."
     produces:
       - application/json
     parameters:

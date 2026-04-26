@@ -40,7 +40,8 @@ def _try_refund_credits(user_id: int, amount: int, remark: str):
 
 def _run_async_analysis_task(task_memory_id: int, market: str, symbol: str, language: str,
                              model: str, timeframe: str, user_id: int, inflight_key: str,
-                             credits_charged: int = 0):
+                             credits_charged: int = 0, use_dify: bool = False,
+                             workflow_code: str = None):
     """
     Background worker: execute analysis and update pending history record.
     """
@@ -53,7 +54,9 @@ def _run_async_analysis_task(task_memory_id: int, market: str, symbol: str, lang
             language=language,
             model=model,
             timeframe=timeframe,
-            user_id=user_id
+            user_id=user_id,
+            use_dify=use_dify,
+            workflow_code=workflow_code,
         )
         memory.finalize_pending_task(task_memory_id, result)
         if result.get("error"):
@@ -116,8 +119,9 @@ def analyze():
     """
     ---
     tags:
-      - Analyze
-    summary: "Fast AI analysis for any symbol."
+      - AI/Fast Analysis
+    summary: "Fast AI analysis"
+    description: "Run a fast AI-powered analysis for any trading symbol across markets."
     produces:
       - application/json
     consumes:
@@ -172,6 +176,8 @@ def analyze():
         model = data.get('model')
         timeframe = data.get('timeframe', '1D')
         async_submit = bool(data.get('async_submit', False))
+        use_dify = bool(data.get('use_dify', False))
+        workflow_code = data.get('workflow_code') or None
         
         if not market or not symbol:
             return jsonify({
@@ -253,7 +259,7 @@ def analyze():
 
             t = threading.Thread(
                 target=_run_async_analysis_task,
-                args=(int(pending_id), market, symbol, language, model, timeframe, int(user_id), inflight_key, int(credits_charged or 0)),
+                args=(int(pending_id), market, symbol, language, model, timeframe, int(user_id), inflight_key, int(credits_charged or 0), use_dify, workflow_code),
                 daemon=True
             )
             t.start()
@@ -281,7 +287,9 @@ def analyze():
             language=language,
             model=model,
             timeframe=timeframe,
-            user_id=user_id
+            user_id=user_id,
+            use_dify=use_dify,
+            workflow_code=workflow_code,
         )
         
         if result.get('error'):
@@ -351,8 +359,9 @@ def analyze_legacy():
     """
     ---
     tags:
-      - Analyze
-    summary: "Fast analysis with legacy format output."
+      - AI/Fast Analysis
+    summary: "Fast analysis with legacy format"
+    description: "Run a fast AI analysis returning results in legacy (PHP-compatible) format."
     produces:
       - application/json
     consumes:
@@ -530,8 +539,9 @@ def get_history():
     """
     ---
     tags:
-      - General
-    summary: "Get analysis history for a symbol."
+      - AI/Fast Analysis
+    summary: "Get analysis history"
+    description: "Retrieve AI analysis history for a specific symbol, filtered by market and days."
     produces:
       - application/json
     security:
@@ -618,8 +628,9 @@ def get_all_history():
     """
     ---
     tags:
-      - General
-    summary: "Get all analysis history with pagination."
+      - AI/Fast Analysis
+    summary: "Get all analysis history"
+    description: "Retrieve all AI analysis history records with pagination."
     produces:
       - application/json
     security:
@@ -692,8 +703,9 @@ def delete_history(memory_id: int):
     """
     ---
     tags:
-      - General
-    summary: "Delete a history record."
+      - AI/Fast Analysis
+    summary: "Delete analysis history"
+    description: "Delete a specific analysis history record by memory ID."
     produces:
       - application/json
     security:
@@ -760,8 +772,9 @@ def submit_feedback():
     """
     ---
     tags:
-      - Submit
-    summary: "Submit user feedback on an analysis."
+      - AI/Fast Analysis
+    summary: "Submit analysis feedback"
+    description: "Submit user feedback (helpful/not_helpful/accurate/inaccurate) for an analysis result."
     produces:
       - application/json
     consumes:
@@ -844,8 +857,9 @@ def get_performance():
     """
     ---
     tags:
-      - General
-    summary: "Get AI analysis performance statistics."
+      - AI/Fast Analysis
+    summary: "Get analysis performance"
+    description: "Retrieve AI analysis performance statistics for a symbol."
     produces:
       - application/json
     security:
@@ -916,8 +930,9 @@ def get_similar_patterns():
     """
     ---
     tags:
-      - General
-    summary: "Get similar historical patterns for current market conditions."
+      - AI/Fast Analysis
+    summary: "Get similar patterns"
+    description: "Find similar historical patterns matching the current market conditions."
     produces:
       - application/json
     security:

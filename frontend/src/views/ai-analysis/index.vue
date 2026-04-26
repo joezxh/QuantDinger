@@ -186,6 +186,21 @@ class="analyze-button">
             <a-button size="large" icon="history" @click="showHistoryModal = true; loadHistoryList()" class="history-button">
               {{ $t('fastAnalysis.history') }}
             </a-button>
+            <a-select
+              v-if="useDify"
+              v-model="selectedWorkflowCode"
+              placeholder="选择工作流"
+              size="large"
+              style="width: 160px; margin-left: 8px;"
+              :options="difyWorkflows.map(w => ({ label: w.name, value: w.code }))"
+            />
+            <a-tooltip title="使用 Dify 工作流">
+              <a-switch
+                v-model="useDify"
+                style="margin-left: 8px;"
+                @change="onDifyToggle"
+              />
+            </a-tooltip>
           </div>
 
           <!-- 分析结果区域 -->
@@ -763,6 +778,7 @@ import { getWatchlist, addWatchlist, removeWatchlist, getWatchlistPrices, getMar
 import { getPositions, addPosition, getMonitors, addMonitor, updateMonitor, deleteMonitor } from '@/api/portfolio'
 import { fastAnalyze, getAllAnalysisHistory, deleteAnalysisHistory } from '@/api/fast-analysis'
 import { getMarketSentiment, getMarketOverview, getMarketHeatmap, getEconomicCalendar } from '@/api/global-market'
+import { getWorkflows } from '@/api/dify'
 import FastAnalysisReport from './components/FastAnalysisReport.vue'
 
 export default {
@@ -815,6 +831,9 @@ export default {
       analysisResult: null,
       analysisError: null,
       analysisErrorTone: 'error',
+      useDify: false,
+      selectedWorkflowCode: '',
+      difyWorkflows: [],
       showHistoryModal: false,
       historyList: [],
       historyLoading: false,
@@ -926,6 +945,26 @@ export default {
     }
   },
   methods: {
+    async onDifyToggle (checked) {
+      this.useDify = checked
+      if (checked) {
+        if (!this.difyWorkflows.length) {
+          try {
+            const res = await getWorkflows()
+            if (res.success) {
+              this.difyWorkflows = res.data || []
+              if (this.difyWorkflows.length && !this.selectedWorkflowCode) {
+                this.selectedWorkflowCode = this.difyWorkflows[0].code
+              }
+            }
+          } catch (e) {
+            this.$message.error('加载 Dify 工作流失败')
+          }
+        }
+      } else {
+        this.selectedWorkflowCode = ''
+      }
+    },
     stopTaskPolling () {
       if (this.taskPollingTimer) {
         clearInterval(this.taskPollingTimer)
@@ -1665,7 +1704,9 @@ export default {
           symbol: symbol,
           language: language,
           timeframe: '1D',
-          async_submit: true
+          async_submit: true,
+          use_dify: this.useDify,
+          workflow_code: this.useDify ? this.selectedWorkflowCode : undefined
         })
 
         if (res && res.code === 1 && res.data) {

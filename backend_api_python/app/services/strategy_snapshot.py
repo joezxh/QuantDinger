@@ -1,7 +1,8 @@
 import json
 from typing import Any, Dict, Optional
 
-from app.utils.db import get_db_connection
+from app.database.session import get_session
+from app.database.repositories.indicator_repository import IndicatorRepository
 
 
 class StrategySnapshotResolver:
@@ -104,12 +105,9 @@ class StrategySnapshotResolver:
         if not indicator_id:
             return ""
         try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                cur.execute("SELECT code FROM qd_indicator_codes WHERE id = ?", (int(indicator_id),))
-                row = cur.fetchone()
-                cur.close()
-            return (row or {}).get("code") or ""
+            with get_session() as session:
+                indicator = IndicatorRepository(session).get_by_id(int(indicator_id))
+                return indicator.code if indicator else ""
         except Exception:
             return ""
 

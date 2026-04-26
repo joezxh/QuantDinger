@@ -101,6 +101,19 @@ from app.config.settings import Config
 app = create_app()
 
 
+# Auto-run Alembic migrations on startup (unless disabled)
+if os.getenv("AUTO_MIGRATE", "true").lower() == "true":
+    try:
+        from alembic.config import Config as AlembicConfig  # 使用别名避免命名冲突
+        from alembic import command
+
+        alembic_ini = os.path.join(os.path.dirname(os.path.abspath(__file__)), "migrations", "alembic.ini")
+        alembic_cfg = AlembicConfig(alembic_ini)
+        command.upgrade(alembic_cfg, "head")
+        print("[DB] Alembic migrations applied.")
+    except Exception as e:
+        print(f"[DB] Alembic migration warning: {e}")
+
 def main():
     """启动应用"""
     # Keep startup messages ASCII-only and short.

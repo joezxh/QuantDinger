@@ -1,19 +1,11 @@
-"""
-Exchange execution helpers (local deployment).
-
-This module provides helpers for resolving exchange configs and safe logging.
-
-Notes:
-- In paper mode, the system only enqueues signals into `pending_orders`.
-- Real trading execution is intentionally not implemented here.
-"""
-
+"""Exchange execution helpers (local deployment)."""
 from __future__ import annotations
 
 import json
 from typing import Any, Dict
 
-from app.utils.db import get_db_connection
+from app.database.repositories.live_trading_repository import LiveTradingRepository
+from app.database.session import get_session
 from app.utils.logger import get_logger
 from app.utils.credential_crypto import decrypt_credential_blob
 
@@ -37,7 +29,6 @@ def _safe_json_loads(value: Any, default: Any) -> Any:
 
 
 def mask_secret(s: str, keep: int = 4) -> str:
-    """Return a masked representation of a secret for safe logs."""
     if not s:
         return ""
     s = str(s)
@@ -57,29 +48,17 @@ def safe_exchange_config_for_log(cfg: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def load_strategy_configs(strategy_id: int) -> Dict[str, Any]:
-    """Load strategy config fields needed for live execution."""
-    with get_db_connection() as db:
-        cur = db.cursor()
-        cur.execute(
-            """
-            SELECT id, user_id, exchange_config, trading_config, market_type, leverage, execution_mode, market_category
-            FROM qd_strategies_trading
-            WHERE id = %s
-            """,
-            (int(strategy_id),),
-        )
-        row = cur.fetchone() or {}
-        cur.close()
-
-    exchange_config = _safe_json_loads(row.get("exchange_config"), {})
-    trading_config = _safe_json_loads(row.get("trading_config"), {})
-
-    market_type = (row.get("market_type") or exchange_config.get("market_type") or "swap").strip()
-    leverage = float(row.get("leverage") or trading_config.get("leverage") or exchange_config.get("leverage") or 1.0)
-    execution_mode = (row.get("execution_mode") or "signal").strip().lower()
-    market_category = (row.get("market_category") or "Crypto").strip()
-    user_id = int(row.get("user_id") or 1)
-
+    with get_session() as session:
+        row = LiveTradingRepository(session).get_strategy_config(int(strategy_id))
+    if not row:
+        return {}
+    exchange_config = _safe_json_loads(getattr(row, "exchange_config", None), {})
+    trading_config = _safe_json_loads(getattr(row, "trading_config", None), {})
+    market_type = (getattr(row, "market_type", None) or exchange_config.get("market_type") or "swap").strip()
+    leverage = float(getattr(row, "leverage", None) or trading_config.get("leverage") or exchange_config.get("leverage") or 1.0)
+    execution_mode = (getattr(row, "execution_mode", None) or "signal").strip().lower()
+    market_category = (getattr(row, "market_category", None) or "Crypto").strip()
+    user_id = int(getattr(row, "user_id", None) or 1)
     return {
         "strategy_id": int(strategy_id),
         "user_id": user_id,
@@ -93,20 +72,9 @@ def load_strategy_configs(strategy_id: int) -> Dict[str, Any]:
 
 
 def _load_credential_config(credential_id: int, user_id: int = 1) -> Dict[str, Any]:
-    """Load credential JSON from qd_exchange_credentials (Fernet via SECRET_KEY)."""
-    with get_db_connection() as db:
-        cur = db.cursor()
-        cur.execute(
-            """
-            SELECT encrypted_config
-            FROM qd_exchange_credentials
-            WHERE id = %s AND user_id = %s
-            """,
-            (int(credential_id), int(user_id)),
-        )
-        row = cur.fetchone() or {}
-        cur.close()
-    raw = row.get("encrypted_config")
+    with get_session() as session:
+        row = LiveTradingRepository(session).get_exchange_credential(int(credential_id), int(user_id))
+    raw = getattr(row, "encrypted_config", None) if row else None
     try:
         plain = decrypt_credential_blob(raw)
     except ValueError as e:
@@ -116,16 +84,8 @@ def _load_credential_config(credential_id: int, user_id: int = 1) -> Dict[str, A
 
 
 def resolve_exchange_config(exchange_config: Dict[str, Any], user_id: int = 1) -> Dict[str, Any]:
-    """
-    Resolve exchange config.
-
-    Supports:
-    - direct inline config: {exchange_id, api_key, secret_key, passphrase?}
-    - credential reference: {credential_id: 123, ...overrides}
-    """
     if not isinstance(exchange_config, dict):
         return {}
-
     merged: Dict[str, Any] = {}
     credential_id = exchange_config.get("credential_id") or exchange_config.get("credentials_id")
     try:
@@ -135,15 +95,10 @@ def resolve_exchange_config(exchange_config: Dict[str, Any], user_id: int = 1) -
                 merged.update(base)
     except Exception as e:
         logger.warning(f"Failed to load credential_id={credential_id}: {e}")
-
-    # Overlay strategy-level settings (non-empty wins)
     for k, v in exchange_config.items():
         if v is None:
             continue
         if isinstance(v, str) and not v.strip():
             continue
         merged[k] = v
-
     return merged
-
-

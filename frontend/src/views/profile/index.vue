@@ -1152,7 +1152,17 @@ export default {
           this.referralPagination.total = res.data.total || 0
         }
       } catch (e) {
-        this.$message.error('Failed to load referral data')
+        // 如果是 404，说明后端未实现邀请功能，静默处理
+        if (e.response?.status === 404) {
+          this.referralData = {
+            list: [],
+            total: 0,
+            referral_code: '',
+            referral_bonus: 0,
+            register_bonus: 0
+          }
+        }
+        // 其他错误不显示提示，避免打扰用户
       } finally {
         this.referralLoading = false
       }

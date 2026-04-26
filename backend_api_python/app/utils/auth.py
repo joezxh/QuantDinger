@@ -16,18 +16,6 @@ logger = get_logger(__name__)
 
 
 def generate_token(user_id: int, username: str, role: str = 'user', token_version: int = 1) -> str:
-    """
-    Generate JWT token with user information.
-    
-    Args:
-        user_id: User ID
-        username: Username
-        role: User role (admin/manager/user/viewer)
-        token_version: Token version for single-client enforcement
-    
-    Returns:
-        JWT token string
-    """
     try:
         payload = {
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7),
@@ -35,41 +23,23 @@ def generate_token(user_id: int, username: str, role: str = 'user', token_versio
             'sub': username,
             'user_id': user_id,
             'role': role,
-            'token_version': token_version,  # 用于单一客户端登录控制
+            'token_version': token_version,
         }
-        return jwt.encode(
-            payload,
-            Config.SECRET_KEY,
-            algorithm='HS256'
-        )
+        return jwt.encode(payload, Config.SECRET_KEY, algorithm='HS256')
     except Exception as e:
         logger.error(f"Token generation failed: {e}")
         return None
 
 
 def verify_token(token: str) -> dict:
-    """
-    Verify JWT token and return payload.
-    
-    Args:
-        token: JWT token string
-    
-    Returns:
-        Token payload dict or None if invalid
-    """
     try:
         payload = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
-        
-        # 验证 token_version（单一客户端登录控制）
         user_id = payload.get('user_id')
         token_version = payload.get('token_version')
-        
         if user_id and token_version is not None:
-            # 检查数据库中的 token_version 是否匹配
             if not _verify_token_version(user_id, token_version):
                 logger.debug(f"Token version mismatch for user {user_id}: expected current, got {token_version}")
                 return None
-        
         return payload
     except jwt.ExpiredSignatureError:
         logger.debug("Token expired")
@@ -80,102 +50,68 @@ def verify_token(token: str) -> dict:
 
 
 def _verify_token_version(user_id: int, token_version: int) -> bool:
-    """
-    验证 token 版本是否与数据库中存储的版本匹配。
-    用于实现单一客户端登录（踢出重复登录）。
-    
-    Args:
-        user_id: 用户ID
-        token_version: Token中的版本号
-    
-    Returns:
-        True if version matches, False otherwise
-    """
     try:
-        from app.utils.db import get_db_connection
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                "SELECT token_version FROM qd_users WHERE id = ?",
-                (user_id,)
-            )
-            row = cur.fetchone()
-            cur.close()
-            
-            if not row:
-                return False
-            
-            db_token_version = row.get('token_version') or 1
-            return int(token_version) == int(db_token_version)
+        from app.services.user_service import get_user_service
+        db_token_version = get_user_service().get_token_version(user_id)
+        return int(token_version) == int(db_token_version)
     except Exception as e:
         logger.error(f"_verify_token_version failed: {e}")
-        # 如果验证失败，为了安全起见，返回 False
         return False
 
 
 def get_current_user_id() -> int:
-    """Get current user ID from flask.g context"""
     return getattr(g, 'user_id', None)
 
 
 def get_current_user_role() -> str:
-    """Get current user role from flask.g context"""
     return getattr(g, 'user_role', 'user')
 
 
 def login_required(f):
-    """
-    Decorator that enforces Bearer token auth.
-    
-    Sets g.user, g.user_id, g.user_role on successful auth.
-    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        
-        # Read token from Authorization: Bearer <token>
         auth_header = request.headers.get('Authorization')
         if auth_header:
             parts = auth_header.split()
             if len(parts) == 2 and parts[0].lower() == 'bearer':
                 token = parts[1]
-        
         if not token:
             return jsonify({'code': 401, 'msg': 'Token missing', 'data': None}), 401
-        
         payload = verify_token(token)
         if not payload:
             return jsonify({'code': 401, 'msg': 'Token invalid or expired', 'data': None}), 401
-        
-        # Store user info in flask.g
         g.user = payload.get('sub')
         g.user_id = payload.get('user_id')
         g.user_role = payload.get('role', 'user')
-        
         return f(*args, **kwargs)
-        
     return decorated
 
 
 def admin_required(f):
-    """
-    Decorator that requires admin role.
-    Must be used after @login_required.
-    """
     @wraps(f)
     def decorated(*args, **kwargs):
+        user_id = getattr(g, 'user_id', None)
+        # Legacy check — fallback to simple role string
         role = getattr(g, 'user_role', None)
-        if role != 'admin':
-            return jsonify({'code': 403, 'msg': 'Admin access required', 'data': None}), 403
-        return f(*args, **kwargs)
+        if role == 'admin':
+            return f(*args, **kwargs)
+        # RBAC check — user must have super_admin or admin role
+        if user_id:
+            try:
+                from app.services.permission_service import get_permission_service
+                svc = get_permission_service()
+                codes = svc.get_user_permission_codes(user_id)
+                # Admin-level access: has system management permissions
+                if 'system:user:view' in codes or 'system:role:view' in codes:
+                    return f(*args, **kwargs)
+            except Exception as e:
+                logger.warning(f"RBAC admin check failed: {e}")
+        return jsonify({'code': 403, 'msg': 'Admin access required', 'data': None}), 403
     return decorated
 
 
 def manager_required(f):
-    """
-    Decorator that requires manager or admin role.
-    Must be used after @login_required.
-    """
     @wraps(f)
     def decorated(*args, **kwargs):
         role = getattr(g, 'user_role', None)
@@ -186,53 +122,61 @@ def manager_required(f):
 
 
 def permission_required(permission: str):
-    """
-    Decorator factory that checks for a specific permission.
-    Must be used after @login_required.
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            user_id = getattr(g, 'user_id', None)
+            # Legacy check — use hardcoded role permissions
+            role = getattr(g, 'user_role', 'user')
+            from app.services.user_service import get_user_service
+            permissions = get_user_service().get_user_permissions(role)
+            if permission in permissions:
+                return f(*args, **kwargs)
+            # RBAC check — use database permission codes
+            if user_id:
+                try:
+                    from app.services.permission_service import get_permission_service
+                    svc = get_permission_service()
+                    if svc.has_permission(user_id, permission):
+                        return f(*args, **kwargs)
+                except Exception as e:
+                    logger.warning(f"RBAC permission check failed: {e}")
+            return jsonify({'code': 403, 'msg': f'Permission denied: {permission}', 'data': None}), 403
+        return decorated
+    return decorator
+
+
+def require_permission(permission_code: str):
+    """RBAC 权限装饰器 — 检查用户是否拥有指定 permission_code
     
-    Usage:
-        @login_required
-        @permission_required('strategy')
-        def my_endpoint():
+    用法:
+        @require_permission('system:user:create')
+        def create_user():
             ...
     """
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            role = getattr(g, 'user_role', 'user')
-            
-            # Import here to avoid circular import
-            from app.services.user_service import get_user_service
-            permissions = get_user_service().get_user_permissions(role)
-            
-            if permission not in permissions:
-                return jsonify({
-                    'code': 403, 
-                    'msg': f'Permission denied: {permission}', 
-                    'data': None
-                }), 403
-            
-            return f(*args, **kwargs)
+            user_id = getattr(g, 'user_id', None)
+            if not user_id:
+                return jsonify({'code': 403, 'msg': 'Authentication required', 'data': None}), 403
+            try:
+                from app.services.permission_service import get_permission_service
+                svc = get_permission_service()
+                if svc.has_permission(user_id, permission_code):
+                    return f(*args, **kwargs)
+            except Exception as e:
+                logger.error(f"require_permission check failed: {e}")
+            return jsonify({'code': 403, 'msg': f'Permission denied: {permission_code}', 'data': None}), 403
         return decorated
     return decorator
 
 
-# Legacy compatibility: single-user mode fallback
 def _is_single_user_mode() -> bool:
-    """Check if system is in single-user (legacy) mode"""
     return os.getenv('SINGLE_USER_MODE', 'false').lower() == 'true'
 
 
 def authenticate_legacy(username: str, password: str) -> dict:
-    """
-    Legacy single-user authentication (for backward compatibility).
-    Uses ADMIN_USER and ADMIN_PASSWORD from environment.
-    """
     if username == Config.ADMIN_USER and password == Config.ADMIN_PASSWORD:
-        return {
-            'user_id': 1,
-            'username': username,
-            'role': 'admin',
-            'nickname': 'Admin',
-        }
+        return {'user_id': 1, 'username': username, 'role': 'admin', 'nickname': 'Admin'}
     return None

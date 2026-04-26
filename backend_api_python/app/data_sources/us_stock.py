@@ -9,7 +9,8 @@ import yfinance as yf
 
 from app.data_sources.base import BaseDataSource
 from app.utils.logger import get_logger
-from app.config import APIKeys, YFinanceConfig
+from app.config import YFinanceConfig
+from app.data_sources.config_resolver import ConfigResolver
 
 logger = get_logger(__name__)
 
@@ -49,8 +50,9 @@ class USStockDataSource(BaseDataSource):
         self.finnhub_client = None
         try:
             import finnhub
-            if APIKeys.is_configured('FINNHUB_API_KEY'):
-                self.finnhub_client = finnhub.Client(api_key=APIKeys.FINNHUB_API_KEY)
+            finnhub_key = ConfigResolver.get_api_key("us_stock_finnhub", key_type="public")
+            if finnhub_key:
+                self.finnhub_client = finnhub.Client(api_key=finnhub_key)
                 logger.info("Finnhub client initialized")
         except Exception as e:
             logger.warning(f"Finnhub init failed: {e}")

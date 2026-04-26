@@ -25,8 +25,9 @@ def get_market_indicators():
     """
     ---
     tags:
-      - General
-    summary: "获取市场指标列表"
+      - Community/Indicators
+    summary: "Get market indicator list"
+    description: "Retrieve paginated list of community indicators with optional keyword search, pricing filter, and sort."
     produces:
       - application/json
     security:
@@ -34,32 +35,35 @@ def get_market_indicators():
     parameters:
       - name: page
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Page"
+        default: 1
+        description: "Page number"
       - name: page_size
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Page Size"
+        default: 12
+        description: "Items per page, max 50"
       - name: keyword
         in: query
         type: string
         required: false
-        description: "Keyword"
+        description: "Search keyword"
       - name: pricing_type
         in: query
         type: string
         required: false
-        description: "Pricing Type"
+        description: "Pricing type filter (free/paid)"
       - name: sort_by
         in: query
         type: string
         required: false
-        description: "Sort By"
+        default: newest
+        description: "Sort field (newest, popular, rating)"
     responses:
       200:
-        description: Success
+        description: Successful response with indicator list
         schema:
           type: object
           properties:
@@ -73,8 +77,6 @@ def get_market_indicators():
               type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -111,8 +113,9 @@ def get_indicator_detail(indicator_id: int):
     """
     ---
     tags:
-      - General
-    summary: "获取指标详情"
+      - Community/Indicators
+    summary: "Get indicator detail"
+    description: "Retrieve detailed information about a specific community indicator by ID."
     produces:
       - application/json
     security:
@@ -122,10 +125,10 @@ def get_indicator_detail(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
     responses:
       200:
-        description: Success
+        description: Successful response with indicator details
         schema:
           type: object
           properties:
@@ -139,8 +142,8 @@ def get_indicator_detail(indicator_id: int):
               type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
+      404:
+        description: Indicator not found
       500:
         description: Internal Server Error
     """
@@ -168,8 +171,9 @@ def purchase_indicator(indicator_id: int):
     """
     ---
     tags:
-      - Purchase
-    summary: "购买指标"
+      - Community/Purchases
+    summary: "Purchase indicator"
+    description: "Purchase a community indicator from the indicator marketplace."
     produces:
       - application/json
     consumes:
@@ -181,10 +185,10 @@ def purchase_indicator(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
     responses:
       200:
-        description: Success
+        description: Indicator purchased successfully
         schema:
           type: object
           properties:
@@ -199,7 +203,7 @@ def purchase_indicator(indicator_id: int):
       401:
         description: Unauthorized - Invalid or missing token
       400:
-        description: Bad Request
+        description: Bad Request - e.g. insufficient credits
       500:
         description: Internal Server Error
     """
@@ -226,8 +230,9 @@ def sync_purchased_indicator(indicator_id: int):
     """
     ---
     tags:
-      - Sync
-    summary: "同步已购买指标的最新代码"
+      - Community/Purchases
+    summary: "Sync purchased indicator code"
+    description: "Sync the latest version of a purchased indicator's code to the user's local indicator library."
     produces:
       - application/json
     consumes:
@@ -239,10 +244,10 @@ def sync_purchased_indicator(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
     responses:
       200:
-        description: Success
+        description: Indicator synced successfully
         schema:
           type: object
           properties:
@@ -256,6 +261,10 @@ def sync_purchased_indicator(indicator_id: int):
               type: object
       401:
         description: Unauthorized - Invalid or missing token
+      403:
+        description: Not purchased this indicator
+      404:
+        description: Indicator not found or unpublished
       400:
         description: Bad Request
       500:
@@ -290,8 +299,9 @@ def get_my_purchases():
     """
     ---
     tags:
-      - General
-    summary: "获取我购买的指标列表"
+      - Community/Purchases
+    summary: "Get my purchased indicators"
+    description: "Return the current user's purchased indicator list with pagination."
     produces:
       - application/json
     security:
@@ -299,17 +309,19 @@ def get_my_purchases():
     parameters:
       - name: page
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Page"
+        default: 1
+        description: "Page number"
       - name: page_size
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Page Size"
+        default: 20
+        description: "Items per page, max 50"
     responses:
       200:
-        description: Success
+        description: Successful response with purchased indicator list
         schema:
           type: object
           properties:
@@ -323,8 +335,6 @@ def get_my_purchases():
               type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -357,8 +367,9 @@ def get_comments(indicator_id: int):
     """
     ---
     tags:
-      - General
-    summary: "获取指标评论列表"
+      - Community/Comments
+    summary: "Get indicator comments"
+    description: "Retrieve paginated comments for a specific community indicator."
     produces:
       - application/json
     security:
@@ -368,20 +379,22 @@ def get_comments(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
       - name: page
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Page"
+        default: 1
+        description: "Page number"
       - name: page_size
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Page Size"
+        default: 20
+        description: "Items per page, max 50"
     responses:
       200:
-        description: Success
+        description: Successful response with comment list
         schema:
           type: object
           properties:
@@ -395,8 +408,6 @@ def get_comments(indicator_id: int):
               type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -425,8 +436,9 @@ def add_comment(indicator_id: int):
     """
     ---
     tags:
-      - Add
-    summary: "添加评论"
+      - Community/Comments
+    summary: "Add comment"
+    description: "Add a rating and comment to a community indicator."
     produces:
       - application/json
     consumes:
@@ -438,19 +450,23 @@ def add_comment(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
       - name: body
         in: body
+        required: true
         schema:
           type: object
           properties:
             rating:
-              type: string
+              type: integer
+              default: 5
+              description: "Rating score (1-5)"
             content:
               type: string
+              description: "Comment text content"
     responses:
       200:
-        description: Success
+        description: Comment added successfully
         schema:
           type: object
           properties:
@@ -498,8 +514,9 @@ def update_comment(indicator_id: int, comment_id: int):
     """
     ---
     tags:
-      - General
-    summary: "更新评论（只能修改自己的评论）"
+      - Community/Comments
+    summary: "Update comment"
+    description: "Update the current user's own comment on an indicator (rating and/or content)."
     produces:
       - application/json
     consumes:
@@ -511,24 +528,27 @@ def update_comment(indicator_id: int, comment_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
       - name: comment_id
         in: path
         type: integer
         required: true
-        description: "Comment Id"
+        description: "Comment ID"
       - name: body
         in: body
+        required: true
         schema:
           type: object
           properties:
             rating:
-              type: string
+              type: integer
+              description: "Updated rating score (1-5)"
             content:
               type: string
+              description: "Updated comment text"
     responses:
       200:
-        description: Success
+        description: Comment updated successfully
         schema:
           type: object
           properties:
@@ -577,8 +597,9 @@ def get_my_comment(indicator_id: int):
     """
     ---
     tags:
-      - General
-    summary: "获取当前用户对指定指标的评论（用于编辑）"
+      - Community/Comments
+    summary: "Get my comment"
+    description: "Retrieve the current user's comment on a specific indicator (for editing purposes)."
     produces:
       - application/json
     security:
@@ -588,10 +609,10 @@ def get_my_comment(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
     responses:
       200:
-        description: Success
+        description: Successful response with user's comment
         schema:
           type: object
           properties:
@@ -605,8 +626,6 @@ def get_my_comment(indicator_id: int):
               type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -634,8 +653,9 @@ def get_indicator_performance(indicator_id: int):
     """
     ---
     tags:
-      - General
-    summary: "获取指标的实盘表现统计"
+      - Community/Indicators
+    summary: "Get indicator performance stats"
+    description: "Retrieve live trading performance statistics for a specific community indicator."
     produces:
       - application/json
     security:
@@ -645,10 +665,10 @@ def get_indicator_performance(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
     responses:
       200:
-        description: Success
+        description: Successful response with performance stats
         schema:
           type: object
           properties:
@@ -662,8 +682,6 @@ def get_indicator_performance(indicator_id: int):
               type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -694,8 +712,9 @@ def get_pending_indicators():
     """
     ---
     tags:
-      - General
-    summary: "获取待审核的指标列表（管理员专用）"
+      - Community/Admin
+    summary: "Get pending review indicators"
+    description: "Admin only. Retrieve paginated list of indicators pending review with status filter."
     produces:
       - application/json
     security:
@@ -703,22 +722,25 @@ def get_pending_indicators():
     parameters:
       - name: page
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Page"
+        default: 1
+        description: "Page number"
       - name: page_size
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Page Size"
+        default: 20
+        description: "Items per page, max 100"
       - name: review_status
         in: query
         type: string
         required: false
-        description: "Review Status"
+        default: pending
+        description: "Review status filter (pending, approved, rejected)"
     responses:
       200:
-        description: Success
+        description: Successful response with pending indicator list
         schema:
           type: object
           properties:
@@ -732,8 +754,8 @@ def get_pending_indicators():
               type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
+      403:
+        description: Forbidden - Admin access required
       500:
         description: Internal Server Error
     """
@@ -766,15 +788,16 @@ def get_review_stats():
     """
     ---
     tags:
-      - General
-    summary: "获取审核统计数据（管理员专用）"
+      - Community/Admin
+    summary: "Get review statistics"
+    description: "Admin only. Retrieve aggregate review statistics for the indicator marketplace."
     produces:
       - application/json
     security:
       - BearerAuth: []
     responses:
       200:
-        description: Success
+        description: Successful response with review stats
         schema:
           type: object
           properties:
@@ -788,8 +811,8 @@ def get_review_stats():
               type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
+      403:
+        description: Forbidden - Admin access required
       500:
         description: Internal Server Error
     """
@@ -813,8 +836,9 @@ def review_indicator(indicator_id: int):
     """
     ---
     tags:
-      - Review
-    summary: "审核指标（管理员专用）"
+      - Community/Admin
+    summary: "Review indicator"
+    description: "Admin only. Approve or reject a community indicator with an optional review note."
     produces:
       - application/json
     consumes:
@@ -826,19 +850,22 @@ def review_indicator(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
       - name: body
         in: body
+        required: true
         schema:
           type: object
           properties:
             action:
               type: string
+              description: "Review action (approve/reject)"
             note:
               type: string
+              description: "Optional review note"
     responses:
       200:
-        description: Success
+        description: Indicator reviewed successfully
         schema:
           type: object
           properties:
@@ -852,8 +879,10 @@ def review_indicator(indicator_id: int):
               type: object
       401:
         description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
       400:
-        description: Bad Request
+        description: Bad Request - invalid action
       500:
         description: Internal Server Error
     """
@@ -892,8 +921,9 @@ def unpublish_indicator(indicator_id: int):
     """
     ---
     tags:
-      - Unpublish
-    summary: "下架指标（管理员专用）"
+      - Community/Admin
+    summary: "Unpublish indicator"
+    description: "Admin only. Remove a community indicator from the marketplace (unpublish)."
     produces:
       - application/json
     consumes:
@@ -905,7 +935,7 @@ def unpublish_indicator(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
       - name: body
         in: body
         schema:
@@ -913,9 +943,10 @@ def unpublish_indicator(indicator_id: int):
           properties:
             note:
               type: string
+              description: "Reason for unpublishing"
     responses:
       200:
-        description: Success
+        description: Indicator unpublished successfully
         schema:
           type: object
           properties:
@@ -929,6 +960,8 @@ def unpublish_indicator(indicator_id: int):
               type: object
       401:
         description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
       400:
         description: Bad Request
       500:
@@ -964,8 +997,9 @@ def admin_delete_indicator(indicator_id: int):
     """
     ---
     tags:
-      - Admin
-    summary: "删除指标（管理员专用）"
+      - Community/Admin
+    summary: "Delete indicator"
+    description: "Admin only. Permanently delete a community indicator by ID."
     produces:
       - application/json
     security:
@@ -975,10 +1009,10 @@ def admin_delete_indicator(indicator_id: int):
         in: path
         type: integer
         required: true
-        description: "Indicator Id"
+        description: "Indicator ID"
     responses:
       200:
-        description: Success
+        description: Indicator deleted successfully
         schema:
           type: object
           properties:
@@ -992,6 +1026,8 @@ def admin_delete_indicator(indicator_id: int):
               type: object
       401:
         description: Unauthorized - Invalid or missing token
+      403:
+        description: Forbidden - Admin access required
       400:
         description: Bad Request
       500:

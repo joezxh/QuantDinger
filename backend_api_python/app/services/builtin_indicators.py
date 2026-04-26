@@ -189,61 +189,59 @@ output = {
 _BUILTIN_PACK_ANCHOR_NAME = "[示例] RSI 边缘触发"
 
 
-def seed_builtin_indicators_for_new_user(db: Any, user_id: int) -> int:
+def seed_builtin_indicators_for_new_user(session: Any, user_id: int) -> int:
     """
     注册成功后写入示例指标包。若该用户已有锚点名称指标则跳过（幂等）。
     返回本次插入条数。
     """
     if not user_id:
         return 0
+    from sqlalchemy import text
+
     now = int(time.time())
-    cur = db.cursor()
     try:
-        cur.execute(
-            """
-            SELECT 1 AS x
-            FROM qd_indicator_codes
-            WHERE user_id = ? AND name = ?
-            LIMIT 1
-            """,
-            (user_id, _BUILTIN_PACK_ANCHOR_NAME),
+        # Idempotency check
+        result = session.execute(
+            text("""
+                SELECT 1 AS x
+                FROM ind_indicator_codes
+                WHERE user_id = :user_id AND name = :name
+                LIMIT 1
+            """),
+            {"user_id": user_id, "name": _BUILTIN_PACK_ANCHOR_NAME},
         )
-        if cur.fetchone():
+        if result.fetchone():
             return 0
 
         inserted = 0
         for spec in _builtin_specs():
-            cur.execute(
-                """
-                INSERT INTO qd_indicator_codes
-                  (user_id, is_buy, end_time, name, code, description,
-                   publish_to_community, pricing_type, price, preview_image, vip_free, review_status,
-                   createtime, updatetime, created_at, updated_at)
-                VALUES (?, 0, 1, ?, ?, ?, 0, 'free', 0, '', FALSE, NULL, ?, ?, NOW(), NOW())
-                """,
-                (
-                    user_id,
-                    spec["name"],
-                    spec["code"],
-                    spec["description"],
-                    now,
-                    now,
-                ),
+            session.execute(
+                text("""
+                    INSERT INTO ind_indicator_codes
+                      (user_id, is_buy, end_time, name, code, description,
+                       publish_to_community, pricing_type, price, preview_image, vip_free, review_status,
+                       createtime, updatetime, created_at, updated_at)
+                    VALUES (:user_id, 0, 1, :name, :code, :description, 0, 'free', 0, '', FALSE, NULL,
+                            :createtime, :updatetime, NOW(), NOW())
+                """),
+                {
+                    "user_id": user_id,
+                    "name": spec["name"],
+                    "code": spec["code"],
+                    "description": spec["description"],
+                    "createtime": now,
+                    "updatetime": now,
+                },
             )
             inserted += 1
-        db.commit()
+        session.commit()
         if inserted:
             logger.info("Seeded %s builtin indicator(s) for new user_id=%s", inserted, user_id)
         return inserted
     except Exception as e:
         logger.warning("seed_builtin_indicators_for_new_user failed user_id=%s: %s", user_id, e)
         try:
-            db.rollback()
+            session.rollback()
         except Exception:
             pass
         return 0
-    finally:
-        try:
-            cur.close()
-        except Exception:
-            pass

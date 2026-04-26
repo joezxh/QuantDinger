@@ -146,6 +146,40 @@
       </div>
     </div>
 
+    <!-- 知识图谱状态概览 -->
+    <div v-if="graphQuality" class="graph-quality-card">
+      <div class="graph-quality-header">
+        <a-icon type="cluster" />
+        <span>知识图谱状态</span>
+        <a-tag :color="graphQuality.is_ready ? 'green' : 'orange'" size="small">
+          {{ graphQuality.is_ready ? '已就绪' : '积累中' }}
+        </a-tag>
+      </div>
+      <div class="graph-quality-stats">
+        <div class="gq-stat">
+          <span class="gq-value">{{ graphQuality.episode_count || 0 }}</span>
+          <span class="gq-label">Episodes</span>
+        </div>
+        <div class="gq-stat">
+          <span class="gq-value">{{ graphQuality.entity_count || 0 }}</span>
+          <span class="gq-label">实体</span>
+        </div>
+        <div class="gq-stat">
+          <span class="gq-value">{{ graphQuality.relation_count || 0 }}</span>
+          <span class="gq-label">关系</span>
+        </div>
+        <div class="gq-stat">
+          <span class="gq-value">{{ (graphQuality.min_confidence_avg || 0).toFixed(2) }}</span>
+          <span class="gq-label">置信度</span>
+        </div>
+      </div>
+      <div class="graph-quality-actions">
+        <a-button type="link" size="small" @click="$router.push('/graph-analysis')">
+          查看图谱分析
+        </a-button>
+      </div>
+    </div>
+
     <div v-if="showSetupGuide && !hideSetupGuide" class="setup-guide-card">
       <div class="setup-guide-copy">
         <div class="setup-guide-title">{{ $t('dashboard.setupGuide.title') }}</div>
@@ -515,6 +549,7 @@
 <script>
 import * as echarts from 'echarts'
 import { getDashboardSummary, getPendingOrders } from '@/api/dashboard'
+import { getGraphQuality } from '@/api/graph'
 import { mapState } from 'vuex'
 import { formatUserDateTime } from '@/utils/userTime'
 
@@ -561,7 +596,10 @@ export default {
       lastOrderId: 0,
       orderPollIntervalMs: 5000,
       soundEnabled: true,
-      beepCtx: null
+      beepCtx: null,
+      // 图谱状态
+      graphQuality: null,
+      graphQualityLoading: false
     }
   },
   computed: {
@@ -758,6 +796,7 @@ export default {
   mounted () {
     this.fetchData()
     this.fetchPendingOrders()
+    this.loadGraphQuality()
     this.startOrderPolling()
     window.addEventListener('resize', this.handleResize)
   },
@@ -805,6 +844,19 @@ export default {
         console.error('获取订单列表失败:', e)
       } finally {
         this.ordersLoading = false
+      }
+    },
+    async loadGraphQuality () {
+      this.graphQualityLoading = true
+      try {
+        const res = await getGraphQuality()
+        if (res.code === 1) {
+          this.graphQuality = res.data
+        }
+      } catch (e) {
+        // 静默失败，不影响主流程
+      } finally {
+        this.graphQualityLoading = false
       }
     },
     // ========== 订单声音提醒 ==========
@@ -2565,6 +2617,73 @@ export default {
 
     .ranking-grid {
       grid-template-columns: 1fr;
+    }
+  }
+}
+
+.graph-quality-card {
+  margin: 16px 0;
+  padding: 16px 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .graph-quality-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    color: #1f1f1f;
+
+    i { color: #722ed1; }
+  }
+
+  .graph-quality-stats {
+    display: flex;
+    gap: 24px;
+
+    .gq-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .gq-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1f1f1f;
+      }
+
+      .gq-label {
+        font-size: 12px;
+        color: #888;
+        margin-top: 2px;
+      }
+    }
+  }
+
+  .graph-quality-actions {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .graph-quality-card {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .graph-quality-stats {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .graph-quality-actions {
+      margin-left: 0;
     }
   }
 }

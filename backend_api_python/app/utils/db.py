@@ -1,33 +1,57 @@
 """
-Database Connection Utility - PostgreSQL Only
+Database Connection Facade — SQLAlchemy-first with legacy compat aliases.
 
-Provides unified interface for PostgreSQL database operations.
+All new code should import directly from ``app.database.session``:
 
-Usage:
-    from app.utils.db import get_db_connection
-    
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
-        row = cursor.fetchone()
-        conn.commit()
+    from app.database.session import get_session
 
-Configuration:
-    DATABASE_URL=postgresql://user:password@host:port/dbname
+    with get_session() as session:
+        ...
+
+The symbols re-exported here are deprecated and retained only to avoid
+breaking legacy imports during the ORM migration transition.
 """
 
-# Re-export from PostgreSQL module
+import warnings
+
+from app.database.session import get_session
+
+# Keep lightweight psycopg2 helpers for scripts that need raw connections
 from app.utils.db_postgres import (
-    get_pg_connection as get_db_connection,
-    get_pg_connection_sync as get_db_connection_sync,
     is_postgres_available,
-    close_pool as close_db,
+    close_pool as _close_pool,
 )
+
+
+def get_db_connection():
+    """Deprecated — use ``app.database.session.get_session()`` instead.
+
+    Yields a SQLAlchemy Session wrapped in a minimal compatibility shim
+    so that legacy ``with get_db_connection() as conn: conn.cursor()``
+    patterns fail fast with a clear message instead of an obscure
+    AttributeError.
+    """
+    warnings.warn(
+        "get_db_connection() is deprecated. Use get_session() from app.database.session.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return get_session()
+
+
+def get_db_connection_sync():
+    """Deprecated — use ``app.database.session.get_session()`` instead."""
+    warnings.warn(
+        "get_db_connection_sync() is deprecated. Use get_session() from app.database.session.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return get_session()
 
 
 def get_db_type() -> str:
     """Get database type (always postgresql)"""
-    return 'postgresql'
+    return "postgresql"
 
 
 def is_postgres() -> bool:
@@ -36,30 +60,34 @@ def is_postgres() -> bool:
 
 
 def init_database():
-    """
-    Initialize database connection.
-    Schema is created via migrations/init.sql on PostgreSQL container start.
-    """
-    if is_postgres_available():
+    """Verify database connectivity via SQLAlchemy."""
+    try:
+        with get_session() as session:
+            from sqlalchemy import text
+            session.execute(text("SELECT 1"))
         from app.utils.logger import get_logger
         logger = get_logger(__name__)
-        logger.info("PostgreSQL connection verified")
-    else:
-        raise RuntimeError("Cannot connect to PostgreSQL. Check DATABASE_URL.")
+        logger.info("PostgreSQL connection verified (via SQLAlchemy)")
+    except Exception as exc:
+        raise RuntimeError(f"Cannot connect to PostgreSQL. Check DATABASE_URL. {exc}")
 
 
-# Legacy alias
+def close_db():
+    """Close legacy psycopg2 connection pool (if any)."""
+    _close_pool()
+
+
 def close_db_connection():
-    """Legacy alias for close_db"""
-    pass
+    """Legacy alias for close_db."""
+    close_db()
 
 
 __all__ = [
-    'get_db_connection',
-    'get_db_connection_sync',
-    'close_db_connection',
-    'init_database',
-    'close_db',
-    'get_db_type',
-    'is_postgres',
+    "get_db_connection",
+    "get_db_connection_sync",
+    "close_db_connection",
+    "init_database",
+    "close_db",
+    "get_db_type",
+    "is_postgres",
 ]

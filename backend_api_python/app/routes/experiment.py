@@ -24,14 +24,37 @@ def detect_market_regime():
     """
     ---
     tags:
-      - Detect
-    summary: "Detect the current market regime for a symbol/timeframe/date range."
+      - Experiment/Regime Detection
+    summary: "Detect current market regime"
+    description: "Analyze and detect the current market regime for a given symbol, timeframe, and date range."
     produces:
       - application/json
     consumes:
       - application/json
     security:
       - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - symbol
+          properties:
+            symbol:
+              type: string
+              description: "Trading symbol (e.g., BTC/USDT)"
+            timeframe:
+              type: string
+              default: 1d
+              description: "K-line timeframe (1m, 5m, 15m, 1h, 4h, 1d, etc.)"
+            start_date:
+              type: string
+              description: "Start date for analysis (YYYY-MM-DD)"
+            end_date:
+              type: string
+              description: "End date for analysis (YYYY-MM-DD)"
     responses:
       200:
         description: Success
@@ -76,14 +99,47 @@ def run_experiment_pipeline():
     """
     ---
     tags:
-      - Run
-    summary: "Legacy grid-search pipeline (kept for backward compat)."
+      - Experiment/Pipeline
+    summary: "Run experiment pipeline (legacy)"
+    description: "Legacy grid-search pipeline kept for backward compatibility."
     produces:
       - application/json
     consumes:
       - application/json
     security:
       - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - symbol
+          properties:
+            symbol:
+              type: string
+              description: "Trading symbol (e.g., BTC/USDT)"
+            strategy_type:
+              type: string
+              description: "Strategy type identifier"
+            parameters:
+              type: object
+              description: "Grid-search parameters with ranges"
+            date_range:
+              type: object
+              description: "Backtest date range"
+              properties:
+                start:
+                  type: string
+                  description: "Start date (YYYY-MM-DD)"
+                end:
+                  type: string
+                  description: "End date (YYYY-MM-DD)"
+            market_type:
+              type: string
+              default: crypto
+              description: "Market type (crypto, stock, forex)"
     responses:
       200:
         description: Success
@@ -126,28 +182,47 @@ def ai_optimize():
     """
     ---
     tags:
-      - Ai
-    summary: "LLM-driven multi-round optimization pipeline with SSE progress streaming."
+      - Experiment/AI Optimization
+    summary: "AI-powered optimization with SSE streaming"
+    description: "LLM-driven multi-round optimization pipeline with progress streaming via Server-Sent Events."
     produces:
-      - application/json
+      - text/event-stream
     consumes:
       - application/json
     security:
       - BearerAuth: []
-    responses:
-      200:
-        description: Success
+    parameters:
+      - name: body
+        in: body
+        required: true
         schema:
           type: object
+          required:
+            - symbol
           properties:
-            code:
-              type: integer
-              example: 1
-            msg:
+            symbol:
               type: string
-              example: success
-            data:
+              description: "Trading symbol (e.g., BTC/USDT)"
+            strategy_description:
+              type: string
+              description: "Natural language description of the strategy to optimize"
+            objective:
+              type: string
+              default: sharpe_ratio
+              description: "Optimization objective (sharpe_ratio, sortino_ratio, total_return, max_drawdown)"
+            constraints:
               type: object
+              description: "Optimization constraints"
+            timeframe:
+              type: string
+              default: 1d
+              description: "K-line timeframe"
+    responses:
+      200:
+        description: SSE stream with progress events and final result
+        schema:
+          type: string
+          format: binary
       401:
         description: Unauthorized - Invalid or missing token
       400:
@@ -207,14 +282,41 @@ def ai_optimize_sync():
     """
     ---
     tags:
-      - Ai
-    summary: "Non-streaming version (simpler client integration)."
+      - Experiment/AI Optimization
+    summary: "AI optimization (sync, non-streaming)"
+    description: "Non-streaming version of AI optimization for simpler client integration."
     produces:
       - application/json
     consumes:
       - application/json
     security:
       - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - symbol
+          properties:
+            symbol:
+              type: string
+              description: "Trading symbol (e.g., BTC/USDT)"
+            strategy_description:
+              type: string
+              description: "Natural language description of the strategy to optimize"
+            objective:
+              type: string
+              default: sharpe_ratio
+              description: "Optimization objective"
+            constraints:
+              type: object
+              description: "Optimization constraints"
+            timeframe:
+              type: string
+              default: 1d
+              description: "K-line timeframe"
     responses:
       200:
         description: Success
@@ -257,14 +359,46 @@ def structured_tune():
     """
     ---
     tags:
-      - Structured
-    summary: "Grid or random search over explicit parameterSpace (no LLM)."
+      - Experiment/Structured Tuning
+    summary: "Run structured parameter tuning"
+    description: "Grid or random search over an explicit parameter space without LLM involvement."
     produces:
       - application/json
     consumes:
       - application/json
     security:
       - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - symbol
+          properties:
+            symbol:
+              type: string
+              description: "Trading symbol (e.g., BTC/USDT)"
+            parameter_space:
+              type: object
+              description: "Dictionary of parameter names to value ranges"
+            search_method:
+              type: string
+              default: grid
+              description: "Search method - grid or random"
+            max_iterations:
+              type: integer
+              default: 100
+              description: "Max iterations for random search"
+            metric:
+              type: string
+              default: sharpe_ratio
+              description: "Metric to optimize"
+            timeframe:
+              type: string
+              default: 1d
+              description: "K-line timeframe"
     responses:
       200:
         description: Success
@@ -309,14 +443,35 @@ def save_experiment_strategy():
     """
     ---
     tags:
-      - Save
-    summary: "Save the best experiment candidate as a strategy record."
+      - Experiment/Strategy
+    summary: "Save experiment as strategy"
+    description: "Save the best experiment candidate as a permanent strategy record."
     produces:
       - application/json
     consumes:
       - application/json
     security:
       - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - bestOutput
+            - strategyName
+          properties:
+            bestOutput:
+              type: object
+              description: "Best experiment candidate output to save as strategy"
+            strategyName:
+              type: string
+              description: "Name for the saved strategy"
+            marketCategory:
+              type: string
+              default: Crypto
+              description: "Market category (Crypto, Stock, Forex)"
     responses:
       200:
         description: Success

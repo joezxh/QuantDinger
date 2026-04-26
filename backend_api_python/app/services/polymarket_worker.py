@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from app.utils.logger import get_logger
-from app.utils.db import get_db_connection
+
 from app.data_sources.polymarket import PolymarketDataSource
 from app.services.polymarket_batch_analyzer import PolymarketBatchAnalyzer
 

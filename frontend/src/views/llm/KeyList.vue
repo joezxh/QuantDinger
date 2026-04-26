@@ -17,9 +17,7 @@
         <a-tag v-else-if="text === 2" color="orange">{{ $t('llm.status.broken') }}</a-tag>
         <a-tag v-else color="red">{{ $t('llm.status.disabled') }}</a-tag>
       </span>
-      <span slot="apiKey" slot-scope="text">
-        <code>{{ text.substring(0, 8) }}...{{ text.substring(text.length - 4) }}</code>
-      </span>
+
       <span slot="action" slot-scope="text, record">
         <template>
           <a @click="handleEdit(record)">{{ $t('common.edit') }}</a>
@@ -87,7 +85,6 @@ export default {
         { title: 'ID', dataIndex: 'id' },
         { title: this.$t('llm.provider'), dataIndex: 'provider_name' },
         { title: 'Name', dataIndex: 'name' },
-        { title: this.$t('llm.apiKey'), dataIndex: 'api_key_masked', scopedSlots: { customRender: 'apiKey' } },
         { title: this.$t('llm.weight'), dataIndex: 'weight' },
         { title: this.$t('llm.status'), dataIndex: 'status', scopedSlots: { customRender: 'status' } },
         { title: this.$t('llm.actions'), dataIndex: 'action', scopedSlots: { customRender: 'action' } }

@@ -4,8 +4,9 @@ Polymarket批量分析器
 """
 import json
 from typing import List, Dict, Optional
+from app.database.session import get_session
+from app.database.repositories.polymarket_repository import PolymarketRepository
 from app.utils.logger import get_logger
-from app.utils.db import get_db_connection
 from app.services.llm import LLMService
 from app.data_sources.polymarket import PolymarketDataSource
 
@@ -212,50 +213,9 @@ class PolymarketBatchAnalyzer:
     def save_batch_analysis(self, markets: List[Dict]):
         """保存批量分析结果到数据库"""
         try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                
-                for market in markets:
-                    market_id = market.get('market_id')
-                    ai_analysis = market.get('ai_analysis')
-                    
-                    if not market_id or not ai_analysis:
-                        continue
-                    
-                    try:
-                        # 先删除该市场的旧分析记录（user_id为NULL的通用分析）
-                        cur.execute("""
-                            DELETE FROM qd_polymarket_ai_analysis
-                            WHERE market_id = %s AND user_id IS NULL
-                        """, (market_id,))
-                        
-                        # 插入新的分析记录
-                        cur.execute("""
-                            INSERT INTO qd_polymarket_ai_analysis
-                            (market_id, user_id, ai_predicted_probability, market_probability,
-                             divergence, recommendation, confidence_score, opportunity_score,
-                             reasoning, key_factors, related_assets, created_at)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                        """, (
-                            market_id,
-                            None,  # 通用分析
-                            float(ai_analysis.get('predicted_probability', market.get('current_probability', 50.0))),
-                            market.get('current_probability', 50.0),
-                            float(ai_analysis.get('divergence', 0)),
-                            ai_analysis.get('recommendation', 'HOLD'),
-                            ai_analysis.get('confidence_score', 0),
-                            ai_analysis.get('opportunity_score', 0),
-                            ai_analysis.get('reasoning', ''),
-                            json.dumps(ai_analysis.get('key_factors', [])),
-                            []
-                        ))
-                    except Exception as e:
-                        logger.warning(f"Failed to save analysis for market {market_id}: {e}")
-                        continue
-                
-                db.commit()
-                cur.close()
+            with get_session() as session:
+                repo = PolymarketRepository(session)
+                repo.save_batch_analysis(markets)
                 logger.info(f"Saved batch analysis for {len(markets)} markets")
-                
         except Exception as e:
             logger.error(f"Failed to save batch analysis: {e}", exc_info=True)

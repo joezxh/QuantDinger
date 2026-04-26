@@ -1,0 +1,548 @@
+/**
+ * Windows XP 经典风格主题
+ * Windows XP Classic Theme
+ * 
+ * 设计特点：
+ * - 模拟 Windows XP 的经典视觉风格
+ * - 使用 Windows XP 标志性的蓝色/绿色渐变色调
+ * - 卡片和窗口组件采用圆角和轻微阴影
+ * - 按钮设计带有 XP 风格的渐变和边框
+ */
+
+// XP 主题主色调
+@xp-primary: #0054E3;
+@xp-primary-dark: #003087;
+@xp-primary-light: #6699FF;
+
+// XP 绿色（开始按钮等）
+@xp-green: #1F8303;
+@xp-green-dark: #0D5C02;
+@xp-green-light: #3DAD1D;
+
+// XP 经典蓝色渐变
+@xp-blue-gradient-start: #0973DF;
+@xp-blue-gradient-end: #0054E3;
+
+// 灰色系
+@xp-gray: #D8DFE8;
+@xp-gray-dark: #AEBACG;
+@xp-gray-light: #EEF1F6;
+@xp-gray-lighter: #F5F7FA;
+
+// XP 银色系
+@xp-silver: #ECE9D8;
+@xp-silver-dark: #C4C0B8;
+@xp-silver-light: #FFFFFF;
+
+// 窗口背景
+@xp-window-bg: #E8EDF5;
+@xp-window-header: #1A5CB8;
+
+// 文字颜色
+@xp-text-primary: #1A1A1A;
+@xp-text-secondary: #4A4A4A;
+@xp-text-muted: #808080;
+
+// Windows XP 经典按钮样式
+.xp-button-style() {
+  background: linear-gradient(180deg, #FFFFFF 0%, #E8EDF5 50%, #C6D0E0 100%);
+  border: 1px solid;
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
+  border-radius: 0;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 12px;
+  padding: 4px 12px;
+  cursor: pointer;
+  box-shadow: inset -1px -1px 0 rgba(0,0,0,0.1), inset 1px 1px 0 rgba(255,255,255,0.5);
+  
+  &:hover {
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8EDF5 50%, #D8DFE8 100%);
+  }
+  
+  &:active {
+    background: linear-gradient(180deg, #C6D0E0 0%, #E8EDF5 50%, #FFFFFF 100%);
+    border-color: #808080 #FFFFFF #FFFFFF #808080;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15);
+  }
+}
+
+body.xp {
+  // 侧边栏 - XP 经典银色
+  .ant-layout-sider,
+  .ant-layout-sider-dark,
+  .ant-pro-sider-menu-sider,
+  aside.ant-layout-sider {
+    background: linear-gradient(180deg, @xp-silver 0%, #DDD8C8 100%) !important;
+    border-right: 2px solid @xp-silver-dark !important;
+    box-shadow: inset -2px 0 4px rgba(0,0,0,0.08);
+  }
+  
+  .ant-pro-sider-menu-logo {
+    background: linear-gradient(180deg, @xp-blue-gradient-start 0%, @xp-blue-gradient-end 100%) !important;
+    border-bottom: 2px solid #003087 !important;
+    
+    h1 {
+      color: #FFFFFF !important;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+  }
+  
+  // XP 风格菜单
+  .ant-menu-light,
+  .ant-menu.ant-menu-light {
+    background: transparent !important;
+    
+    .ant-menu-item {
+      border-radius: 0;
+      font-size: 12px;
+      margin: 2px 4px;
+      padding: 0 8px;
+      height: 28px;
+      line-height: 28px;
+      
+      &:hover {
+        background: linear-gradient(180deg, #316AC5 0%, #1F5BB8 100%) !important;
+        color: #FFFFFF !important;
+      }
+      
+      &.ant-menu-item-selected {
+        background: linear-gradient(180deg, #316AC5 0%, #1F5BB8 100%) !important;
+        color: #FFFFFF !important;
+        font-weight: normal;
+        border: 1px solid #0D328F;
+        border-radius: 2px;
+        margin: 2px 4px;
+        padding: 0 7px;
+        
+        &::after {
+          display: none;
+        }
+      }
+    }
+    
+    .ant-menu-submenu-title {
+      border-radius: 0;
+      font-size: 12px;
+      height: 28px;
+      line-height: 28px;
+      margin: 2px 4px;
+      
+      &:hover {
+        background: linear-gradient(180deg, #316AC5 0%, #1F5BB8 100%) !important;
+        color: #FFFFFF !important;
+      }
+    }
+  }
+  
+  .ant-layout-sider-trigger {
+    background: linear-gradient(180deg, @xp-silver 0%, #C8C4B8 100%) !important;
+    border-top: 1px solid @xp-silver-dark !important;
+    color: @xp-text-primary !important;
+    font-size: 11px;
+  }
+  
+  // 顶栏 - XP 经典蓝色
+  .ant-layout-header,
+  .ant-pro-global-header {
+    background: linear-gradient(180deg, @xp-blue-gradient-start 0%, @xp-blue-gradient-end 100%) !important;
+    border-bottom: 2px solid #003087 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+    
+    * {
+      color: #FFFFFF !important;
+    }
+    
+    .ant-pro-global-header-trigger {
+      &:hover {
+        background: rgba(255,255,255,0.15) !important;
+      }
+    }
+  }
+  
+  // 主内容区
+  .ant-layout {
+    background: @xp-window-bg !important;
+  }
+  
+  .ant-layout-content,
+  .ant-pro-basicLayout-content {
+    background: @xp-window-bg !important;
+  }
+  
+  // XP 窗口风格卡片
+  .ant-card {
+    background: @xp-window-bg !important;
+    border: 1px solid @xp-silver-dark !important;
+    border-radius: 0 !important;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.1) !important;
+    
+    .ant-card-head {
+      background: linear-gradient(180deg, #1A5CB8 0%, #0D4590 100%) !important;
+      border-bottom: 2px solid #003087 !important;
+      color: #FFFFFF !important;
+      min-height: 32px;
+      padding: 0 12px;
+      
+      .ant-card-head-title {
+        color: #FFFFFF !important;
+        font-size: 13px;
+        font-weight: 600;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      }
+    }
+    
+    .ant-card-body {
+      color: @xp-text-primary;
+      padding: 16px;
+    }
+  }
+  
+  // 表格 - XP 经典风格
+  .ant-table {
+    background: @xp-window-bg !important;
+    color: @xp-text-primary;
+    border: 1px solid @xp-silver-dark !important;
+    
+    .ant-table-thead > tr > th {
+      background: linear-gradient(180deg, #D8DFE8 0%, #C6D0E0 100%) !important;
+      border-bottom: 2px solid @xp-silver-dark !important;
+      border-right: 1px solid @xp-silver-dark !important;
+      color: @xp-text-primary !important;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 8px;
+    }
+    
+    .ant-table-tbody > tr > td {
+      border-bottom: 1px solid @xp-silver-dark !important;
+      border-right: 1px solid @xp-gray-light !important;
+      background: #FFFFFF !important;
+      padding: 6px 8px;
+    }
+    
+    .ant-table-tbody > tr:hover > td {
+      background: #FFF9D9 !important;
+    }
+  }
+  
+  // XP 分页器
+  .ant-pagination-item {
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8EDF5 50%, #C6D0E0 100%);
+    border: 1px solid;
+    border-color: #FFFFFF #808080 #808080 #FFFFFF;
+    border-radius: 0;
+    
+    a {
+      color: @xp-text-primary !important;
+      line-height: 24px;
+    }
+    
+    &:hover {
+      background: linear-gradient(180deg, #FFFFFF 0%, #D8DFE8 100%);
+    }
+    
+    &-active {
+      background: linear-gradient(180deg, #C6D0E0 0%, #E8EDF5 50%, #FFFFFF 100%);
+      border-color: #808080 #FFFFFF #FFFFFF #808080;
+      
+      a {
+        color: @xp-blue-gradient-end !important;
+        font-weight: 600;
+      }
+    }
+  }
+  
+  // XP 表单元素
+  .ant-input,
+  .ant-input-number,
+  .ant-select-selection {
+    background: #FFFFFF !important;
+    border: 2px solid;
+    border-color: #717171 #DFE3EB #DFE3EB #717171 !important;
+    border-radius: 0 !important;
+    color: @xp-text-primary !important;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.15);
+    
+    &:focus,
+    &:hover {
+      border-color: #316AC5 !important;
+      box-shadow: 0 0 2px #316AC5 !important;
+    }
+  }
+  
+  .ant-input::placeholder {
+    color: @xp-text-muted !important;
+  }
+  
+  .ant-form-item-label > label {
+    color: @xp-text-primary !important;
+    font-size: 12px;
+  }
+  
+  // XP 按钮
+  .ant-btn {
+    border-radius: 0;
+    font-size: 12px;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    .xp-button-style();
+    
+    &-primary {
+      background: linear-gradient(180deg, #316AC5 0%, #1F5BB8 100%) !important;
+      border-color: #0D328F !important;
+      color: #FFFFFF !important;
+      box-shadow: none !important;
+      text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+      
+      &:hover {
+        background: linear-gradient(180deg, #4172CC 0%, #2F6BC8 100%) !important;
+      }
+      
+      &:active {
+        background: linear-gradient(180deg, #1F5BB8 0%, #316AC5 100%) !important;
+      }
+    }
+    
+    &-default {
+      &:hover {
+        border-color: #316AC5 !important;
+        color: #316AC5 !important;
+      }
+    }
+  }
+  
+  // XP 面包屑
+  .ant-breadcrumb-link,
+  .ant-breadcrumb-separator {
+    color: @xp-text-secondary !important;
+  }
+  
+  .ant-page-header {
+    background: linear-gradient(180deg, #FFFFFF 0%, @xp-window-bg 100%) !important;
+    border: 1px solid @xp-silver-dark !important;
+    padding: 12px 16px;
+  }
+  
+  .ant-page-header-heading-title {
+    color: @xp-text-primary !important;
+    font-size: 16px;
+  }
+  
+  // XP Tabs
+  .ant-tabs-bar {
+    border-bottom: 2px solid @xp-silver-dark !important;
+    margin-bottom: 16px;
+  }
+  
+  .ant-tabs-tab {
+    color: @xp-text-secondary !important;
+    font-size: 12px;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    background: linear-gradient(180deg, #E8EDF5 0%, #C6D0E0 100%);
+    border-radius: 0;
+    margin-right: 4px;
+    
+    &:hover {
+      background: linear-gradient(180deg, #FFFFFF 0%, #E8EDF5 100%);
+      border-color: #717171;
+    }
+    
+    &-active {
+      background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 100%);
+      border-color: #717171 #717171 transparent #717171;
+      border-bottom: 2px solid #FFFFFF;
+      color: @xp-blue-gradient-end !important;
+      font-weight: 600;
+    }
+  }
+  
+  // XP Modal
+  .ant-modal-content {
+    background: @xp-window-bg !important;
+    border: 1px solid @xp-silver-dark !important;
+    border-radius: 0 !important;
+    box-shadow: 4px 4px 16px rgba(0,0,0,0.25) !important;
+    
+    .ant-modal-header {
+      background: linear-gradient(180deg, @xp-blue-gradient-start 0%, @xp-blue-gradient-end 100%) !important;
+      border-bottom: 2px solid #003087 !important;
+      border-radius: 0 !important;
+      padding: 4px 8px;
+      
+      .ant-modal-title {
+        color: #FFFFFF !important;
+        font-size: 13px;
+        font-weight: 600;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      }
+    }
+    
+    .ant-modal-body {
+      background: @xp-window-bg !important;
+      color: @xp-text-primary !important;
+      padding: 16px;
+    }
+    
+    .ant-modal-footer {
+      border-top: 1px solid @xp-silver-dark !important;
+      background: @xp-gray-light !important;
+      border-radius: 0 !important;
+      padding: 8px 16px;
+    }
+    
+    .ant-modal-close {
+      color: #FFFFFF !important;
+      opacity: 0.8;
+      &:hover {
+        opacity: 1;
+        background: rgba(255,255,255,0.2);
+      }
+    }
+  }
+  
+  // XP Select
+  .ant-select-dropdown {
+    background: @xp-window-bg !important;
+    border: 2px solid;
+    border-color: #717171 #DFE3EB #DFE3EB #717171 !important;
+    border-radius: 0 !important;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.15) !important;
+    
+    .ant-select-dropdown-menu-item {
+      color: @xp-text-primary !important;
+      font-size: 12px;
+      padding: 6px 12px;
+      
+      &:hover {
+        background: #FFF9D9 !important;
+      }
+      
+      &-active {
+        background: #FFF9D9 !important;
+      }
+      
+      &-selected {
+        background: #316AC5 !important;
+        color: #FFFFFF !important;
+        font-weight: normal;
+      }
+    }
+  }
+  
+  // XP Tag
+  .ant-tag {
+    border-radius: 0;
+    border: 1px solid;
+    border-color: #717171 #DFE3EB #DFE3EB #717171;
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8EDF5 100%);
+    color: @xp-text-primary;
+    font-size: 11px;
+  }
+  
+  // XP Drawer
+  .ant-drawer-content {
+    background: @xp-window-bg !important;
+  }
+  
+  .ant-drawer-header {
+    background: linear-gradient(180deg, @xp-blue-gradient-start 0%, @xp-blue-gradient-end 100%) !important;
+    border-bottom: 2px solid #003087 !important;
+    
+    .ant-drawer-title {
+      color: #FFFFFF !important;
+      font-size: 13px;
+    }
+  }
+  
+  .ant-drawer-close {
+    color: #FFFFFF !important;
+    opacity: 0.8;
+  }
+  
+  // XP Switch
+  .ant-switch {
+    background: linear-gradient(180deg, #C6D0E0 0%, #E8EDF5 100%);
+    border: 1px solid;
+    border-color: #717171 #DFE3EB #DFE3EB #717171;
+    border-radius: 0;
+    
+    &-checked {
+      background: linear-gradient(180deg, #316AC5 0%, #1F5BB8 100%);
+    }
+  }
+  
+  // XP Checkbox
+  .ant-checkbox-wrapper,
+  .ant-checkbox {
+    .ant-checkbox-inner {
+      border: 2px solid #717171;
+      border-radius: 0;
+      background: #FFFFFF;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    &-checked .ant-checkbox-inner {
+      background: linear-gradient(180deg, #316AC5 0%, #1F5BB8 100%);
+      border-color: #0D328F;
+    }
+  }
+  
+  // XP Radio
+  .ant-radio-wrapper,
+  .ant-radio {
+    .ant-radio-inner {
+      border: 2px solid #717171;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    &-checked .ant-radio-inner {
+      border-color: #316AC5;
+      
+      &::after {
+        background: linear-gradient(180deg, #316AC5 0%, #1F5BB8 100%);
+        box-shadow: none;
+      }
+    }
+  }
+  
+  // XP Dropdown
+  .ant-dropdown-menu {
+    background: @xp-window-bg !important;
+    border: 1px solid @xp-silver-dark !important;
+    border-radius: 0 !important;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.15) !important;
+    padding: 2px;
+    
+    .ant-dropdown-menu-item {
+      color: @xp-text-primary !important;
+      font-size: 12px;
+      border-radius: 0;
+      padding: 4px 24px 4px 8px;
+      
+      &:hover {
+        background: linear-gradient(180deg, #316AC5 0%, #1F5BB8 100%) !important;
+        color: #FFFFFF !important;
+      }
+    }
+  }
+}
+
+// XP 开始按钮风格
+body.xp {
+  .ant-btn-start {
+    background: linear-gradient(180deg, #3DAD1D 0%, #1F8303 100%) !important;
+    border: 1px solid;
+    border-color: #6DD01A #0D5C02 #0D5C02 #6DD01A !important;
+    color: #FFFFFF !important;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+    
+    &:hover {
+      background: linear-gradient(180deg, #4DE02D 0%, #2A9A13 100%) !important;
+    }
+  }
+}

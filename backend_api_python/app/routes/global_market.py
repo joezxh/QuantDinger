@@ -61,8 +61,9 @@ def market_overview():
     """
     ---
     tags:
-      - Market
-    summary: "Get global market overview including indices, forex, crypto, and commodities."
+      - Market/Global
+    summary: "Get global market overview"
+    description: "Fetch aggregated global market data including major indices, forex pairs, crypto prices, and commodities."
     produces:
       - application/json
     security:
@@ -147,8 +148,9 @@ def market_heatmap():
     """
     ---
     tags:
-      - Market
-    summary: "Get market heatmap data for crypto, stock sectors, forex, and indices."
+      - Market/Global
+    summary: "Get market heatmap"
+    description: "Generate market heatmap data for crypto, stock sectors, forex, and indices."
     produces:
       - application/json
     security:
@@ -195,8 +197,9 @@ def market_news():
     """
     ---
     tags:
-      - Market
-    summary: "Get financial news from various sources.  Query params: lang ('cn'|'en'|'all')."
+      - Market/Global
+    summary: "Get financial news"
+    description: "Fetch financial news from various sources. Supports language filter (cn/en/all)."
     produces:
       - application/json
     security:
@@ -252,8 +255,9 @@ def economic_calendar():
     """
     ---
     tags:
-      - Economic
-    summary: "Get economic calendar events with impact indicators."
+      - Market/Economic
+    summary: "Get economic calendar"
+    description: "Retrieve economic calendar events with impact indicators."
     produces:
       - application/json
     security:
@@ -300,8 +304,9 @@ def market_sentiment():
     """
     ---
     tags:
-      - Market
-    summary: "Get comprehensive market sentiment indicators."
+      - Market/Sentiment
+    summary: "Get market sentiment indicators"
+    description: "Retrieve comprehensive market sentiment data including Fear & Greed Index, VIX, DXY, yield curve, and more."
     produces:
       - application/json
     security:
@@ -388,8 +393,9 @@ def adanos_market_sentiment():
     """
     ---
     tags:
-      - Adanos
-    summary: "Get optional Adanos Market Sentiment for selected US stock tickers."
+      - Market/Sentiment
+    summary: "Get Adanos market sentiment"
+    description: "Retrieve optional Adanos Market Sentiment analysis for selected US stock tickers."
     produces:
       - application/json
     security:
@@ -469,8 +475,9 @@ def trading_opportunities():
     """
     ---
     tags:
-      - Trading
-    summary: "Scan for trading opportunities across Crypto, US/CN/HK Stocks, and Forex."
+      - Market/Opportunities
+    summary: "Scan trading opportunities"
+    description: "Scan for trading opportunities across crypto, US/CN/HK stocks, and forex markets."
     produces:
       - application/json
     security:
@@ -549,8 +556,9 @@ def refresh_data():
     """
     ---
     tags:
-      - Refresh
-    summary: "Force refresh all market data (clears cache)."
+      - Market/Refresh
+    summary: "Force refresh market data"
+    description: "Clear all cached market data and trigger a fresh fetch on next request."
     produces:
       - application/json
     consumes:

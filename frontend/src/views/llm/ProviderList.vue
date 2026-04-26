@@ -40,6 +40,9 @@
         <a-form-item :label="$t('llm.providerName')">
           <a-input v-decorator="['name', { rules: [{ required: true, message: 'Please enter name' }] }]" />
         </a-form-item>
+        <a-form-item label="Code">
+          <a-input v-decorator="['code', { rules: [{ required: true, message: 'Please enter code' }] }]" />
+        </a-form-item>
         <a-form-item :label="$t('llm.baseUrl')">
           <a-input v-decorator="['base_url', { rules: [{ required: true, message: 'Please enter base url' }] }]" />
         </a-form-item>
@@ -79,6 +82,7 @@ export default {
       columns: [
         { title: 'ID', dataIndex: 'id' },
         { title: this.$t('llm.providerName'), dataIndex: 'name' },
+        { title: 'Code', dataIndex: 'code' },
         { title: this.$t('llm.baseUrl'), dataIndex: 'base_url' },
         { title: 'API Type', dataIndex: 'api_type', scopedSlots: { customRender: 'apiType' } },
         { title: this.$t('llm.status'), dataIndex: 'status', scopedSlots: { customRender: 'status' } },
@@ -125,6 +129,7 @@ export default {
       this.$nextTick(() => {
         this.form.setFieldsValue({
           name: record.name,
+          code: record.code,
           base_url: record.base_url,
           api_type: record.api_type,
           status: record.status === 1

@@ -32,7 +32,9 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-from app.utils.db import get_db_connection
+from app.database.session import get_session
+from app.database.repositories.notification_repository import NotificationRepository
+from app.database.repositories.strategy_repository import StrategyRepository
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -86,20 +88,9 @@ def _load_user_timezone_for_strategy(strategy_id: int) -> str:
     except Exception:
         return ""
     try:
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                """
-                SELECT COALESCE(u.timezone, '') AS tz
-                FROM qd_strategies_trading s
-                JOIN qd_users u ON u.id = s.user_id
-                WHERE s.id = ?
-                """,
-                (sid,),
-            )
-            row = cur.fetchone() or {}
-            cur.close()
-        return str(row.get("tz") or "").strip()
+        with get_session() as session:
+            repo = StrategyRepository(session)
+            return repo.get_user_timezone(sid)
     except Exception:
         return ""
 
@@ -499,38 +490,26 @@ class SignalNotifier:
             if user_id is None:
                 if strategy_id is not None:
                     try:
-                        with get_db_connection() as db:
-                            cur = db.cursor()
-                            cur.execute("SELECT user_id FROM qd_strategies_trading WHERE id = ?", (int(strategy_id),))
-                            row = cur.fetchone()
-                            cur.close()
-                        user_id = int((row or {}).get('user_id') or 1)
+                        with get_session() as sess:
+                            repo = StrategyRepository(sess)
+                            user_id = repo.get_user_id(int(strategy_id))
                     except Exception:
                         user_id = 1
                 else:
                     user_id = 1
             sid = None if strategy_id is None else int(strategy_id)
-            with get_db_connection() as db:
-                cur = db.cursor()
-                cur.execute(
-                    """
-                    INSERT INTO qd_strategy_notifications
-                    (user_id, strategy_id, symbol, signal_type, channels, title, message, payload_json, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                    """,
-                    (
-                        int(user_id),
-                        sid,
-                        str(symbol or ""),
-                        str(signal_type or ""),
-                        ",".join([str(c) for c in (channels or [])]),
-                        str(title or ""),
-                        str(message or ""),
-                        json.dumps(payload or {}, ensure_ascii=False),
-                    ),
+            with get_session() as sess:
+                repo = NotificationRepository(sess)
+                repo.create_notification(
+                    user_id=int(user_id),
+                    strategy_id=sid,
+                    symbol=str(symbol or ""),
+                    signal_type=str(signal_type or ""),
+                    channels=",".join([str(c) for c in (channels or [])]),
+                    title=str(title or ""),
+                    message=str(message or ""),
+                    payload_json=json.dumps(payload or {}, ensure_ascii=False),
                 )
-                db.commit()
-                cur.close()
             return True, ""
         except Exception as e:
             logger.warning(f"browser notify persist failed: {e}")

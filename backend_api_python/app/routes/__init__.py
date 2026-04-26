@@ -1,6 +1,4 @@
-"""
-API Routes Module
-"""
+"""API Routes Module"""
 from flask import Flask
 
 
@@ -29,10 +27,16 @@ def register_routes(app: Flask):
     from app.routes.polymarket import polymarket_bp
     from app.routes.experiment import experiment_bp
     from app.routes.llm import llm_bp
+    from app.routes.graph_analysis import graph_analysis_bp
+    from app.routes.stock_news_graph_poc import stock_news_graph_poc_bp
+    from app.routes.domain_graph import stock_graph_bp, crypto_graph_bp, polymarket_graph_bp
+    from app.routes.dify_workflow import dify_bp
+    from app.routes.data_source import data_source_bp
+    from app.routes.permission import permission_bp
     
     app.register_blueprint(health_bp)
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')   # Auth routes
-    app.register_blueprint(user_bp, url_prefix='/api/users')  # User management
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(user_bp, url_prefix='/api/users')
     app.register_blueprint(kline_bp, url_prefix='/api/indicator')
     app.register_blueprint(backtest_bp, url_prefix='/api/indicator')
     app.register_blueprint(market_bp, url_prefix='/api/market')
@@ -53,3 +57,11 @@ def register_routes(app: Flask):
     app.register_blueprint(polymarket_bp, url_prefix='/api/polymarket')
     app.register_blueprint(experiment_bp, url_prefix='/api/experiment')
     app.register_blueprint(llm_bp, url_prefix='/api/llm')
+    app.register_blueprint(graph_analysis_bp, url_prefix='/api/graph-analysis')
+    app.register_blueprint(stock_news_graph_poc_bp, url_prefix='/api/graph-poc/stock-news')
+    app.register_blueprint(stock_graph_bp, url_prefix='/api/graph/stock')
+    app.register_blueprint(crypto_graph_bp, url_prefix='/api/graph/crypto')
+    app.register_blueprint(polymarket_graph_bp, url_prefix='/api/graph/polymarket')
+    app.register_blueprint(dify_bp)
+    app.register_blueprint(data_source_bp, url_prefix='/api/data-source')
+    app.register_blueprint(permission_bp, url_prefix='/api/permission')

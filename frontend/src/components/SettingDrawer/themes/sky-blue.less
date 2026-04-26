@@ -1,0 +1,540 @@
+/**
+ * 天空蓝极简风格主题
+ * Sky Blue Minimalist Theme
+ * 
+ * 设计特点：
+ * - 使用天空蓝色作为主要色调 (#87CEEB)
+ * - 极简化设计，减少视觉元素
+ * - 注重留白和清晰的布局
+ * - 简洁的按钮、卡片、边框设计
+ */
+
+// 主题主色调
+@skyblue-primary: #87CEEB;
+@skyblue-primary-light: #B0E0E6;
+@skyblue-primary-dark: #5CACEE;
+@skyblue-primary-lighter: #E0F4FF;
+
+// 背景色
+@skyblue-bg-primary: #F5F9FC;
+@skyblue-bg-secondary: #FFFFFF;
+@skyblue-bg-tertiary: #EEF4F8;
+
+// 文字颜色
+@skyblue-text-primary: #2C3E50;
+@skyblue-text-secondary: #5D6D7E;
+@skyblue-text-muted: #8E99A4;
+
+// 边框颜色
+@skyblue-border: #D4E5F7;
+@skyblue-border-light: #E8F1F8;
+
+// 天空蓝渐变主题
+@skyblue-gradient-start: #E8F4FC;
+@skyblue-gradient-end: #B8D8F0;
+@skyblue-gradient-light: #F0F7FC;
+
+// 侧边栏 - 渐变浅蓝
+body.skyblue,
+body.realskyblue {
+  .ant-layout-sider,
+  .ant-layout-sider-dark,
+  .ant-pro-sider-menu-sider,
+  aside.ant-layout-sider {
+    background: linear-gradient(180deg, #F0F7FC 0%, #B8D8F0 100%) !important;
+    border-right: 1px solid #A8CCE8 !important;
+  }
+  
+  .ant-pro-sider-menu-logo {
+    background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+    border-bottom: 1px solid #4A9ED8 !important;
+  }
+  
+  // 顶栏 - 渐变浅蓝
+  .ant-layout-header,
+  .ant-pro-global-header {
+    background: linear-gradient(180deg, #C8E4F8 0%, #B8D8F0 100%) !important;
+    border-bottom: 1px solid #A8CCE8 !important;
+    box-shadow: 0 1px 4px rgba(92, 172, 238, 0.15) !important;
+  }
+  
+  // 菜单样式 - 渐变浅蓝
+  .ant-menu-light,
+  .ant-menu.ant-menu-light {
+    background: transparent !important;
+    
+    .ant-menu-item {
+      border-radius: 6px;
+      margin: 4px 8px;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: linear-gradient(180deg, #E0F0FA 0%, #D0E8F5 100%) !important;
+        color: #4A9ED8 !important;
+      }
+      
+      &.ant-menu-item-selected {
+        background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+        color: #fff !important;
+        font-weight: 500;
+        
+        &::after {
+          display: none;
+        }
+      }
+    }
+    
+    .ant-menu-submenu-title {
+      border-radius: 6px;
+      margin: 4px 8px;
+      
+      &:hover {
+        background: linear-gradient(180deg, #E0F0FA 0%, #D0E8F5 100%) !important;
+        color: #4A9ED8 !important;
+      }
+    }
+  }
+  
+  .ant-layout-sider-trigger {
+    background: linear-gradient(180deg, #B8D8F0 0%, #A8CCE8 100%) !important;
+    border-top: 1px solid #A8CCE8 !important;
+    color: #4A9ED8 !important;
+  }
+  
+  // 主内容区
+  .ant-layout {
+    background: @skyblue-bg-primary !important;
+  }
+  
+  .ant-layout-content,
+  .ant-pro-basicLayout-content {
+    background: @skyblue-bg-primary !important;
+  }
+  
+  // 卡片样式 - 渐变蓝标题栏
+  .ant-card {
+    background: @skyblue-bg-secondary !important;
+    border: 1px solid @skyblue-border !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(92, 172, 238, 0.08) !important;
+    
+    .ant-card-head {
+      background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+      border-bottom: 1px solid #4A9ED8 !important;
+      color: #FFFFFF !important;
+      border-radius: 8px 8px 0 0;
+      
+      .ant-card-head-title {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+      
+      .ant-card-head-extra {
+        color: #FFFFFF !important;
+      }
+    }
+    
+    .ant-card-body {
+      color: @skyblue-text-primary;
+    }
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(92, 172, 238, 0.15) !important;
+    }
+  }
+  
+  // 表格样式
+  .ant-table {
+    background: @skyblue-bg-secondary !important;
+    color: @skyblue-text-primary;
+    border-radius: 8px;
+    overflow: hidden;
+    
+    .ant-table-thead > tr > th {
+      background: @skyblue-bg-tertiary !important;
+      border-bottom: 2px solid @skyblue-primary !important;
+      color: @skyblue-text-primary !important;
+      font-weight: 600;
+    }
+    
+    .ant-table-tbody > tr > td {
+      border-bottom: 1px solid @skyblue-border-light !important;
+    }
+    
+    .ant-table-tbody > tr:hover > td {
+      background: @skyblue-primary-lighter !important;
+    }
+  }
+  
+  // 分页器
+  .ant-pagination-item {
+    background: @skyblue-bg-secondary !important;
+    border-color: @skyblue-border !important;
+    border-radius: 6px;
+    
+    a {
+      color: @skyblue-text-primary !important;
+    }
+    
+    &:hover,
+    &-active {
+      border-color: @skyblue-primary !important;
+      background: @skyblue-primary-lighter !important;
+      
+      a {
+        color: @skyblue-primary-dark !important;
+      }
+    }
+  }
+  
+  // 表单元素 - 简洁设计
+  .ant-input,
+  .ant-input-number,
+  .ant-select-selection {
+    background: @skyblue-bg-secondary !important;
+    border: 1px solid @skyblue-border !important;
+    border-radius: 6px !important;
+    color: @skyblue-text-primary !important;
+    
+    &:focus,
+    &:hover {
+      border-color: @skyblue-primary !important;
+      box-shadow: 0 0 0 2px rgba(135, 206, 235, 0.2) !important;
+    }
+  }
+  
+  .ant-input::placeholder {
+    color: @skyblue-text-muted !important;
+  }
+  
+  .ant-form-item-label > label {
+    color: @skyblue-text-secondary !important;
+  }
+  
+  // 按钮 - 极简风格
+  .ant-btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    
+    &-default {
+      background: @skyblue-bg-secondary !important;
+      border-color: @skyblue-border !important;
+      color: @skyblue-text-primary !important;
+      
+      &:hover {
+        border-color: @skyblue-primary !important;
+        color: @skyblue-primary-dark !important;
+        background: @skyblue-primary-lighter !important;
+      }
+    }
+    
+    &-primary {
+      background: @skyblue-primary !important;
+      border-color: @skyblue-primary !important;
+      color: #fff !important;
+      box-shadow: 0 2px 4px rgba(135, 206, 235, 0.3) !important;
+      
+      &:hover {
+        background: @skyblue-primary-dark !important;
+        border-color: @skyblue-primary-dark !important;
+        box-shadow: 0 4px 8px rgba(135, 206, 235, 0.4) !important;
+      }
+    }
+  }
+  
+  // 面包屑
+  .ant-breadcrumb-link,
+  .ant-breadcrumb-separator {
+    color: @skyblue-text-secondary !important;
+  }
+  
+  .ant-page-header-heading-title {
+    color: @skyblue-text-primary !important;
+  }
+  
+  // Tabs
+  .ant-tabs-bar {
+    border-bottom-color: @skyblue-border !important;
+  }
+  
+  .ant-tabs-tab {
+    color: @skyblue-text-secondary !important;
+    border-radius: 6px 6px 0 0;
+    
+    &:hover {
+      color: @skyblue-primary-dark !important;
+      background: @skyblue-primary-lighter !important;
+    }
+    
+    &-active {
+      color: @skyblue-primary-dark !important;
+      font-weight: 600;
+    }
+  }
+  
+  // Modal 弹窗 - 渐变蓝标题栏
+  .ant-modal-content {
+    background: @skyblue-bg-secondary !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(92, 172, 238, 0.2) !important;
+    overflow: hidden;
+    
+    .ant-modal-header {
+      background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+      border-bottom: 1px solid #4A9ED8 !important;
+      border-radius: 12px 12px 0 0 !important;
+      padding: 12px 16px;
+      
+      .ant-modal-title {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+    }
+    
+    .ant-modal-body {
+      color: @skyblue-text-primary !important;
+    }
+    
+    .ant-modal-footer {
+      border-top-color: @skyblue-border !important;
+      background: @skyblue-bg-tertiary !important;
+      border-radius: 0 0 12px 12px !important;
+    }
+    
+    .ant-modal-close {
+      color: #FFFFFF !important;
+      opacity: 0.8;
+      &:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+  
+  // Select dropdown
+  .ant-select-dropdown {
+    background: @skyblue-bg-secondary !important;
+    border: 1px solid @skyblue-border !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 16px rgba(135, 206, 235, 0.15) !important;
+    
+    .ant-select-dropdown-menu-item {
+      color: @skyblue-text-primary !important;
+      border-radius: 4px;
+      margin: 2px 4px;
+      
+      &:hover {
+        background: @skyblue-primary-lighter !important;
+        color: @skyblue-primary-dark !important;
+      }
+      
+      &-active {
+        background: @skyblue-primary-lighter !important;
+      }
+      
+      &-selected {
+        background: @skyblue-primary !important;
+        color: #fff !important;
+        font-weight: 500;
+      }
+    }
+  }
+  
+  // Drawer 右侧抽屉 - 渐变蓝标题栏
+  .ant-drawer-content {
+    background: @skyblue-bg-primary !important;
+  }
+  
+  .ant-drawer-header {
+    background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+    border-bottom: 1px solid #4A9ED8 !important;
+    padding: 12px 16px;
+    
+    .ant-drawer-title {
+      color: #FFFFFF !important;
+      font-weight: 600;
+    }
+  }
+  
+  .ant-drawer-close {
+    color: #FFFFFF !important;
+    opacity: 0.8;
+    &:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+  
+  // PageHeader 页面标题栏 - 渐变蓝
+  .ant-page-header {
+    background: linear-gradient(180deg, #F8FCFE 0%, #F0F7FC 100%) !important;
+    border-bottom: 2px solid #87CEEB !important;
+    padding: 16px 24px;
+  }
+  
+  .ant-page-header-heading {
+    .ant-page-header-heading-title {
+      color: @skyblue-primary-dark !important;
+      font-weight: 600;
+    }
+    
+    .ant-page-header-heading-back {
+      color: @skyblue-primary-dark !important;
+      &:hover {
+        color: @skyblue-primary !important;
+      }
+    }
+  }
+  
+  .ant-page-header-content {
+    color: @skyblue-text-secondary;
+  }
+  
+  // Tabs 标签页 - 渐变蓝标题
+  .ant-tabs-bar {
+    border-bottom: 2px solid @skyblue-border !important;
+    margin-bottom: 16px;
+  }
+  
+  .ant-tabs-tab {
+    color: @skyblue-text-secondary !important;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 16px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      color: @skyblue-primary-dark !important;
+      background: linear-gradient(180deg, #E8F4FC 0%, #D8EEF8 100%) !important;
+    }
+    
+    &-active {
+      color: #FFFFFF !important;
+      font-weight: 600;
+      background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+      border-radius: 8px 8px 0 0;
+    }
+  }
+  
+  // 手风琴菜单模式
+  .ant-menu-light,
+  .ant-menu.ant-menu-light,
+  .ant-menu-submenu-light,
+  .ant-menu-vertical {
+    &.ant-menu-submenu-parent-inline {
+      > .ant-menu-submenu-title {
+        background: transparent !important;
+        border-radius: 6px;
+        margin: 4px 8px;
+        padding-left: 16px !important;
+        color: @skyblue-primary-dark !important;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: linear-gradient(180deg, #E0F0FA 0%, #D0E8F5 100%) !important;
+        }
+        
+        .ant-menu-submenu-arrow {
+          color: @skyblue-primary-dark !important;
+        }
+        
+        .anticon {
+          color: @skyblue-primary-dark !important;
+        }
+      }
+    }
+    
+    // 子菜单项
+    .ant-menu-item {
+      border-radius: 6px;
+      margin: 2px 8px;
+      padding-left: 32px !important;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background: linear-gradient(180deg, #E0F0FA 0%, #D0E8F5 100%) !important;
+        color: @skyblue-primary-dark !important;
+      }
+      
+      &.ant-menu-item-selected {
+        background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+        color: #FFFFFF !important;
+        border-radius: 6px;
+        
+        &::after {
+          display: none;
+        }
+      }
+    }
+  }
+  
+  // Pro Layout 菜单手风琴适配
+  .ant-pro-sider-menu {
+    .ant-menu-submenu-open,
+    .ant-menu-submenu-selected {
+      > .ant-menu-submenu-title {
+        background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+        color: #FFFFFF !important;
+        
+        .ant-menu-submenu-arrow {
+          color: #FFFFFF !important;
+        }
+      }
+    }
+  }
+  
+  // Tag 标签样式
+  .ant-tag {
+    border-radius: 4px;
+    border: 1px solid @skyblue-border;
+    background: @skyblue-bg-tertiary;
+    color: @skyblue-text-secondary;
+    
+    &-blue {
+      background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+      border-color: #5CACEE !important;
+      color: #FFFFFF !important;
+    }
+  }
+  
+  // Switch 开关样式
+  .ant-switch {
+    background: @skyblue-border;
+    border-radius: 12px;
+    
+    &-checked {
+      background: linear-gradient(180deg, #87CEEB 0%, #5CACEE 100%) !important;
+    }
+  }
+  
+  // Drawer
+  .ant-drawer-content {
+    background: @skyblue-bg-primary !important;
+  }
+  
+  .ant-drawer-header {
+    background: @skyblue-bg-secondary !important;
+    border-bottom: 1px solid @skyblue-border !important;
+    
+    .ant-drawer-title {
+      color: @skyblue-text-primary !important;
+    }
+  }
+  
+  .ant-drawer-close {
+    color: @skyblue-text-secondary !important;
+  }
+}
+
+// 极简按钮阴影
+body.skyblue,
+body.realskyblue {
+  .ant-btn {
+    &-primary:not(:disabled):active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 2px rgba(135, 206, 235, 0.3) !important;
+    }
+  }
+}

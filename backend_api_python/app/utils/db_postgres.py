@@ -234,159 +234,25 @@ def _acquire_conn_with_wait(pg_pool):
         return conn
 
 
-class PostgresCursor:
-    """PostgreSQL cursor wrapper with placeholder conversion for backward compatibility"""
-    
-    def __init__(self, cursor):
-        self._cursor = cursor
-        self._last_insert_id = None
-    
-    def _convert_placeholders(self, query: str) -> str:
-        """
-        Convert ? placeholders to PostgreSQL %s for backward compatibility.
-        Also handle some SQL syntax differences.
-        """
-        # Replace ? -> %s
-        query = query.replace('?', '%s')
-        
-        # INSERT OR IGNORE -> PostgreSQL: INSERT ... ON CONFLICT DO NOTHING
-        query = query.replace('INSERT OR IGNORE', 'INSERT')
-        
-        return query
-    
-    def execute(self, query: str, args: Any = None):
-        """Execute SQL statement.
-
-        For INSERT statements without an explicit RETURNING clause, we try to
-        append ``RETURNING id`` so legacy callers can read ``cursor.lastrowid``.
-        But not every table has an ``id`` column (e.g. ``qd_oauth_states``
-        uses ``state`` as PK).  In that case psycopg2 raises
-        ``UndefinedColumn`` and aborts the whole transaction, which can
-        cascade into "column \"id\" does not exist" errors across the app.
-
-        To stay safe, wrap the RETURNING-id variant in a SAVEPOINT.  If it
-        fails with UndefinedColumn, roll back to the savepoint and retry the
-        plain INSERT without RETURNING.  The outer transaction is preserved.
-        """
-        query = self._convert_placeholders(query)
-        if args is not None and not isinstance(args, (tuple, list)):
-            args = (args,)
-
-        is_insert = query.strip().upper().startswith('INSERT')
-        has_returning = 'RETURNING' in query.upper()
-
-        if is_insert and not has_returning:
-            q_with_id = query.rstrip(';').rstrip() + ' RETURNING id'
-            savepoint = '_pg_ins_ret_id'
-            try:
-                self._cursor.execute(f"SAVEPOINT {savepoint}")
-            except Exception:
-                savepoint = None
-
-            try:
-                if args:
-                    result = self._cursor.execute(q_with_id, args)
-                else:
-                    result = self._cursor.execute(q_with_id)
-                try:
-                    row = self._cursor.fetchone()
-                    if row and 'id' in row:
-                        self._last_insert_id = row['id']
-                except Exception:
-                    pass
-                if savepoint:
-                    try:
-                        self._cursor.execute(f"RELEASE SAVEPOINT {savepoint}")
-                    except Exception:
-                        pass
-                return result
-            except Exception as e:
-                # If the error is about missing id column, fall back.  Other
-                # errors (unique violation, NOT NULL, FK, ...) must propagate.
-                msg = str(e).lower()
-                is_missing_id = (
-                    'column "id" does not exist' in msg
-                    or 'undefinedcolumn' in e.__class__.__name__.lower()
-                    and '"id"' in msg
-                )
-                if not is_missing_id:
-                    raise
-                if savepoint:
-                    try:
-                        self._cursor.execute(f"ROLLBACK TO SAVEPOINT {savepoint}")
-                    except Exception:
-                        pass
-                # Retry without RETURNING id.  Leaves _last_insert_id as None.
-                if args:
-                    return self._cursor.execute(query, args)
-                return self._cursor.execute(query)
-
-        # Non-INSERT, or INSERT with caller-supplied RETURNING
-        if args:
-            result = self._cursor.execute(query, args)
-        else:
-            result = self._cursor.execute(query)
-
-        if is_insert and has_returning:
-            try:
-                row = self._cursor.fetchone()
-                if row and 'id' in row:
-                    self._last_insert_id = row['id']
-            except Exception:
-                pass
-
-        return result
-    
-    def fetchone(self) -> Optional[Dict[str, Any]]:
-        """Fetch single row"""
-        row = self._cursor.fetchone()
-        if row is None:
-            return None
-        # RealDictCursor already returns a dict, so return as-is
-        return row if isinstance(row, dict) else dict(row) if row else None
-    
-    def fetchall(self) -> List[Dict[str, Any]]:
-        """Fetch all rows"""
-        rows = self._cursor.fetchall()
-        if not rows:
-            return []
-        # RealDictCursor already returns dicts, so return as-is
-        return [row if isinstance(row, dict) else dict(row) for row in rows]
-    
-    def close(self):
-        """Close cursor"""
-        self._cursor.close()
-    
-    @property
-    def lastrowid(self) -> Optional[int]:
-        """Get last inserted row ID"""
-        return self._last_insert_id
-    
-    @property
-    def rowcount(self) -> int:
-        """Get affected row count"""
-        return self._cursor.rowcount
-
-
 class PostgresConnection:
-    """PostgreSQL connection wrapper"""
-    
+    """PostgreSQL connection wrapper (minimal — no legacy cursor compat)."""
+
     def __init__(self, conn):
         self._conn = conn
         self._pool = _get_connection_pool()
-    
-    def cursor(self) -> PostgresCursor:
-        """Create cursor"""
-        return PostgresCursor(self._conn.cursor(cursor_factory=RealDictCursor))
-    
+
+    def cursor(self):
+        """Create a raw psycopg2 cursor with RealDictCursor."""
+        return self._conn.cursor(cursor_factory=RealDictCursor)
+
     def commit(self):
         """Commit transaction"""
         self._conn.commit()
-    
+
     def rollback(self):
         """Rollback transaction"""
         self._conn.rollback()
-    
+
     def close(self):
         """Return connection to pool.  Broken connections are discarded so
         we don't poison the pool with closed sockets.
@@ -435,32 +301,6 @@ def get_pg_connection():
                 pg_pool.putconn(conn, close=broken)
             except Exception:
                 pass
-
-
-def get_pg_connection_sync() -> PostgresConnection:
-    """
-    Get connection synchronously (caller must close).
-
-    NOTE: this function leaks its connection if the caller forgets to call
-    `.close()`.  Prefer `get_pg_connection()` (context manager) whenever
-    possible.
-    """
-    pg_pool = _get_connection_pool()
-    conn = _acquire_conn_with_wait(pg_pool)
-    return PostgresConnection(conn)
-
-
-def execute_sql(sql: str, params: tuple = None) -> List[Dict[str, Any]]:
-    """
-    Execute SQL and return results (convenience function)
-    """
-    with get_pg_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(sql, params)
-        if sql.strip().upper().startswith('SELECT'):
-            return cursor.fetchall()
-        conn.commit()
-        return []
 
 
 def is_postgres_available() -> bool:

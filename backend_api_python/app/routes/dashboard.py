@@ -17,7 +17,9 @@ from typing import Any, Dict, List, Tuple
 
 from flask import Blueprint, jsonify, request, g
 
-from app.utils.db import get_db_connection
+from sqlalchemy import text
+
+from app.database.session import get_session
 from app.utils.logger import get_logger
 from app.utils.auth import login_required
 
@@ -310,15 +312,16 @@ def summary():
     """
     ---
     tags:
-      - Summary
-    summary: "Return dashboard summary used by the frontend dashboard view (private Vue repo)."
+      - Dashboard/Summary
+    summary: "Get dashboard summary"
+    description: "Return aggregated dashboard data including strategy counts, positions, trade history, P&L, performance statistics, and charts."
     produces:
       - application/json
     security:
       - BearerAuth: []
     responses:
       200:
-        description: Success
+        description: Successful response with dashboard summary
         schema:
           type: object
           properties:
@@ -330,29 +333,56 @@ def summary():
               example: success
             data:
               type: object
+              properties:
+                ai_strategy_count:
+                  type: integer
+                indicator_strategy_count:
+                  type: integer
+                total_equity:
+                  type: number
+                total_pnl:
+                  type: number
+                total_realized_pnl:
+                  type: number
+                total_unrealized_pnl:
+                  type: number
+                performance:
+                  type: object
+                strategy_stats:
+                  type: array
+                daily_pnl_chart:
+                  type: array
+                strategy_pnl_chart:
+                  type: array
+                monthly_returns:
+                  type: array
+                hourly_distribution:
+                  type: array
+                calendar_months:
+                  type: array
+                recent_trades:
+                  type: array
+                current_positions:
+                  type: array
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
       500:
-        description: Internal Server Error
+        description: Internal server error
     """
     try:
         user_id = g.user_id
         
         # Strategy counts (filtered by user_id)
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                """
-                SELECT id, strategy_name, strategy_type, status, initial_capital, trading_config, strategy_mode
-                FROM qd_strategies_trading
-                WHERE user_id = ?
-                """,
-                (user_id,)
+        with get_session() as session:
+            result = session.execute(
+                text("""
+                    SELECT id, strategy_name, strategy_type, status, initial_capital, trading_config, strategy_mode
+                    FROM trade_strategies_trading
+                    WHERE user_id = :user_id
+                """),
+                {"user_id": user_id},
             )
-            strategies = cur.fetchall() or []
-            cur.close()
+            strategies = result.mappings().fetchall() or []
 
         strategies = [s for s in strategies if not _is_bot_strategy(s)]
         running = [s for s in strategies if (s.get("status") or "").strip().lower() == "running"]
@@ -376,22 +406,20 @@ def summary():
                 ai_enabled_strategy_count += 1
 
         # Positions (best-effort, filtered by user_id)
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                """
-                SELECT p.*, s.strategy_name, s.initial_capital, s.leverage, s.market_type
-                FROM qd_strategy_positions p
-                INNER JOIN qd_strategies_trading s ON s.id = p.strategy_id
-                WHERE p.user_id = ?
-                  AND s.user_id = ?
-                  AND COALESCE(LOWER(TRIM(s.strategy_mode)), 'signal') <> 'bot'
-                ORDER BY p.updated_at DESC
-                """,
-                (user_id, user_id)
+        with get_session() as session:
+            result = session.execute(
+                text("""
+                    SELECT p.*, s.strategy_name, s.initial_capital, s.leverage, s.market_type
+                    FROM trade_strategy_positions p
+                    INNER JOIN trade_strategies_trading s ON s.id = p.strategy_id
+                    WHERE p.user_id = :user_id
+                      AND s.user_id = :user_id
+                      AND COALESCE(LOWER(TRIM(s.strategy_mode)), 'signal') <> 'bot'
+                    ORDER BY p.updated_at DESC
+                """),
+                {"user_id": user_id},
             )
-            rows = cur.fetchall() or []
-            cur.close()
+            rows = result.mappings().fetchall() or []
 
         current_positions: List[Dict[str, Any]] = []
         total_unrealized_pnl = 0.0
@@ -421,39 +449,35 @@ def summary():
 
         # Recent trades (best-effort, filtered by user_id)
         # Also compute all-time trade count for dashboard top cards.
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                """
-                SELECT COUNT(1) AS cnt
-                FROM qd_strategy_trades t
-                INNER JOIN qd_strategies_trading s ON s.id = t.strategy_id
-                WHERE t.user_id = ?
-                  AND s.user_id = ?
-                  AND COALESCE(LOWER(TRIM(s.strategy_mode)), 'signal') <> 'bot'
-                """,
-                (user_id, user_id)
+        with get_session() as session:
+            result = session.execute(
+                text("""
+                    SELECT COUNT(1) AS cnt
+                    FROM trade_strategy_trades t
+                    INNER JOIN trade_strategies_trading s ON s.id = t.strategy_id
+                    WHERE t.user_id = :user_id
+                      AND s.user_id = :user_id
+                      AND COALESCE(LOWER(TRIM(s.strategy_mode)), 'signal') <> 'bot'
+                """),
+                {"user_id": user_id},
             )
-            total_trades_all = int((cur.fetchone() or {}).get("cnt") or 0)
-            cur.close()
+            row = result.mappings().fetchone() or {}
+            total_trades_all = int(row.get("cnt") or 0)
 
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                """
-                SELECT t.*, s.strategy_name
-                FROM qd_strategy_trades t
-                INNER JOIN qd_strategies_trading s ON s.id = t.strategy_id
-                WHERE t.user_id = ?
-                  AND s.user_id = ?
-                  AND COALESCE(LOWER(TRIM(s.strategy_mode)), 'signal') <> 'bot'
-                ORDER BY t.created_at DESC
-                LIMIT 500
-                """,
-                (user_id, user_id)
+            result = session.execute(
+                text("""
+                    SELECT t.*, s.strategy_name
+                    FROM trade_strategy_trades t
+                    INNER JOIN trade_strategies_trading s ON s.id = t.strategy_id
+                    WHERE t.user_id = :user_id
+                      AND s.user_id = :user_id
+                      AND COALESCE(LOWER(TRIM(s.strategy_mode)), 'signal') <> 'bot'
+                    ORDER BY t.created_at DESC
+                    LIMIT 500
+                """),
+                {"user_id": user_id},
             )
-            recent_trades_raw = cur.fetchall() or []
-            cur.close()
+            recent_trades_raw = result.mappings().fetchall() or []
         
         # Convert datetime to timestamp for frontend compatibility
         from datetime import timezone as _tz
@@ -624,8 +648,9 @@ def pending_orders():
     """
     ---
     tags:
-      - Pending
-    summary: "Return pending orders list for dashboard page."
+      - Dashboard/Orders
+    summary: "Get pending orders"
+    description: "Return paginated pending orders list with strategy and exchange info for the dashboard page."
     produces:
       - application/json
     security:
@@ -633,17 +658,19 @@ def pending_orders():
     parameters:
       - name: page
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Page"
+        default: 1
+        description: "Page number"
       - name: pageSize
         in: query
-        type: string
+        type: integer
         required: false
-        description: "Pagesize"
+        default: 20
+        description: "Items per page, max 200"
     responses:
       200:
-        description: Success
+        description: Successful response with pending order list
         schema:
           type: object
           properties:
@@ -655,12 +682,19 @@ def pending_orders():
               example: success
             data:
               type: object
+              properties:
+                list:
+                  type: array
+                page:
+                  type: integer
+                pageSize:
+                  type: integer
+                total:
+                  type: integer
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
       500:
-        description: Internal Server Error
+        description: Internal server error
     """
     try:
         user_id = g.user_id
@@ -668,33 +702,32 @@ def pending_orders():
         page_size = max(1, min(200, _safe_int(request.args.get("pageSize"), 20)))
         offset = (page - 1) * page_size
 
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute("SELECT COUNT(1) AS cnt FROM pending_orders WHERE user_id = ?", (user_id,))
-            total = int((cur.fetchone() or {}).get("cnt") or 0)
-            cur.close()
-
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                """
-                SELECT o.*,
-                       s.strategy_name,
-                       s.notification_config AS strategy_notification_config,
-                       s.exchange_config AS strategy_exchange_config,
-                       s.market_type AS strategy_market_type,
-                       s.market_category AS strategy_market_category,
-                       s.execution_mode AS strategy_execution_mode
-                FROM pending_orders o
-                LEFT JOIN qd_strategies_trading s ON s.id = o.strategy_id
-                WHERE o.user_id = ?
-                ORDER BY o.id DESC
-                LIMIT ? OFFSET ?
-                """,
-                (user_id, int(page_size), int(offset)),
+        with get_session() as session:
+            result = session.execute(
+                text("SELECT COUNT(1) AS cnt FROM pending_orders WHERE user_id = :user_id"),
+                {"user_id": user_id},
             )
-            rows = cur.fetchall() or []
-            cur.close()
+            row = result.mappings().fetchone() or {}
+            total = int(row.get("cnt") or 0)
+
+            result = session.execute(
+                text("""
+                    SELECT o.*,
+                           s.strategy_name,
+                           s.notification_config AS strategy_notification_config,
+                           s.exchange_config AS strategy_exchange_config,
+                           s.market_type AS strategy_market_type,
+                           s.market_category AS strategy_market_category,
+                           s.execution_mode AS strategy_execution_mode
+                    FROM pending_orders o
+                    LEFT JOIN trade_strategies_trading s ON s.id = o.strategy_id
+                    WHERE o.user_id = :user_id
+                    ORDER BY o.id DESC
+                    LIMIT :limit OFFSET :offset
+                """),
+                {"user_id": user_id, "limit": int(page_size), "offset": int(offset)},
+            )
+            rows = result.mappings().fetchall() or []
 
         out: List[Dict[str, Any]] = []
         for r in rows:
@@ -781,8 +814,9 @@ def delete_pending_order(order_id: int):
     """
     ---
     tags:
-      - General
-    summary: "Delete a pending order record (dashboard operation)."
+      - Dashboard/Orders
+    summary: "Delete pending order"
+    description: "Delete a pending order record by ID. Orders in 'processing' status cannot be deleted."
     produces:
       - application/json
     security:
@@ -792,10 +826,10 @@ def delete_pending_order(order_id: int):
         in: path
         type: integer
         required: true
-        description: "Order Id"
+        description: "Order ID"
     responses:
       200:
-        description: Success
+        description: Pending order deleted successfully
         schema:
           type: object
           properties:
@@ -807,12 +841,17 @@ def delete_pending_order(order_id: int):
               example: success
             data:
               type: object
+              properties:
+                id:
+                  type: integer
       401:
         description: Unauthorized - Invalid or missing token
       400:
-        description: Bad Request
+        description: Bad Request - invalid id or processing order
+      404:
+        description: Order not found
       500:
-        description: Internal Server Error
+        description: Internal server error
     """
     try:
         user_id = g.user_id
@@ -820,21 +859,23 @@ def delete_pending_order(order_id: int):
         if oid <= 0:
             return jsonify({"code": 0, "msg": "invalid_id", "data": None}), 400
 
-        with get_db_connection() as db:
-            cur = db.cursor()
+        with get_session() as session:
             # Verify the order belongs to current user
-            cur.execute("SELECT id, status FROM pending_orders WHERE id = ? AND user_id = ?", (oid, user_id))
-            row = cur.fetchone() or {}
+            result = session.execute(
+                text("SELECT id, status FROM pending_orders WHERE id = :oid AND user_id = :user_id"),
+                {"oid": oid, "user_id": user_id},
+            )
+            row = result.mappings().fetchone() or {}
             if not row:
-                cur.close()
                 return jsonify({"code": 0, "msg": "not_found", "data": None}), 404
             st = (row.get("status") or "").strip().lower()
             if st == "processing":
-                cur.close()
                 return jsonify({"code": 0, "msg": "cannot_delete_processing", "data": None}), 400
-            cur.execute("DELETE FROM pending_orders WHERE id = ? AND user_id = ?", (oid, user_id))
-            db.commit()
-            cur.close()
+            session.execute(
+                text("DELETE FROM pending_orders WHERE id = :oid AND user_id = :user_id"),
+                {"oid": oid, "user_id": user_id},
+            )
+            # session 由 get_session() 上下文管理器自动 commit
 
         return jsonify({"code": 1, "msg": "success", "data": {"id": oid}})
     except Exception as e:

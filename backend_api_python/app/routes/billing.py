@@ -24,8 +24,9 @@ def get_membership_plans():
     """
     ---
     tags:
-      - General
-    summary: "Get membership plan configuration + current user's billing snapshot."
+      - System/Billing
+    summary: "Get membership plans"
+    description: "Retrieve membership plan configurations and the current user's billing snapshot."
     produces:
       - application/json
     security:
@@ -68,8 +69,9 @@ def purchase_membership():
     """
     ---
     tags:
-      - Purchase
-    summary: "Purchase membership (mock: immediate activation)."
+      - System/Billing
+    summary: "Purchase membership"
+    description: "Purchase a membership plan (mock: immediate activation without real payment)."
     produces:
       - application/json
     consumes:
@@ -132,8 +134,9 @@ def usdt_create_order():
     """
     ---
     tags:
-      - Usdt
-    summary: "Create USDT order for membership plan (per-order address)."
+      - System/Billing
+    summary: "Create USDT payment order"
+    description: "Create a USDT payment order for a membership plan with a per-order deposit address."
     produces:
       - application/json
     consumes:
@@ -191,8 +194,9 @@ def usdt_get_order(order_id: int):
     """
     ---
     tags:
-      - Usdt
-    summary: "Get my USDT order; refresh chain status by default."
+      - System/Billing
+    summary: "Get USDT order details"
+    description: "Retrieve a USDT payment order by ID with optional chain status refresh."
     produces:
       - application/json
     security:
@@ -202,15 +206,15 @@ def usdt_get_order(order_id: int):
         in: path
         type: integer
         required: true
-        description: "Order Id"
+        description: "Order ID"
       - name: refresh
         in: query
         type: string
         required: false
-        description: "Refresh"
+        description: "Force refresh chain status (1/true/yes)"
     responses:
       200:
-        description: Success
+        description: Order details retrieved successfully
         schema:
           type: object
           properties:
@@ -223,11 +227,11 @@ def usdt_get_order(order_id: int):
             data:
               type: object
       401:
-        description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
+        description: Unauthorized
+      404:
+        description: Order not found
       500:
-        description: Internal Server Error
+        description: Internal server error
     """
     try:
         user_id = getattr(g, "user_id", None)

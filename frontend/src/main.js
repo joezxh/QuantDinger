@@ -3,6 +3,8 @@ import 'core-js/stable'
 import 'regenerator-runtime/runtime'
 
 import Vue from 'vue'
+// 必须在 Vue.use(Antd) 之前引入，扩展 theme 属性支持
+import '@/plugins/antdThemeFix'
 import App from './App.vue'
 import router from './router'
 import store from './store/'
@@ -19,6 +21,7 @@ import bootstrap from './core/bootstrap'
 import './core/lazy_use' // use lazy load components
 import './permission' // permission control
 import './utils/filter' // global filter
+import './directives/hasPermi' // RBAC button permission directive
 import './global.less' // global style
 // 必须在 global.less 之后：覆盖 Pro Layout 顶栏/侧栏底栏（否则会被 global 与组件顺序盖住）
 import './qd-layout-dark-override.less'

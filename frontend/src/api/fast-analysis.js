@@ -8,7 +8,7 @@ const BASE_URL = '/api/fast-analysis'
 
 /**
  * Run fast AI analysis
- * @param {Object} params - { market, symbol, language, timeframe }
+ * @param {Object} params - { market, symbol, language, timeframe, use_dify, workflow_code }
  */
 export function fastAnalyze (params) {
   return request({

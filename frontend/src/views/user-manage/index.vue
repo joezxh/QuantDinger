@@ -44,10 +44,10 @@
         <a-card :bordered="false" class="user-table-card">
           <a-table
             :columns="columns"
-            :dataSource="users"
+            :dataSource="users || []"
             :loading="loading"
             :pagination="pagination"
-            :rowKey="record => record.id"
+            :rowKey="(record, index) => `user-${record.id}-${index}`"
             :scroll="{ x: 1420 }"
             @change="handleTableChange"
           >
@@ -114,6 +114,11 @@
                 <a-tooltip :title="$t('userManage.resetPassword') || 'Reset Password'">
                   <a-button type="link" size="small" @click="showResetPasswordModal(record)">
                     <a-icon type="key" />
+                  </a-button>
+                </a-tooltip>
+                <a-tooltip :title="$t('userManage.assignRoles') || 'Assign Roles'">
+                  <a-button type="link" size="small" @click="showAssignRoleModal(record)">
+                    <a-icon type="safety" style="color: #52c41a" />
                   </a-button>
                 </a-tooltip>
                 <a-tooltip :title="$t('common.delete') || 'Delete'">
@@ -226,7 +231,7 @@
         <a-card :bordered="false" class="user-table-card">
           <a-table
             :columns="strategyColumns"
-            :dataSource="systemStrategies"
+            :dataSource="systemStrategies || []"
             :loading="strategyLoading"
             :pagination="strategyPagination"
             :rowKey="record => record.id"
@@ -420,7 +425,7 @@
         <a-card :bordered="false" class="user-table-card">
           <a-table
             :columns="orderColumns"
-            :dataSource="orders"
+            :dataSource="orders || []"
             :loading="orderLoading"
             :pagination="orderPagination"
             :rowKey="record => record.order_type + '-' + record.id"
@@ -568,7 +573,7 @@
           </h4>
           <a-table
             :columns="aiUserColumns"
-            :dataSource="aiUserStats"
+            :dataSource="aiUserStats || []"
             :loading="aiStatsLoading"
             :pagination="aiStatsPagination"
             :rowKey="record => record.user_id"
@@ -624,7 +629,7 @@
           </h4>
           <a-table
             :columns="aiRecentColumns"
-            :dataSource="aiRecentRecords"
+            :dataSource="aiRecentRecords || []"
             :loading="aiStatsLoading"
             :pagination="false"
             :rowKey="record => record.id"
@@ -843,11 +848,34 @@
         </a-form-item>
       </a-form>
     </a-modal>
+
+    <!-- Assign Roles Modal -->
+    <a-modal
+      v-model="roleModalVisible"
+      :title="$t('userManage.assignRoles') || '分配角色'"
+      @ok="handleAssignRoles"
+      @cancel="roleModalVisible = false"
+      :confirmLoading="roleSaving"
+    >
+      <a-checkbox-group v-model="selectedRoleIds">
+        <a-row>
+          <a-col :span="12" v-for="role in availableRoles" :key="role.id">
+            <a-checkbox :value="role.id">
+              {{ role.name }}
+              <a-tooltip v-if="role.description" :title="role.description">
+                <a-icon type="info-circle" style="color: #999; font-size: 12px;" />
+              </a-tooltip>
+            </a-checkbox>
+          </a-col>
+        </a-row>
+      </a-checkbox-group>
+    </a-modal>
   </div>
 </template>
 
 <script>
 import { getUserList, exportUsers, createUser, updateUser, deleteUser, resetUserPassword, getRoles, setUserCredits, setUserVip, getSystemStrategies, getAdminOrders, getAdminAiStats } from '@/api/user'
+import { getUserRoles, assignRolesToUser, getAllRoles } from '@/api/permission'
 import { baseMixin } from '@/store/app-mixin'
 import { mapGetters } from 'vuex'
 
@@ -889,6 +917,12 @@ export default {
       vipDays: 30,
       vipCustomDate: null,
       vipRemark: '',
+      // Role Assignment Modal
+      roleModalVisible: false,
+      roleSaving: false,
+      roleEditingUser: null,
+      selectedRoleIds: [],
+      availableRoles: [],
       // System Strategy Overview
       strategyLoading: false,
       systemStrategies: [],
@@ -1355,8 +1389,9 @@ export default {
           params.sort_order = this.strategySortOrder
         }
         const res = await getSystemStrategies(params)
-        if (res.code === 1) {
-          this.systemStrategies = res.data.items || []
+        if (res.code === 1 && res.data) {
+          // 确保数据是数组
+          this.systemStrategies = Array.isArray(res.data.items) ? res.data.items : []
           this.strategyPagination.total = res.data.total || 0
           this.strategySummary = res.data.summary || {}
           this.strategiesLoaded = true
@@ -1435,8 +1470,9 @@ export default {
           page_size: this.pagination.pageSize,
           search: this.searchKeyword || ''
         })
-        if (res.code === 1) {
-          this.users = res.data.items || []
+        if (res.code === 1 && res.data) {
+          // 确保数据是数组
+          this.users = Array.isArray(res.data.items) ? res.data.items : []
           this.pagination.total = res.data.total || 0
         } else {
           this.$message.error(res.msg || 'Failed to load users')
@@ -1479,8 +1515,8 @@ export default {
     async loadRoles () {
       try {
         const res = await getRoles()
-        if (res.code === 1) {
-          this.roles = res.data.roles || []
+        if (res.code === 1 && res.data) {
+          this.roles = Array.isArray(res.data.roles) ? res.data.roles : []
         }
       } catch (error) {
         console.error('Failed to load roles:', error)
@@ -1723,6 +1759,36 @@ export default {
       }
     },
 
+    // ==================== Role Assignment ====================
+    async showAssignRoleModal (record) {
+      this.roleEditingUser = record
+      this.roleModalVisible = true
+      // Load available roles and user's current roles in parallel
+      try {
+        const [rolesRes, userRolesRes] = await Promise.all([
+          getAllRoles(),
+          getUserRoles(record.id)
+        ])
+        this.availableRoles = rolesRes.data || []
+        this.selectedRoleIds = (userRolesRes.data || []).map(r => r.id)
+      } catch (e) {
+        this.$message.error(this.$t('userManage.roleFetchFailed') || '加载角色数据失败')
+      }
+    },
+
+    async handleAssignRoles () {
+      this.roleSaving = true
+      try {
+        await assignRolesToUser(this.roleEditingUser.id, this.selectedRoleIds)
+        this.$message.success(this.$t('userManage.roleAssignSuccess') || '角色分配成功')
+        this.roleModalVisible = false
+        this.loadUsers()
+      } catch (e) {
+        this.$message.error(e.response?.data?.msg || (this.$t('common.operationFailed') || '操作失败'))
+      }
+      this.roleSaving = false
+    },
+
     // ==================== Order List ====================
     async loadOrders () {
       this.orderLoading = true
@@ -1733,8 +1799,9 @@ export default {
           status: this.orderStatusFilter === 'all' ? '' : this.orderStatusFilter,
           search: this.orderSearchKeyword || ''
         })
-        if (res.code === 1) {
-          this.orders = res.data.items || []
+        if (res.code === 1 && res.data) {
+          // 确保数据是数组
+          this.orders = Array.isArray(res.data.items) ? res.data.items : []
           this.orderPagination.total = res.data.total || 0
           this.orderSummary = res.data.summary || {}
           this.ordersLoaded = true
@@ -1798,9 +1865,10 @@ export default {
           page_size: this.aiStatsPagination.pageSize,
           search: this.aiStatsSearchKeyword || ''
         })
-        if (res.code === 1) {
-          this.aiUserStats = res.data.user_stats || []
-          this.aiRecentRecords = res.data.recent || []
+        if (res.code === 1 && res.data) {
+          // 确保数据是数组
+          this.aiUserStats = Array.isArray(res.data.user_stats) ? res.data.user_stats : []
+          this.aiRecentRecords = Array.isArray(res.data.recent) ? res.data.recent : []
           this.aiStatsPagination.total = res.data.user_total || 0
           this.aiStatsSummary = res.data.summary || {}
           this.aiStatsLoaded = true

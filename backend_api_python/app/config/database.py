@@ -83,6 +83,21 @@ class MetaCacheConfig(type):
     def PRICE_CACHE_TTL(cls):
         return 10
 
+    @property
+    def GRAPH_CONTEXT_TTL(cls):
+        """Graph context cache TTL in seconds (default: 15 minutes)"""
+        return int(os.getenv('GRAPH_CONTEXT_TTL', 900))
+
+    @property
+    def RELATED_ASSETS_TTL(cls):
+        """Related assets cache TTL in seconds (default: 30 minutes)"""
+        return int(os.getenv('RELATED_ASSETS_TTL', 1800))
+
+    @property
+    def EVENT_IMPACT_TTL(cls):
+        """Event impact analysis cache TTL (default: 10 minutes)"""
+        return 600
+
 
 class CacheConfig(metaclass=MetaCacheConfig):
     """缓存配置"""

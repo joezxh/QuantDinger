@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-import { UserLayout, BasicLayout, BlankLayout } from '@/layouts'
+import { UserLayout, BasicLayout, BlankLayout, RouteView } from '@/layouts'
 
 export const asyncRouterMap = [
   {
@@ -9,39 +9,74 @@ export const asyncRouterMap = [
     meta: { title: 'menu.home' },
     redirect: '/ai-asset-analysis',
     children: [
-      // 1. AI资产分析（首页）
+      // ========== 手风琴菜单：分析工具（第一位）==========
       {
-        path: '/ai-asset-analysis',
-        name: 'AIAssetAnalysis',
-        component: () => import('@/views/ai-asset-analysis'),
-        meta: { title: 'menu.dashboard.aiAssetAnalysis', keepAlive: false, icon: 'appstore', permission: ['dashboard'] }
+        path: '/analysis-tools',
+        name: 'AnalysisTools',
+        component: RouteView,
+        meta: {
+          title: 'menu.analysisTools',
+          icon: 'cluster',
+          permission: ['dashboard']
+        },
+        redirect: '/ai-asset-analysis',
+        children: [
+          // AI资产分析
+          {
+            path: '/ai-asset-analysis',
+            name: 'AIAssetAnalysis',
+            component: () => import('@/views/ai-asset-analysis'),
+            meta: { title: 'menu.dashboard.aiAssetAnalysis', keepAlive: false, icon: 'appstore', permission: ['dashboard'] }
+          },
+          // 知识图谱分析
+          {
+            path: '/graph-analysis',
+            name: 'GraphAnalysis',
+            component: () => import('@/views/graph-analysis'),
+            meta: { title: 'menu.graphAnalysis', keepAlive: false, icon: 'cluster', permission: ['dashboard'] }
+          }
+        ]
       },
-      // 2. 指标市场（浏览/购买指标，排在图表页之上）
-      {
-        path: '/indicator-community',
-        name: 'IndicatorCommunity',
-        component: () => import('@/views/indicator-community'),
-        meta: { title: 'menu.dashboard.community', keepAlive: false, icon: 'shop', permission: ['dashboard'] }
-      },
-      // 3. 指标 IDE（图表 + 代码编辑 + 回测一体化）
+      // 指标 IDE（独立）
       {
         path: '/indicator-ide',
         name: 'IndicatorIDE',
         component: () => import('@/views/indicator-ide'),
         meta: { title: 'menu.dashboard.indicatorIde', keepAlive: true, icon: 'code', permission: ['dashboard'] }
       },
-      // 4. 策略与实盘（指标信号策略：创建 / 管理 / 与实盘联动；不含 Python 脚本策略）
+      // ========== 手风琴菜单：交易工具 ==========
       {
-        path: '/strategy-live',
-        name: 'StrategyLive',
-        component: () => import('@/views/trading-assistant'),
+        path: '/trading-tools',
+        name: 'TradingTools',
+        component: RouteView,
         meta: {
-          title: 'menu.dashboard.tradingAssistant',
-          keepAlive: true,
-          icon: 'deployment-unit',
-          permission: ['dashboard'],
-          indicatorSignalOnly: true
-        }
+          title: 'menu.tradingTools',
+          icon: 'dollar',
+          permission: ['dashboard']
+        },
+        redirect: '/trading-bot',
+        children: [
+          // 交易机器人
+          {
+            path: '/trading-bot',
+            name: 'TradingBot',
+            component: () => import('@/views/trading-bot'),
+            meta: { title: 'menu.dashboard.tradingBot', keepAlive: true, icon: 'robot', permission: ['dashboard'] }
+          },
+          // 策略与实盘
+          {
+            path: '/strategy-live',
+            name: 'StrategyLive',
+            component: () => import('@/views/trading-assistant'),
+            meta: {
+              title: 'menu.dashboard.tradingAssistant',
+              keepAlive: true,
+              icon: 'deployment-unit',
+              permission: ['dashboard'],
+              indicatorSignalOnly: true
+            }
+          }
+        ]
       },
       // Python 脚本策略（无侧栏入口，从「交易机器人」进入）
       {
@@ -59,13 +94,6 @@ export const asyncRouterMap = [
         path: '/strategy-scripts',
         redirect: '/strategy-live',
         hidden: true
-      },
-      // 5. 交易机器人（实盘运维监控）
-      {
-        path: '/trading-bot',
-        name: 'TradingBot',
-        component: () => import('@/views/trading-bot'),
-        meta: { title: 'menu.dashboard.tradingBot', keepAlive: true, icon: 'robot', permission: ['dashboard'] }
       },
       // 旧路由兼容：图表与指标 → 指标 IDE
       {
@@ -91,7 +119,7 @@ export const asyncRouterMap = [
         hidden: true,
         meta: { title: 'menu.dashboard.tradingAssistant', keepAlive: false, icon: 'deployment-unit', permission: ['dashboard'] }
       },
-      // 原仪表盘路由保留兼容，重定向到交易助手
+      // 原仪表盘路由保留兼容，重定向到交易机器人
       {
         path: '/dashboard',
         name: 'Dashboard',
@@ -115,6 +143,104 @@ export const asyncRouterMap = [
         hidden: true,
         meta: { title: 'menu.dashboard.portfolio', keepAlive: true, icon: 'fund', permission: ['dashboard'] }
       },
+      // ========== 手风琴菜单：AI 配置 ==========
+      {
+        path: '/ai-config',
+        name: 'AIConfig',
+        component: RouteView,
+        meta: {
+          title: 'menu.aiConfig',
+          icon: 'api',
+          permission: ['dashboard']
+        },
+        redirect: '/llm-settings',
+        children: [
+          // LLM 设置
+          {
+            path: '/llm-settings',
+            name: 'LLMSettings',
+            component: () => import('@/views/llm'),
+            meta: { title: 'menu.llmSettings', keepAlive: false, icon: 'api', permission: ['dashboard'] }
+          },
+          // Dify 工作流管理
+          {
+            path: '/dify-workflow',
+            name: 'DifyWorkflow',
+            component: () => import('@/views/dify-workflow'),
+            meta: { title: 'menu.difyWorkflow', keepAlive: false, icon: 'robot', permission: ['dashboard'] }
+          }
+        ]
+      },
+      // ========== 手风琴菜单：数据工具 ==========
+      {
+        path: '/data-tools',
+        name: 'DataTools',
+        component: RouteView,
+        meta: {
+          title: 'menu.dataTools',
+          icon: 'database',
+          permission: ['dashboard']
+        },
+        redirect: '/indicator-community',
+        children: [
+          // 指标市场
+          {
+            path: '/indicator-community',
+            name: 'IndicatorCommunity',
+            component: () => import('@/views/indicator-community'),
+            meta: { title: 'menu.dashboard.community', keepAlive: false, icon: 'shop', permission: ['dashboard'] }
+          },
+          // 数据源管理 (admin only)
+          {
+            path: '/data-source',
+            name: 'DataSource',
+            component: () => import('@/views/data-source'),
+            meta: { title: 'menu.dataSource', keepAlive: false, icon: 'database', permission: ['admin'] }
+          }
+        ]
+      },
+      // ========== 手风琴菜单：系统管理 ==========
+      {
+        path: '/system',
+        name: 'System',
+        component: RouteView,
+        meta: {
+          title: 'menu.system',
+          icon: 'setting',
+          permission: ['admin']
+        },
+        redirect: '/user-manage',
+        children: [
+          // 用户管理 (admin only)
+          {
+            path: '/user-manage',
+            name: 'UserManage',
+            component: () => import('@/views/user-manage'),
+            meta: { title: 'menu.userManage', keepAlive: false, icon: 'team', permission: ['admin'] }
+          },
+          // 角色管理 (admin only)
+          {
+            path: '/role-manage',
+            name: 'RoleManage',
+            component: () => import('@/views/role-manage'),
+            meta: { title: 'menu.roleManage', keepAlive: false, icon: 'safety', permission: ['admin'] }
+          },
+          // 权限管理 (admin only)
+          {
+            path: '/permission-manage',
+            name: 'PermissionManage',
+            component: () => import('@/views/permission-manage'),
+            meta: { title: 'menu.permissionManage', keepAlive: false, icon: 'lock', permission: ['admin'] }
+          },
+          // 系统设置 (admin only)
+          {
+            path: '/settings',
+            name: 'Settings',
+            component: () => import('@/views/settings'),
+            meta: { title: 'menu.settings', keepAlive: false, icon: 'setting', permission: ['admin'] }
+          }
+        ]
+      },
       // 个人中心
       {
         path: '/profile',
@@ -128,27 +254,6 @@ export const asyncRouterMap = [
         name: 'Billing',
         component: () => import('@/views/billing'),
         meta: { title: 'menu.billing', keepAlive: false, icon: 'wallet', permission: ['dashboard'] }
-      },
-      // 用户管理 (admin only)
-      {
-        path: '/user-manage',
-        name: 'UserManage',
-        component: () => import('@/views/user-manage'),
-        meta: { title: 'menu.userManage', keepAlive: false, icon: 'team', permission: ['admin'] }
-      },
-      // LLM 设置
-      {
-        path: '/llm-settings',
-        name: 'LLMSettings',
-        component: () => import('@/views/llm'),
-        meta: { title: 'menu.llmSettings', keepAlive: false, icon: 'api', permission: ['dashboard'] }
-      },
-      // 系统设置 (admin only) - 放在最后
-      {
-        path: '/settings',
-        name: 'Settings',
-        component: () => import('@/views/settings'),
-        meta: { title: 'menu.settings', keepAlive: false, icon: 'setting', permission: ['admin'] }
       }
 
       // other

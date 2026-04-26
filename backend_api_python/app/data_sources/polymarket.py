@@ -8,8 +8,10 @@ import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 
+from sqlalchemy import text
+
+from app.database.session import get_session
 from app.utils.logger import get_logger
-from app.utils.db import get_db_connection
 
 logger = get_logger(__name__)
 
@@ -97,17 +99,18 @@ class PolymarketDataSource:
             
             # 先从数据库读取
             try:
-                with get_db_connection() as db:
-                    cur = db.cursor()
-                    cur.execute("""
-                        SELECT market_id, question, category, current_probability, 
-                               volume_24h, liquidity, end_date_iso, status, outcome_tokens
-                        FROM qd_polymarket_markets
-                        WHERE market_id = %s
-                    """, (market_id,))
-                    row = cur.fetchone()
-                    cur.close()
-                    
+                with get_session() as session:
+                    result = session.execute(
+                        text("""
+                            SELECT market_id, question, category, current_probability,
+                                   volume_24h, liquidity, end_date_iso, status, outcome_tokens
+                            FROM qd_polymarket_markets
+                            WHERE market_id = :market_id
+                        """),
+                        {"market_id": market_id},
+                    )
+                    row = result.mappings().fetchone()
+
                     if row:
                         # RealDictCursor返回字典，使用键访问
                         db_market_id = str(row.get('market_id') or market_id)
@@ -178,49 +181,58 @@ class PolymarketDataSource:
             
             # 如果允许使用缓存，先尝试从数据库搜索
             if use_cache:
-                with get_db_connection() as db:
-                    cur = db.cursor()
+                with get_session() as session:
                     # 改进搜索：同时搜索question和slug字段，也支持market_id精确匹配
                     keyword_lower = keyword.lower()
                     is_numeric = keyword_lower.isdigit()
                     has_hyphens = '-' in keyword_lower
-                    
+
                     if is_numeric:
                         # 如果是纯数字，可能是market_id，精确匹配
-                        cur.execute("""
-                            SELECT market_id, question, category, current_probability, 
-                                   volume_24h, liquidity, end_date_iso, status, slug
-                            FROM qd_polymarket_markets
-                            WHERE market_id = %s AND status = 'active'
-                            ORDER BY volume_24h DESC
-                            LIMIT %s
-                        """, (keyword, limit))
+                        result = session.execute(
+                            text("""
+                                SELECT market_id, question, category, current_probability,
+                                       volume_24h, liquidity, end_date_iso, status, slug
+                                FROM qd_polymarket_markets
+                                WHERE market_id = :keyword AND status = 'active'
+                                ORDER BY volume_24h DESC
+                                LIMIT :limit
+                            """),
+                            {"keyword": keyword, "limit": limit},
+                        )
                     elif has_hyphens:
                         # 如果包含连字符，可能是slug，优先匹配slug
-                        cur.execute("""
-                            SELECT market_id, question, category, current_probability, 
-                                   volume_24h, liquidity, end_date_iso, status, slug
-                            FROM qd_polymarket_markets
-                            WHERE (slug ILIKE %s OR question ILIKE %s) AND status = 'active'
-                            ORDER BY 
-                                CASE WHEN slug ILIKE %s THEN 1 ELSE 2 END,
-                                volume_24h DESC
-                            LIMIT %s
-                        """, (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", limit))
+                        pattern = f"%{keyword}%"
+                        result = session.execute(
+                            text("""
+                                SELECT market_id, question, category, current_probability,
+                                       volume_24h, liquidity, end_date_iso, status, slug
+                                FROM qd_polymarket_markets
+                                WHERE (slug ILIKE :pattern OR question ILIKE :pattern) AND status = 'active'
+                                ORDER BY
+                                    CASE WHEN slug ILIKE :pattern THEN 1 ELSE 2 END,
+                                    volume_24h DESC
+                                LIMIT :limit
+                            """),
+                            {"pattern": pattern, "limit": limit},
+                        )
                     else:
                         # 普通文本搜索
-                        cur.execute("""
-                            SELECT market_id, question, category, current_probability, 
-                                   volume_24h, liquidity, end_date_iso, status, slug
-                            FROM qd_polymarket_markets
-                            WHERE (question ILIKE %s OR slug ILIKE %s) AND status = 'active'
-                            ORDER BY volume_24h DESC
-                            LIMIT %s
-                        """, (f"%{keyword}%", f"%{keyword}%", limit))
-                    
-                    rows = cur.fetchall()
-                    cur.close()
-                    
+                        pattern = f"%{keyword}%"
+                        result = session.execute(
+                            text("""
+                                SELECT market_id, question, category, current_probability,
+                                       volume_24h, liquidity, end_date_iso, status, slug
+                                FROM qd_polymarket_markets
+                                WHERE (question ILIKE :pattern OR slug ILIKE :pattern) AND status = 'active'
+                                ORDER BY volume_24h DESC
+                                LIMIT :limit
+                            """),
+                            {"pattern": pattern, "limit": limit},
+                        )
+
+                    rows = result.mappings().fetchall()
+
                     if rows:
                         logger.info(f"Found {len(rows)} markets in database for keyword '{keyword}'")
                         return [{
@@ -374,39 +386,36 @@ class PolymarketDataSource:
     def _get_cached_markets(self, category: str = None, limit: int = 50) -> Optional[List[Dict]]:
         """从数据库缓存读取市场数据"""
         try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                
+            with get_session() as session:
                 # 检查缓存是否新鲜（5分钟内）
                 cutoff_time = datetime.now() - timedelta(seconds=self.cache_ttl)
-                
+
                 query = """
-                    SELECT market_id, question, category, current_probability, 
+                    SELECT market_id, question, category, current_probability,
                            volume_24h, liquidity, end_date_iso, status, outcome_tokens
                     FROM qd_polymarket_markets
-                    WHERE status = 'active' AND updated_at > %s
+                    WHERE status = 'active' AND updated_at > :cutoff_time
                 """
-                params = [cutoff_time]
-                
+                params = {"cutoff_time": cutoff_time}
+
                 if category:
-                    query += " AND category = %s"
-                    params.append(category)
-                
-                query += " ORDER BY volume_24h DESC LIMIT %s"
-                params.append(limit)
-                
-                cur.execute(query, params)
-                rows = cur.fetchall()
-                cur.close()
-                
+                    query += " AND category = :category"
+                    params["category"] = category
+
+                query += " ORDER BY volume_24h DESC LIMIT :limit"
+                params["limit"] = limit
+
+                result = session.execute(text(query), params)
+                rows = result.mappings().fetchall()
+
                 if rows:
-                    result = []
+                    result_rows = []
                     for row in rows:
                         market_id = str(row.get('market_id') or '')
                         slug = row.get('slug')
                         # 确保使用正确的URL构建方法
                         polymarket_url = self._build_polymarket_url(slug, market_id)
-                        result.append({
+                        result_rows.append({
                             "market_id": market_id,
                             "question": row.get('question') or '',
                             "category": row.get('category') or 'other',
@@ -419,8 +428,8 @@ class PolymarketDataSource:
                             "polymarket_url": polymarket_url,
                             "slug": slug if slug and not str(slug).isdigit() else None
                         })
-                    return result
-            
+                    return result_rows
+
             return None
         except Exception as e:
             logger.debug(f"Failed to get cached markets: {e}")
@@ -1164,8 +1173,7 @@ class PolymarketDataSource:
     def _save_markets_to_db(self, markets: List[Dict]):
         """保存市场数据到数据库"""
         try:
-            with get_db_connection() as db:
-                cur = db.cursor()
+            with get_session() as session:
                 for market in markets:
                     # 获取slug，但如果是数字则不要使用（数字不是有效的slug）
                     slug = market.get('slug') or None
@@ -1180,37 +1188,40 @@ class PolymarketDataSource:
                         # 如果清理后为空或仍然是数字，设置为None
                         if not slug or slug.isdigit():
                             slug = None
-                    
-                    cur.execute("""
-                        INSERT INTO qd_polymarket_markets
-                        (market_id, question, category, current_probability, volume_24h,
-                         liquidity, end_date_iso, status, outcome_tokens, slug, updated_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-                        ON CONFLICT (market_id) DO UPDATE SET
-                            question = EXCLUDED.question,
-                            category = EXCLUDED.category,
-                            current_probability = EXCLUDED.current_probability,
-                            volume_24h = EXCLUDED.volume_24h,
-                            liquidity = EXCLUDED.liquidity,
-                            end_date_iso = EXCLUDED.end_date_iso,
-                            status = EXCLUDED.status,
-                            outcome_tokens = EXCLUDED.outcome_tokens,
-                            slug = EXCLUDED.slug,
-                            updated_at = NOW()
-                    """, (
-                        market.get('market_id'),
-                        market.get('question'),
-                        market.get('category', 'other'),
-                        market.get('current_probability', 50.0),
-                        market.get('volume_24h', 0),
-                        market.get('liquidity', 0),
-                        market.get('end_date_iso'),
-                        market.get('status', 'active'),
-                        json.dumps(market.get('outcome_tokens', {})),
-                        slug
-                    ))
-                db.commit()
-                cur.close()
+
+                    session.execute(
+                        text("""
+                            INSERT INTO qd_polymarket_markets
+                            (market_id, question, category, current_probability, volume_24h,
+                             liquidity, end_date_iso, status, outcome_tokens, slug, updated_at)
+                            VALUES (:market_id, :question, :category, :current_probability, :volume_24h,
+                                    :liquidity, :end_date_iso, :status, :outcome_tokens, :slug, NOW())
+                            ON CONFLICT (market_id) DO UPDATE SET
+                                question = EXCLUDED.question,
+                                category = EXCLUDED.category,
+                                current_probability = EXCLUDED.current_probability,
+                                volume_24h = EXCLUDED.volume_24h,
+                                liquidity = EXCLUDED.liquidity,
+                                end_date_iso = EXCLUDED.end_date_iso,
+                                status = EXCLUDED.status,
+                                outcome_tokens = EXCLUDED.outcome_tokens,
+                                slug = EXCLUDED.slug,
+                                updated_at = NOW()
+                        """),
+                        {
+                            "market_id": market.get('market_id'),
+                            "question": market.get('question'),
+                            "category": market.get('category', 'other'),
+                            "current_probability": market.get('current_probability', 50.0),
+                            "volume_24h": market.get('volume_24h', 0),
+                            "liquidity": market.get('liquidity', 0),
+                            "end_date_iso": market.get('end_date_iso'),
+                            "status": market.get('status', 'active'),
+                            "outcome_tokens": json.dumps(market.get('outcome_tokens', {})),
+                            "slug": slug,
+                        },
+                    )
+                # session 由 get_session() 上下文管理器自动 commit
         except Exception as e:
             logger.error(f"Failed to save markets to DB: {type(e).__name__}: {e}", exc_info=True)
     

@@ -20,7 +20,8 @@ from flask import Blueprint, Response, jsonify, request, g
 import pandas as pd
 import numpy as np
 
-from app.utils.db import get_db_connection
+from app.database.session import get_session
+from app.database.repositories.indicator_repository import IndicatorRepository
 from app.utils.logger import get_logger
 from app.utils.auth import login_required
 from app.services.indicator_params import IndicatorCaller, IndicatorParamsParser
@@ -414,8 +415,9 @@ def get_indicators():
     """
     ---
     tags:
-      - General
-    summary: "Get indicator list for the current user."
+      - Indicator/Management
+    summary: "Get indicator list"
+    description: "Retrieve all indicators for the current user."
     produces:
       - application/json
     security:
@@ -444,30 +446,19 @@ def get_indicators():
     try:
         user_id = g.user_id
 
-        with get_db_connection() as db:
-            cur = db.cursor()
-            # Best-effort schema upgrade for VIP-free indicators
-            try:
-                cur.execute("ALTER TABLE qd_indicator_codes ADD COLUMN IF NOT EXISTS vip_free BOOLEAN DEFAULT FALSE")
-            except Exception:
-                pass
-            # Get user's own indicators (both purchased and custom).
-            cur.execute(
-                """
-                SELECT
-                  id, user_id, is_buy, end_time, name, code, description,
-                  publish_to_community, pricing_type, price, is_encrypted, preview_image, vip_free,
-                  createtime, updatetime, created_at, updated_at
-                FROM qd_indicator_codes
-                WHERE user_id = ?
-                ORDER BY id DESC
-                """,
-                (user_id,),
-            )
-            rows = cur.fetchall() or []
-            cur.close()
+        with get_session() as session:
+            repo = IndicatorRepository(session)
+            rows = repo.list_by_user(user_id)
 
-        out = [_row_to_indicator(r, user_id) for r in rows]
+        out = [_row_to_indicator({
+            'id': r.id, 'user_id': r.user_id, 'is_buy': r.is_buy,
+            'end_time': r.end_time, 'name': r.name, 'code': r.code,
+            'description': r.description, 'publish_to_community': r.publish_to_community,
+            'pricing_type': r.pricing_type, 'price': r.price, 'is_encrypted': r.is_encrypted,
+            'preview_image': r.preview_image, 'vip_free': r.vip_free,
+            'createtime': r.createtime, 'updatetime': r.updatetime,
+            'created_at': r.created_at, 'updated_at': r.updated_at,
+        }, user_id) for r in rows]
         return jsonify({"code": 1, "msg": "success", "data": out})
     except Exception as e:
         logger.error(f"get_indicators failed: {str(e)}", exc_info=True)
@@ -480,8 +471,9 @@ def save_indicator():
     """
     ---
     tags:
-      - Save
-    summary: "Create or update an indicator for the current user."
+      - Indicator/Management
+    summary: "Save indicator"
+    description: "Create or update an indicator for the current user."
     produces:
       - application/json
     consumes:
@@ -577,100 +569,66 @@ def save_indicator():
         user_role = getattr(g, 'user_role', 'user')
         is_admin = user_role == 'admin'
         
-        with get_db_connection() as db:
-            cur = db.cursor()
-            # Best-effort schema upgrade for VIP-free indicators
-            try:
-                cur.execute("ALTER TABLE qd_indicator_codes ADD COLUMN IF NOT EXISTS vip_free BOOLEAN DEFAULT FALSE")
-            except Exception:
-                pass
+        with get_session() as session:
+            repo = IndicatorRepository(session)
             # 市场购买的副本不可改库中源码：应「另存为」新建 is_buy=0 的指标再编辑
             if indicator_id and indicator_id > 0:
-                cur.execute(
-                    "SELECT is_buy FROM qd_indicator_codes WHERE id = ? AND user_id = ?",
-                    (indicator_id, user_id),
-                )
-                _existing_buy = cur.fetchone()
-                if _existing_buy and int(_existing_buy.get("is_buy") or 0) == 1:
-                    cur.close()
-                    return jsonify(
-                        {
-                            "code": 0,
-                            "msg": "indicator_purchased_readonly",
-                            "data": None,
-                        }
-                    ), 403
+                existing_indicator = repo.get_indicator_for_edit(indicator_id, user_id)
+                if existing_indicator is None:
+                    # Check if it was a purchased indicator
+                    indicator = repo.get_by_id(indicator_id)
+                    if indicator and indicator.is_buy == 1:
+                        return jsonify(
+                            {
+                                "code": 0,
+                                "msg": "indicator_purchased_readonly",
+                                "data": None,
+                            }
+                        ), 403
             if indicator_id and indicator_id > 0:
-                # 检查是否从未发布改为发布，需要设置审核状态
-                if publish_to_community:
-                    cur.execute(
-                        "SELECT publish_to_community, review_status FROM qd_indicator_codes WHERE id = ? AND user_id = ?",
-                        (indicator_id, user_id)
-                    )
-                    existing = cur.fetchone()
-                    was_published = existing and existing.get('publish_to_community')
-                    # 如果之前未发布，现在发布，设置审核状态
-                    # 管理员发布的直接通过，普通用户需要待审核
-                    new_review_status = 'approved' if is_admin else 'pending'
-                    if not was_published:
-                        cur.execute(
-                            """
-                            UPDATE qd_indicator_codes
-                            SET name = ?, code = ?, description = ?,
-                                publish_to_community = ?, pricing_type = ?, price = ?, preview_image = ?,
-                                vip_free = ?,
-                                review_status = ?, review_note = '', reviewed_at = NOW(), reviewed_by = ?,
-                                updatetime = ?, updated_at = NOW()
-                            WHERE id = ? AND user_id = ? AND (is_buy IS NULL OR is_buy = 0)
-                            """,
-                            (name, code, description, publish_to_community, pricing_type, price, preview_image, vip_free,
-                             new_review_status, user_id if is_admin else None, now, indicator_id, user_id),
-                        )
+                existing = repo.get_by_id(indicator_id)
+                if existing and existing.user_id == user_id:
+                    update_kwargs = {
+                        'name': name, 'code': code, 'description': description,
+                        'publish_to_community': publish_to_community,
+                        'pricing_type': pricing_type, 'price': price,
+                        'preview_image': preview_image,
+                        'updatetime': now,
+                    }
+                    # 检查是否从未发布改为发布，需要设置审核状态
+                    if publish_to_community:
+                        was_published = existing.publish_to_community
+                        if not was_published:
+                            update_kwargs['review_status'] = 'approved' if is_admin else 'pending'
+                            update_kwargs['review_note'] = ''
+                            update_kwargs['reviewed_at'] = None
+                            update_kwargs['reviewed_by'] = user_id if is_admin else None
+                            update_kwargs['vip_free'] = vip_free
+                        else:
+                            update_kwargs['vip_free'] = vip_free
                     else:
-                        # 已发布过的更新，保持原审核状态
-                        cur.execute(
-                            """
-                            UPDATE qd_indicator_codes
-                            SET name = ?, code = ?, description = ?,
-                                publish_to_community = ?, pricing_type = ?, price = ?, preview_image = ?,
-                                vip_free = ?,
-                                updatetime = ?, updated_at = NOW()
-                            WHERE id = ? AND user_id = ? AND (is_buy IS NULL OR is_buy = 0)
-                            """,
-                            (name, code, description, publish_to_community, pricing_type, price, preview_image, vip_free, now, indicator_id, user_id),
-                        )
-                else:
-                    # 取消发布，清除审核状态
-                    cur.execute(
-                        """
-                        UPDATE qd_indicator_codes
-                        SET name = ?, code = ?, description = ?,
-                            publish_to_community = ?, pricing_type = ?, price = ?, preview_image = ?,
-                            vip_free = FALSE,
-                            review_status = NULL, review_note = '', reviewed_at = NULL, reviewed_by = NULL,
-                            updatetime = ?, updated_at = NOW()
-                        WHERE id = ? AND user_id = ? AND (is_buy IS NULL OR is_buy = 0)
-                        """,
-                        (name, code, description, publish_to_community, pricing_type, price, preview_image, now, indicator_id, user_id),
-                    )
+                        # 取消发布，清除审核状态
+                        update_kwargs['vip_free'] = False
+                        update_kwargs['review_status'] = None
+                        update_kwargs['review_note'] = ''
+                        update_kwargs['reviewed_at'] = None
+                        update_kwargs['reviewed_by'] = None
+                    repo.update_indicator(indicator_id, **update_kwargs)
             else:
                 # 新建指标 - 管理员发布的直接通过，普通用户需要待审核
                 review_status = None
                 if publish_to_community:
                     review_status = 'approved' if is_admin else 'pending'
-                cur.execute(
-                    """
-                    INSERT INTO qd_indicator_codes
-                      (user_id, is_buy, end_time, name, code, description,
-                       publish_to_community, pricing_type, price, preview_image, vip_free, review_status,
-                       createtime, updatetime, created_at, updated_at)
-                    VALUES (?, 0, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-                    """,
-                    (user_id, name, code, description, publish_to_community, pricing_type, price, preview_image, vip_free, review_status, now, now),
+                new_indicator = repo.create_indicator(
+                    user_id=user_id, is_buy=0, end_time=1,
+                    name=name, code=code, description=description,
+                    publish_to_community=publish_to_community,
+                    pricing_type=pricing_type, price=price,
+                    preview_image=preview_image, vip_free=vip_free,
+                    review_status=review_status,
+                    createtime=now, updatetime=now,
                 )
-                indicator_id = int(cur.lastrowid or 0)
-            db.commit()
-            cur.close()
+                indicator_id = new_indicator.id
 
         return jsonify({"code": 1, "msg": "success", "data": {"id": indicator_id, "userid": user_id}})
     except Exception as e:
@@ -684,8 +642,9 @@ def delete_indicator():
     """
     ---
     tags:
-      - General
-    summary: "Delete an indicator by id for the current user."
+      - Indicator/Management
+    summary: "Delete indicator"
+    description: "Delete an indicator by ID for the current user."
     produces:
       - application/json
     consumes:
@@ -728,14 +687,11 @@ def delete_indicator():
         if not indicator_id:
             return jsonify({"code": 0, "msg": "id is required", "data": None}), 400
 
-        with get_db_connection() as db:
-            cur = db.cursor()
-            cur.execute(
-                "DELETE FROM qd_indicator_codes WHERE id = ? AND user_id = ? AND (is_buy IS NULL OR is_buy = 0)",
-                (indicator_id, user_id),
-            )
-            db.commit()
-            cur.close()
+        with get_session() as session:
+            repo = IndicatorRepository(session)
+            deleted = repo.delete_indicator(indicator_id, user_id)
+            if deleted:
+                return jsonify({"code": 1, "msg": "success", "data": None})
 
         return jsonify({"code": 1, "msg": "success", "data": None})
     except Exception as e:
@@ -749,8 +705,9 @@ def get_indicator_params():
     """
     ---
     tags:
-      - General
-    summary: "获取指标的参数声明"
+      - Indicator/Management
+    summary: "Get indicator parameters"
+    description: "Retrieve the parameter declarations for a specific indicator."
     produces:
       - application/json
     security:
@@ -808,8 +765,9 @@ def verify_code():
     """
     ---
     tags:
-      - Verify
-    summary: "Verify/Dry-run indicator code with mock data."
+      - Indicator/Management
+    summary: "Verify indicator code"
+    description: "Dry-run and validate indicator code with mock data."
     produces:
       - application/json
     consumes:
@@ -887,8 +845,9 @@ def ai_generate():
     """
     ---
     tags:
-      - Ai
-    summary: "SSE endpoint to generate indicator code."
+      - Indicator/AI Generate
+    summary: "AI-generate indicator code"
+    description: "SSE endpoint that uses AI to generate indicator code based on a user prompt."
     produces:
       - application/json
     consumes:
@@ -1388,8 +1347,9 @@ def code_quality_hints():
     """
     ---
     tags:
-      - Code
-    summary: "Heuristic hints for indicator code (structure, @strategy risk/position)."
+      - Indicator/Management
+    summary: "Get heuristic code quality hints"
+    description: "Analyze indicator code and return heuristic hints about structure, @strategy annotations, risk, and position management."
     produces:
       - application/json
     consumes:
@@ -1439,8 +1399,9 @@ def parse_strategy_config():
     """
     ---
     tags:
-      - Parse
-    summary: "Parse @strategy annotations from indicator code and return strategy config."
+      - Indicator/Management
+    summary: "Parse @strategy annotations"
+    description: "Extract strategy configuration and indicator parameters from declared @strategy and @param annotations in indicator code."
     produces:
       - application/json
     consumes:
@@ -1496,8 +1457,9 @@ def call_indicator():
     """
     ---
     tags:
-      - Call
-    summary: "调用另一个指标（供前端 Pyodide 环境使用）"
+      - Indicator/Management
+    summary: "Call another indicator"
+    description: "Execute another indicator's logic for use in the Pyodide frontend environment."
     produces:
       - application/json
     consumes:
@@ -1507,20 +1469,30 @@ def call_indicator():
     parameters:
       - name: body
         in: body
+        required: true
         schema:
           type: object
+          required:
+            - indicatorRef
+            - klineData
           properties:
             indicatorRef:
               type: string
+              description: "Indicator reference identifier or code"
             klineData:
-              type: string
+              type: array
+              description: "K-line data as array of OHLCV objects"
+              items:
+                type: object
             params:
-              type: string
+              type: object
+              description: "Optional parameters for the indicator"
             currentIndicatorId:
               type: string
+              description: "Current indicator ID for context"
     responses:
       200:
-        description: Success
+        description: Success - returns indicator execution results
         schema:
           type: object
           properties:
@@ -1532,6 +1504,15 @@ def call_indicator():
               example: success
             data:
               type: object
+              properties:
+                df:
+                  type: array
+                  items:
+                    type: object
+                columns:
+                  type: array
+                  items:
+                    type: string
       401:
         description: Unauthorized - Invalid or missing token
       400:

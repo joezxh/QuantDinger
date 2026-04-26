@@ -25,7 +25,9 @@ import time
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional, Tuple
 
-from app.utils.db import get_db_connection
+from app.database.session import get_session
+from app.database.repositories.ai_calibration_repository import AiCalibrationRepository
+from app.database.repositories.analysis_memory_repository import AnalysisMemoryRepository
 from app.utils.logger import get_logger
 from app.services.analysis_memory import get_analysis_memory, AnalysisMemory
 from app.services.market_data_collector import MarketDataCollector
@@ -59,34 +61,8 @@ class AICalibrationService:
         self._ensure_table()
 
     def _ensure_table(self) -> None:
-        try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                cur.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS qd_ai_calibration (
-                        id SERIAL PRIMARY KEY,
-                        market VARCHAR(50) NOT NULL,
-                        buy_threshold DECIMAL(10,4) NOT NULL,
-                        sell_threshold DECIMAL(10,4) NOT NULL,
-                        min_consensus_abs_override DECIMAL(10,4) NOT NULL,
-                        quality_hold_threshold DECIMAL(10,4) NOT NULL,
-                        validated_at TIMESTAMP DEFAULT NOW(),
-                        created_at TIMESTAMP DEFAULT NOW()
-                    );
-                    """
-                )
-                # Index for latest lookup
-                cur.execute(
-                    """
-                    CREATE INDEX IF NOT EXISTS idx_ai_calibration_market_validated_at
-                    ON qd_ai_calibration(market, validated_at DESC);
-                    """
-                )
-                db.commit()
-                cur.close()
-        except Exception as e:
-            logger.error(f"Failed to ensure qd_ai_calibration table: {e}", exc_info=True)
+        """Schema is managed by Alembic migrations; no runtime CREATE needed."""
+        pass
 
     def get_latest(self, market: str) -> Dict[str, Any]:
         """
@@ -98,31 +74,19 @@ class AICalibrationService:
             return dict(DEFAULTS)
 
         try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                cur.execute(
-                    """
-                    SELECT buy_threshold, sell_threshold,
-                           min_consensus_abs_override, quality_hold_threshold
-                    FROM qd_ai_calibration
-                    WHERE market = %s
-                    ORDER BY validated_at DESC
-                    LIMIT 1
-                    """,
-                    (market,),
-                )
-                row = cur.fetchone() or {}
-                cur.close()
-            if not row:
+            with get_session() as session:
+                repo = AiCalibrationRepository(session)
+                record = repo.get_latest(market)
+            if not record:
                 return dict(DEFAULTS)
             out = dict(DEFAULTS)
-            out["buy_threshold"] = float(row.get("buy_threshold") or DEFAULTS["buy_threshold"])
-            out["sell_threshold"] = float(row.get("sell_threshold") or DEFAULTS["sell_threshold"])
+            out["buy_threshold"] = float(record.buy_threshold or DEFAULTS["buy_threshold"])
+            out["sell_threshold"] = float(record.sell_threshold or DEFAULTS["sell_threshold"])
             out["min_consensus_abs_override"] = float(
-                row.get("min_consensus_abs_override") or DEFAULTS["min_consensus_abs_override"]
+                record.min_consensus_abs_override or DEFAULTS["min_consensus_abs_override"]
             )
             out["quality_hold_threshold"] = float(
-                row.get("quality_hold_threshold") or DEFAULTS["quality_hold_threshold"]
+                record.quality_hold_threshold or DEFAULTS["quality_hold_threshold"]
             )
             return out
         except Exception as e:
@@ -190,29 +154,19 @@ class AICalibrationService:
         # Fetch validated rows with consensus_score and actual_return_pct
         rows: List[Dict[str, Any]] = []
         try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                # Use f-string for interval since Postgres doesn't allow placeholder in INTERVAL literal
-                cur.execute(
-                    f"""
-                    SELECT
-                        decision,
-                        consensus_score,
-                        consensus_abs,
-                        quality_multiplier,
-                        agreement_ratio,
-                        actual_return_pct
-                    FROM qd_analysis_memory
-                    WHERE market = %s
-                      AND validated_at IS NOT NULL
-                      AND actual_return_pct IS NOT NULL
-                      AND consensus_score IS NOT NULL
-                      AND created_at > NOW() - INTERVAL '{int(lookback_days)} days'
-                    """,
-                    (market,),
-                )
-                rows = cur.fetchall() or []
-                cur.close()
+            with get_session() as session:
+                memories = AnalysisMemoryRepository(session).list_for_calibration(market, lookback_days)
+            rows = [
+                {
+                    "decision": m.decision,
+                    "consensus_score": float(m.consensus_score) if m.consensus_score else 0.0,
+                    "consensus_abs": float(m.consensus_abs) if m.consensus_abs else 0.0,
+                    "quality_multiplier": float(m.quality_multiplier) if m.quality_multiplier else 0.0,
+                    "agreement_ratio": float(m.agreement_ratio) if m.agreement_ratio else 0.0,
+                    "actual_return_pct": float(m.actual_return_pct) if m.actual_return_pct else 0.0,
+                }
+                for m in memories
+            ]
         except Exception as e:
             logger.error(f"Failed to fetch memory rows for calibration: {e}", exc_info=True)
             return None
@@ -273,27 +227,15 @@ class AICalibrationService:
         quality_hold_threshold = float(cfg.get("quality_hold_threshold") or DEFAULTS["quality_hold_threshold"])
 
         try:
-            with get_db_connection() as db:
-                cur = db.cursor()
-                cur.execute(
-                    """
-                    INSERT INTO qd_ai_calibration
-                      (market, buy_threshold, sell_threshold,
-                       min_consensus_abs_override, quality_hold_threshold,
-                       validated_at, created_at)
-                    VALUES
-                      (%s, %s, %s, %s, %s, NOW(), NOW())
-                    """,
-                    (
-                        market,
-                        buy_threshold,
-                        sell_threshold,
-                        min_consensus_abs_override,
-                        quality_hold_threshold,
-                    ),
+            with get_session() as session:
+                repo = AiCalibrationRepository(session)
+                repo.create_calibration(
+                    market=market,
+                    buy_threshold=buy_threshold,
+                    sell_threshold=sell_threshold,
+                    min_consensus_abs_override=min_consensus_abs_override,
+                    quality_hold_threshold=quality_hold_threshold,
                 )
-                db.commit()
-                cur.close()
         except Exception as e:
             logger.error(f"[AI Calibration] Failed to persist calibration: {e}", exc_info=True)
             return None

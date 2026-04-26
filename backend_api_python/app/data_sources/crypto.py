@@ -8,7 +8,7 @@ import ccxt
 
 from app.data_sources.base import BaseDataSource, TIMEFRAME_SECONDS
 from app.utils.logger import get_logger
-from app.config import CCXTConfig, APIKeys
+from app.data_sources.config_resolver import ConfigResolver
 
 logger = get_logger(__name__)
 
@@ -19,25 +19,33 @@ class CryptoDataSource(BaseDataSource):
     name = "Crypto/CCXT"
     
     # 时间周期映射
-    TIMEFRAME_MAP = CCXTConfig.TIMEFRAME_MAP
+    TIMEFRAME_MAP = {
+        '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m',
+        '1H': '1h', '4H': '4h', '1D': '1d', '1W': '1w'
+    }
     
     # 常见的报价货币列表（按优先级排序）
     COMMON_QUOTES = ['USDT', 'USD', 'BTC', 'ETH', 'BUSD', 'USDC', 'BNB', 'EUR', 'GBP']
     
     def __init__(self):
+        cfg = ConfigResolver.get_source_config("crypto_ccxt")
+        config_json = cfg.get("config_json") or {}
+        
+        timeout_ms = config_json.get("timeout_sec", 10) * 1000
         config = {
-            'timeout': CCXTConfig.TIMEOUT,
-            'enableRateLimit': CCXTConfig.ENABLE_RATE_LIMIT
+            'timeout': timeout_ms,
+            'enableRateLimit': config_json.get("enable_rate_limit", True)
         }
         
         # 如果配置了代理
-        if CCXTConfig.PROXY:
+        proxy = config_json.get("proxy", "")
+        if proxy:
             config['proxies'] = {
-                'http': CCXTConfig.PROXY,
-                'https': CCXTConfig.PROXY
+                'http': proxy,
+                'https': proxy
             }
         
-        exchange_id = CCXTConfig.DEFAULT_EXCHANGE
+        exchange_id = config_json.get("default_exchange", "binance")
         
         # 动态加载交易所类
         if not hasattr(ccxt, exchange_id):

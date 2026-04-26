@@ -8,6 +8,7 @@
       :handleMediaQuery="handleMediaQuery"
       :handleCollapse="handleCollapse"
       :i18nRender="i18nRender"
+      :menuAccordion="true"
       v-bind="settings"
     >
 
@@ -80,6 +81,7 @@
 <script>
 import { updateTheme } from '@/components/SettingDrawer/settingConfig'
 import { i18nRender } from '@/locales'
+import { switchTheme } from '@/utils/themeManager'
 import { mapState } from 'vuex'
 import {
   CONTENT_WIDTH_TYPE,
@@ -129,8 +131,12 @@ export default {
         layout: defaultSettings.layout, // 'sidemenu', 'topmenu'
         // CONTENT_WIDTH_TYPE
         contentWidth: defaultSettings.layout === 'sidemenu' ? CONTENT_WIDTH_TYPE.Fluid : defaultSettings.contentWidth,
-        // 主题 'dark' | 'light'
-        theme: defaultSettings.navTheme,
+        // 主题 'dark' | 'light' — 自定义主题(skyblue/xp/realSkyblue)映射为 'light'
+        theme: (() => {
+          const customThemes = ['skyblue', 'xp', 'realSkyblue']
+          const navTheme = defaultSettings.navTheme
+          return customThemes.includes(navTheme) ? 'light' : navTheme
+        })(),
         // 主色调
         primaryColor: defaultSettings.primaryColor,
         fixedHeader: defaultSettings.fixedHeader,
@@ -200,7 +206,10 @@ export default {
   created () {
     // menus is now a computed property - no need to set here
     // 从 store 同步主题设置（从 localStorage 恢复）
-    this.settings.theme = this.$store.state.app.theme
+    const savedTheme = this.$store.state.app.theme
+    // pro-layout 只支持 light/dark/realdark，自定义主题映射为 light
+    const customThemes = ['skyblue', 'xp', 'realSkyblue']
+    this.settings.theme = customThemes.includes(savedTheme) ? 'light' : savedTheme
     this.settings.primaryColor = this.$store.state.app.color || defaultSettings.primaryColor
     // 处理侧栏收起状态
     this.$watch('collapsed', () => {
@@ -211,14 +220,11 @@ export default {
     })
     // 监听 store 中的主题变化，同步到 settings 和 body 类名
     this.$watch('$store.state.app.theme', (val) => {
-      this.settings.theme = val
-      if (val === 'dark' || val === 'realdark') {
-        document.body.classList.add('dark')
-        document.body.classList.remove('light')
-      } else {
-        document.body.classList.remove('dark')
-        document.body.classList.add('light')
-      }
+      // pro-layout 只支持 light/dark/realdark，自定义主题映射为 light
+      const customThemes = ['skyblue', 'xp', 'realSkyblue']
+      this.settings.theme = customThemes.includes(val) ? 'light' : val
+      // 应用主题类名（body 类名保留原始主题值）
+      this.applyThemeClass(val)
     }, { immediate: true })
     // 监听 store 中的主题色变化，同步到 settings
     this.$watch('$store.state.app.color', (val) => {
@@ -237,13 +243,7 @@ export default {
     }, { immediate: true })
     // 监听 settings.theme 变化，同步 body 类名（作为额外保障）
     this.$watch('settings.theme', (val) => {
-      if (val === 'dark' || val === 'realdark') {
-        document.body.classList.add('dark')
-        document.body.classList.remove('light')
-      } else {
-        document.body.classList.remove('dark')
-        document.body.classList.add('light')
-      }
+      this.applyThemeClass(val)
     }, { immediate: true })
   },
   mounted () {
@@ -376,6 +376,17 @@ export default {
   },
   methods: {
     i18nRender,
+    // 应用主题类名到 body
+    applyThemeClass (theme) {
+      // 移除所有主题类名
+      document.body.classList.remove('dark', 'realdark', 'light', 'skyblue', 'realskyblue', 'xp')
+      // 添加当前主题类名
+      document.body.classList.add(theme || 'light')
+      // 切换主题时注入内联样式
+      if (theme === 'skyblue' || theme === 'xp') {
+        switchTheme(theme)
+      }
+    },
     updateMenuFooterPosition () {
       this.$nextTick(() => {
         // 使用 requestAnimationFrame 确保在浏览器下一次重绘前更新，避免打断 CSS 过渡

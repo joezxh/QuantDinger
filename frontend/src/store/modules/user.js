@@ -1,7 +1,7 @@
 import storage from 'store'
 import expirePlugin from 'store/plugins/expire'
 import { login, logout, getUserInfo } from '@/api/login'
-import { ACCESS_TOKEN, USER_INFO, USER_ROLES } from '@/store/mutation-types'
+import { ACCESS_TOKEN, USER_INFO, USER_ROLES, USER_PERMISSIONS } from '@/store/mutation-types'
 import { welcome } from '@/utils/util'
 
 storage.addPlugin(expirePlugin)
@@ -46,6 +46,7 @@ const user = {
     welcome: initialWelcome,
     avatar: initialAvatar,
     roles: initialRoles,
+    permissions: storage.get(USER_PERMISSIONS) || [],
     info: initialInfo
   },
 
@@ -62,6 +63,10 @@ const user = {
     },
     SET_ROLES: (state, roles) => {
       state.roles = roles
+    },
+    SET_PERMISSIONS: (state, permissions) => {
+      state.permissions = permissions
+      storage.set(USER_PERMISSIONS, permissions, 7 * 24 * 60 * 60 * 1000)
     },
     SET_INFO: (state, info) => {
       state.info = info

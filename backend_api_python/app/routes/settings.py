@@ -976,15 +976,16 @@ def get_settings_schema():
     """
     ---
     tags:
-      - General
-    summary: "获取配置项定义"
+      - System/Settings
+    summary: "Get settings schema"
+    description: "Admin only. Returns the complete settings schema definition including all configurable items grouped by category."
     produces:
       - application/json
     security:
       - BearerAuth: []
     responses:
       200:
-        description: Success
+        description: Success - returns full schema definition
         schema:
           type: object
           properties:
@@ -1000,8 +1001,6 @@ def get_settings_schema():
         description: Unauthorized - Invalid or missing token
       403:
         description: Forbidden - Admin access required
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -1018,15 +1017,16 @@ def get_public_config():
     """
     ---
     tags:
-      - General
-    summary: "获取公共配置"
+      - System/Settings
+    summary: "Get public configuration"
+    description: "Retrieve public configuration values such as the default exchange. Accessible by any authenticated user."
     produces:
       - application/json
     security:
       - BearerAuth: []
     responses:
       200:
-        description: Success
+        description: Success - returns public config
         schema:
           type: object
           properties:
@@ -1040,8 +1040,6 @@ def get_public_config():
               type: object
       401:
         description: Unauthorized - Invalid or missing token
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -1061,15 +1059,16 @@ def get_settings_values():
     """
     ---
     tags:
-      - General
-    summary: "获取当前配置值"
+      - System/Settings
+    summary: "Get current setting values"
+    description: "Admin only. Read current values of all settings from the .env file."
     produces:
       - application/json
     security:
       - BearerAuth: []
     responses:
       200:
-        description: Success
+        description: Success - returns current setting values
         schema:
           type: object
           properties:
@@ -1085,8 +1084,6 @@ def get_settings_values():
         description: Unauthorized - Invalid or missing token
       403:
         description: Forbidden - Admin access required
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -1118,17 +1115,25 @@ def save_settings():
     """
     ---
     tags:
-      - Save
-    summary: "保存配置"
+      - System/Settings
+    summary: "Save configuration"
+    description: "Admin only. Save updated settings to the .env file and hot-reload runtime services."
     produces:
       - application/json
     consumes:
       - application/json
     security:
       - BearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          description: "Grouped settings values keyed by schema group (e.g. auth group with SECRET_KEY)"
     responses:
       200:
-        description: Success
+        description: Success - settings saved and hot-reloaded
         schema:
           type: object
           properties:
@@ -1137,9 +1142,23 @@ def save_settings():
               example: 1
             msg:
               type: string
-              example: success
+              example: Settings saved successfully
             data:
               type: object
+              properties:
+                updated_keys:
+                  type: array
+                  items:
+                    type: string
+                requires_restart:
+                  type: boolean
+                  example: false
+                hot_reloaded:
+                  type: boolean
+                  example: true
+                services_refreshed:
+                  type: boolean
+                  example: true
       401:
         description: Unauthorized - Invalid or missing token
       403:
@@ -1212,35 +1231,16 @@ def get_openrouter_balance():
     """
     ---
     tags:
-      - General
-    summary: "查询 OpenRouter 账户余额 (admin only)"
+      - System/Settings
+    summary: "Get OpenRouter account balance"
+    description: "Admin only. Query OpenRouter API to retrieve account usage, limits, and rate limit information."
     produces:
       - application/json
     security:
       - BearerAuth: []
-    parameters:
-      - name: body
-        in: body
-        schema:
-          type: object
-          properties:
-            data:
-              type: string
-            usage:
-              type: string
-            limit:
-              type: string
-            limit_remaining:
-              type: string
-            is_free_tier:
-              type: string
-            rate_limit:
-              type: string
-            label:
-              type: string
     responses:
       200:
-        description: Success
+        description: Success - returns OpenRouter account info
         schema:
           type: object
           properties:
@@ -1252,12 +1252,26 @@ def get_openrouter_balance():
               example: success
             data:
               type: object
+              properties:
+                usage:
+                  type: number
+                  description: "Usage in USD"
+                limit:
+                  type: number
+                  description: "Credit limit (null = unlimited)"
+                limit_remaining:
+                  type: number
+                  description: "Remaining credits"
+                is_free_tier:
+                  type: boolean
+                rate_limit:
+                  type: object
+                label:
+                  type: string
       401:
         description: Unauthorized - Invalid or missing token
       403:
         description: Forbidden - Admin access required
-      400:
-        description: Bad Request
       500:
         description: Internal Server Error
     """
@@ -1341,8 +1355,9 @@ def test_connection():
     """
     ---
     tags:
-      - Test
-    summary: "测试API连接 (admin only)"
+      - System/Settings
+    summary: "Test API connection"
+    description: "Admin only. Test connectivity to configured external services such as OpenRouter or Finnhub."
     produces:
       - application/json
     consumes:
@@ -1352,16 +1367,21 @@ def test_connection():
     parameters:
       - name: body
         in: body
+        required: true
         schema:
           type: object
+          required:
+            - service
           properties:
             service:
               type: string
+              description: "Service to test (openrouter, finnhub)"
             api_key:
               type: string
+              description: "Optional API key override for the service"
     responses:
       200:
-        description: Success
+        description: Success - connection test result
         schema:
           type: object
           properties:
@@ -1370,7 +1390,7 @@ def test_connection():
               example: 1
             msg:
               type: string
-              example: success
+              example: OpenRouter connection successful
             data:
               type: object
       401:

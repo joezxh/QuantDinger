@@ -958,6 +958,10 @@ export default {
               }
               this.$store.commit('SET_ROLES', roles)
               storage.set(USER_ROLES, roles, expiresAt)
+
+              // 设置 RBAC 权限码
+              const rbacPermissions = userInfoData.permissions || []
+              this.$store.commit('SET_PERMISSIONS', rbacPermissions)
             }
 
             // 确保 roles 已经被正确设置（使用 Vue.nextTick 确保状态已更新）

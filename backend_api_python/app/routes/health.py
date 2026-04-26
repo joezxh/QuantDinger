@@ -12,8 +12,9 @@ def index():
     """
     ---
     tags:
-      - Index
-    summary: "API 首页"
+      - System/Health
+    summary: "API index / homepage"
+    description: "Returns basic API information including name, version, and status."
     produces:
       - application/json
     responses:
@@ -48,8 +49,9 @@ def health_check():
     """
     ---
     tags:
-      - Health
-    summary: "健康检查"
+      - System/Health
+    summary: "Health check endpoint"
+    description: "Returns service health status and current timestamp."
     produces:
       - application/json
     responses:
@@ -82,8 +84,9 @@ def api_health_check():
     """
     ---
     tags:
-      - Api
-    summary: "兼容路径：用于容器健康检查/反代探针等场景。"
+      - System/Health
+    summary: "Health check (compatible path)"
+    description: "Compatibility endpoint for container health checks and reverse proxy probes."
     produces:
       - application/json
     responses:

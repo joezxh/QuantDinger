@@ -12,7 +12,8 @@ import yfinance as yf
 
 from app.data_sources.base import BaseDataSource, TIMEFRAME_SECONDS
 from app.utils.logger import get_logger
-from app.config import TiingoConfig, APIKeys
+from app.config import TiingoConfig
+from app.data_sources.config_resolver import ConfigResolver
 
 logger = get_logger(__name__)
 
@@ -53,14 +54,8 @@ _YF_TIMEFRAME_MAP = {
 
 
 def _get_td_api_key() -> str:
-    try:
-        from app.utils.config_loader import load_addon_config
-        key = load_addon_config().get("twelve_data", {}).get("api_key", "")
-        if key:
-            return key
-    except Exception:
-        pass
-    return (os.getenv("TWELVE_DATA_API_KEY") or "").strip()
+    key = ConfigResolver.get_api_key("forex_twelve_data", key_type="public")
+    return key or ""
 
 
 def _td_forex_symbol(symbol: str) -> str:
@@ -113,7 +108,7 @@ class ForexDataSource(BaseDataSource):
     def __init__(self):
         self.base_url = TiingoConfig.BASE_URL
         td_key = _get_td_api_key()
-        tiingo_key = APIKeys.TIINGO_API_KEY
+        tiingo_key = ConfigResolver.get_api_key("forex_tiingo", key_type="public") or ""
         if not td_key and not tiingo_key:
             logger.warning("Neither Twelve Data nor Tiingo API key configured; FX data will be limited")
     
@@ -174,7 +169,7 @@ class ForexDataSource(BaseDataSource):
 
     def _get_ticker_tiingo(self, symbol: str) -> Optional[Dict[str, Any]]:
         """Fetch forex quote from Tiingo (legacy fallback)."""
-        api_key = APIKeys.TIINGO_API_KEY
+        api_key = ConfigResolver.get_api_key("forex_tiingo", key_type="public") or ""
         if not api_key:
             return None
 
@@ -203,6 +198,7 @@ class ForexDataSource(BaseDataSource):
                 break
             
             if response.status_code == 429:
+                cache_key = f"ticker_{symbol}"
                 logger.warning("Tiingo rate limit exceeded for ticker request")
                 logger.info("Note: Tiingo 1-minute forex data requires a paid subscription")
                 # 返回缓存数据（如果有的话，即使已过期）
@@ -376,7 +372,7 @@ class ForexDataSource(BaseDataSource):
         self, symbol: str, timeframe: str, limit: int, before_time: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """Fetch forex K-lines from Tiingo (legacy fallback)."""
-        api_key = APIKeys.TIINGO_API_KEY
+        api_key = ConfigResolver.get_api_key("forex_tiingo", key_type="public") or ""
         if not api_key:
             return []
             

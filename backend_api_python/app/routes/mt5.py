@@ -50,8 +50,9 @@ def get_status():
     """
     ---
     tags:
-      - General
-    summary: "Get MT5 connection status."
+      - Trading/MT5
+    summary: "Get MT5 connection status"
+    description: "Check the current connection status to MetaTrader 5 terminal."
     produces:
       - application/json
     responses:
@@ -94,8 +95,9 @@ def connect():
     """
     ---
     tags:
-      - Connect
-    summary: "Connect to MT5 terminal."
+      - Trading/MT5
+    summary: "Connect to MT5 terminal"
+    description: "Establish a connection to MetaTrader 5 with the provided credentials."
     produces:
       - application/json
     consumes:
@@ -206,8 +208,9 @@ def disconnect():
     """
     ---
     tags:
-      - Disconnect
-    summary: "Disconnect from MT5 terminal."
+      - Trading/MT5
+    summary: "Disconnect from MT5"
+    description: "Disconnect the current session from MetaTrader 5."
     produces:
       - application/json
     consumes:
@@ -250,8 +253,9 @@ def get_account():
     """
     ---
     tags:
-      - General
-    summary: "Get account information."
+      - Trading/MT5
+    summary: "Get account information"
+    description: "Retrieve account info from the connected MT5 session."
     produces:
       - application/json
     responses:
@@ -290,8 +294,9 @@ def get_positions():
     """
     ---
     tags:
-      - General
-    summary: "Get open positions."
+      - Trading/MT5
+    summary: "Get open positions"
+    description: "Retrieve current open positions from MT5, optionally filtered by symbol."
     produces:
       - application/json
     parameters:
@@ -337,8 +342,9 @@ def get_orders():
     """
     ---
     tags:
-      - General
-    summary: "Get pending orders."
+      - Trading/MT5
+    summary: "Get pending orders"
+    description: "Retrieve pending orders from MT5, optionally filtered by symbol."
     produces:
       - application/json
     parameters:
@@ -384,8 +390,9 @@ def get_symbols():
     """
     ---
     tags:
-      - General
-    summary: "Get available symbols."
+      - Trading/MT5
+    summary: "Get available symbols"
+    description: "Retrieve the list of available trading symbols from MT5."
     produces:
       - application/json
     parameters:
@@ -433,8 +440,9 @@ def place_order():
     """
     ---
     tags:
-      - Place
-    summary: "Place an order."
+      - Trading/MT5
+    summary: "Place an order"
+    description: "Place a market or limit order through MT5."
     produces:
       - application/json
     consumes:
@@ -545,8 +553,9 @@ def close_position():
     """
     ---
     tags:
-      - Close
-    summary: "Close a position."
+      - Trading/MT5
+    summary: "Close a position"
+    description: "Close an existing position by ticket number."
     produces:
       - application/json
     consumes:
@@ -626,8 +635,9 @@ def cancel_order(ticket: int):
     """
     ---
     tags:
-      - Cancel
-    summary: "Cancel a pending order."
+      - Trading/MT5
+    summary: "Cancel a pending order"
+    description: "Cancel a pending order by its ticket number."
     produces:
       - application/json
     parameters:
@@ -677,8 +687,9 @@ def get_quote():
     """
     ---
     tags:
-      - General
-    summary: "Get real-time quote."
+      - Trading/MT5
+    summary: "Get real-time quote"
+    description: "Retrieve a real-time quote for a given symbol from MT5."
     produces:
       - application/json
     parameters:

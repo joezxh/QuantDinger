@@ -17,8 +17,9 @@ Indicator Parameters Parser and Helper Functions
 import re
 import json
 from typing import Dict, Any, List, Optional, Tuple
+from app.database.session import get_session
+from app.database.repositories.indicator_repository import IndicatorRepository
 from app.utils.logger import get_logger
-from app.utils.db import get_db_connection
 
 logger = get_logger(__name__)
 
@@ -322,33 +323,8 @@ class IndicatorCaller:
     def _get_indicator_code(self, indicator_ref: Any) -> Tuple[Optional[str], Optional[int]]:
         """获取指标代码"""
         try:
-            with get_db_connection() as db:
-                cursor = db.cursor()
-                
-                if isinstance(indicator_ref, int):
-                    # 按ID查询
-                    cursor.execute("""
-                        SELECT id, code FROM qd_indicator_codes 
-                        WHERE id = %s AND (user_id = %s OR publish_to_community = 1)
-                    """, (indicator_ref, self.user_id))
-                else:
-                    # 按名称查询（优先自己的指标）
-                    cursor.execute("""
-                        SELECT id, code FROM qd_indicator_codes 
-                        WHERE name = %s AND user_id = %s
-                        UNION
-                        SELECT id, code FROM qd_indicator_codes 
-                        WHERE name = %s AND publish_to_community = 1
-                        LIMIT 1
-                    """, (str(indicator_ref), self.user_id, str(indicator_ref)))
-                
-                row = cursor.fetchone()
-                cursor.close()
-                
-                if row:
-                    return row['code'], row['id']
-                return None, None
-                
+            with get_session() as session:
+                return IndicatorRepository(session).get_indicator_for_call(indicator_ref, self.user_id)
         except Exception as e:
             logger.error(f"Error fetching indicator code: {e}")
             return None, None
@@ -365,14 +341,10 @@ def get_indicator_params(indicator_id: int) -> List[Dict[str, Any]]:
         参数声明列表
     """
     try:
-        with get_db_connection() as db:
-            cursor = db.cursor()
-            cursor.execute("SELECT code FROM qd_indicator_codes WHERE id = %s", (indicator_id,))
-            row = cursor.fetchone()
-            cursor.close()
-            
-            if row and row['code']:
-                return IndicatorParamsParser.parse_params(row['code'])
+        with get_session() as session:
+            code = IndicatorRepository(session).get_code_by_id(indicator_id)
+            if code:
+                return IndicatorParamsParser.parse_params(code)
             return []
     except Exception as e:
         logger.error(f"Error getting indicator params: {e}")

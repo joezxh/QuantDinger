@@ -19,8 +19,9 @@ def get_kline():
     """
     ---
     tags:
-      - General
-    summary: "获取K线数据"
+      - Market/Kline
+    summary: "Get K-line data"
+    description: "Retrieve historical OHLCV candlestick data for a trading symbol."
     produces:
       - application/json
     parameters:
@@ -136,8 +137,9 @@ def get_price():
     """
     ---
     tags:
-      - General
-    summary: "获取最新价格"
+      - Market/Kline
+    summary: "Get latest price"
+    description: "Retrieve the latest price for a trading symbol."
     produces:
       - application/json
     parameters:

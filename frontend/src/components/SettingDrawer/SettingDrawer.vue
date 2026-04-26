@@ -32,7 +32,31 @@
               </template>
               <div class="setting-drawer-index-item" @click="handleMenuTheme('light')">
                 <img src="https://gw.alipayobjects.com/zos/rmsportal/jpRkZQMyYRryryPNtyIC.svg" alt="light">
-                <div class="setting-drawer-index-selectIcon" v-if="currentNavTheme !== 'dark'">
+                <div class="setting-drawer-index-selectIcon" v-if="currentNavTheme === 'light'">
+                  <a-icon type="check"/>
+                </div>
+              </div>
+            </a-tooltip>
+
+            <a-tooltip>
+              <template slot="title">
+                {{ $t('app.setting.pagestyle.skyblue') }}
+              </template>
+              <div class="setting-drawer-index-item" @click="handleMenuTheme('skyblue')">
+                <img src="https://gw.alipayobjects.com/zos/rmsportal/LCkqqYNmvBEbokSDscrm.svg" alt="skyblue" style="filter: hue-rotate(-10deg) saturate(0.8);"/>
+                <div class="setting-drawer-index-selectIcon" v-if="currentNavTheme === 'skyblue'">
+                  <a-icon type="check"/>
+                </div>
+              </div>
+            </a-tooltip>
+
+            <a-tooltip>
+              <template slot="title">
+                {{ $t('app.setting.pagestyle.xp') }}
+              </template>
+              <div class="setting-drawer-index-item" @click="handleMenuTheme('xp')">
+                <img src="https://gw.alipayobjects.com/zos/rmsportal/jpRkZQMyYRryryPNtyIC.svg" alt="xp" style="filter: hue-rotate(120deg) saturate(1.2);"/>
+                <div class="setting-drawer-index-selectIcon" v-if="currentNavTheme === 'xp'">
                   <a-icon type="check"/>
                 </div>
               </div>

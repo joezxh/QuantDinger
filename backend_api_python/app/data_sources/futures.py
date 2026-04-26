@@ -14,7 +14,8 @@ import yfinance as yf
 
 from app.data_sources.base import BaseDataSource, TIMEFRAME_SECONDS
 from app.utils.logger import get_logger
-from app.config import CCXTConfig, TiingoConfig, APIKeys
+from app.config import CCXTConfig, TiingoConfig
+from app.data_sources.config_resolver import ConfigResolver
 
 logger = get_logger(__name__)
 
@@ -35,14 +36,8 @@ _TD_FUTURES_SYMBOLS = {
 
 
 def _get_td_api_key() -> str:
-    try:
-        from app.utils.config_loader import load_addon_config
-        key = load_addon_config().get("twelve_data", {}).get("api_key", "")
-        if key:
-            return key
-    except Exception:
-        pass
-    return (os.getenv("TWELVE_DATA_API_KEY") or "").strip()
+    key = ConfigResolver.get_api_key("futures_twelve_data", key_type="public")
+    return key or ""
 
 
 # Tiingo FX covers precious metals as spot forex (XAUUSD, XAGUSD)
@@ -186,7 +181,7 @@ class FuturesDataSource(BaseDataSource):
         tiingo_sym = _TIINGO_PRECIOUS_METALS_MAP.get(symbol.replace("=F", ""))
         if not tiingo_sym:
             return None
-        api_key = APIKeys.TIINGO_API_KEY
+        api_key = ConfigResolver.get_api_key("futures_tiingo", key_type="public") or ""
         if not api_key:
             return None
         try:
@@ -364,7 +359,7 @@ class FuturesDataSource(BaseDataSource):
         tiingo_sym = _TIINGO_PRECIOUS_METALS_MAP.get(symbol.replace("=F", ""))
         if not tiingo_sym:
             return []
-        api_key = APIKeys.TIINGO_API_KEY
+        api_key = ConfigResolver.get_api_key("futures_tiingo", key_type="public") or ""
         if not api_key:
             return []
         resample = _TIINGO_TIMEFRAME_MAP.get(timeframe)
