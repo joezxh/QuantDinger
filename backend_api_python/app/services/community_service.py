@@ -120,6 +120,78 @@ class CommunityService:
             logger.error(f"get_indicator_detail failed: {e}")
             return None
 
+    def get_pending_indicators(self, page: int = 1, page_size: int = 20, review_status: str = 'pending') -> Dict[str, Any]:
+        """获取待审核指标列表（管理员用）"""
+        try:
+            with get_session() as session:
+                repo = CommunityRepository(session)
+                total = repo.count_pending_indicators(review_status=review_status)
+                offset = (page - 1) * page_size
+                rows = repo.list_pending_indicators(
+                    review_status=review_status,
+                    offset=offset,
+                    limit=page_size,
+                )
+
+            # 获取作者信息
+            user_ids = list(set([r.user_id for r in rows if r.user_id]))
+            authors = {}
+            if user_ids:
+                with get_session() as session:
+                    from app.models.user import User
+                    for uid in user_ids:
+                        user = session.get(User, uid)
+                        if user:
+                            authors[uid] = {
+                                'id': user.id,
+                                'username': user.username,
+                                'nickname': user.nickname,
+                                'avatar': user.avatar or '/avatar2.jpg',
+                            }
+
+            items = []
+            for indicator in rows:
+                author = authors.get(indicator.user_id, {
+                    'id': indicator.user_id,
+                    'username': None,
+                    'nickname': None,
+                    'avatar': '/avatar2.jpg',
+                })
+                items.append({
+                    'id': indicator.id,
+                    'name': indicator.name,
+                    'description': (indicator.description or '')[:200],
+                    'code_preview': (indicator.code or '')[:500] if indicator.code else None,
+                    'pricing_type': indicator.pricing_type or 'free',
+                    'price': float(indicator.price or 0),
+                    'vip_free': bool(getattr(indicator, 'vip_free', False)),
+                    'review_status': indicator.review_status or 'pending',
+                    'publish_to_community': bool(indicator.publish_to_community),
+                    'created_at': indicator.created_at.isoformat() if indicator.created_at else None,
+                    'updated_at': indicator.updated_at.isoformat() if indicator.updated_at else None,
+                    'author': author,
+                })
+
+            return {
+                'items': items,
+                'total': total,
+                'page': page,
+                'page_size': page_size,
+                'total_pages': (total + page_size - 1) // page_size if total > 0 else 0,
+            }
+        except Exception as e:
+            logger.error(f"get_pending_indicators failed: {e}", exc_info=True)
+            return {'items': [], 'total': 0, 'page': page, 'page_size': page_size, 'total_pages': 0}
+
+    def get_review_stats(self) -> Dict[str, Any]:
+        """获取审核统计信息"""
+        try:
+            with get_session() as session:
+                return CommunityRepository(session).get_review_stats()
+        except Exception as e:
+            logger.error(f"get_review_stats failed: {e}", exc_info=True)
+            return {'pending': 0, 'approved': 0, 'rejected': 0, 'total': 0}
+
 
 _community_service_instance: CommunityService | None = None
 

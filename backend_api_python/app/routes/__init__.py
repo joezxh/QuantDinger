@@ -11,7 +11,7 @@ def register_routes(app: Flask):
     from app.routes.strategy import strategy_bp
     from app.routes.credentials import credentials_bp
     from app.routes.auth import auth_bp
-    from app.routes.ai_chat import ai_chat_bp
+    from app.routes.ai.ai_chat import ai_chat_bp
     from app.routes.indicator import indicator_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.settings import settings_bp

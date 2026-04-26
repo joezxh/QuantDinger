@@ -155,3 +155,38 @@ class SecurityService:
         except Exception as e:
             logger.error(f"Failed to log security event: {e}")
             return False
+
+    def can_send_verification_code(self, email: str, ip_address: str = None) -> Tuple[bool, str]:
+        """Check if we can send a verification code to this email from this IP."""
+        try:
+            from app.database.repositories.verification_repository import VerificationRepository
+            with get_session() as session:
+                repo = VerificationRepository(session)
+                # Check email rate limit (one code per minute per email)
+                rate_limit_time = datetime.now() - timedelta(seconds=self.code_rate_limit_seconds)
+                count = repo.count_recent_by_email(email, rate_limit_time)
+                if count > 0:
+                    return False, f'Please wait {self.code_rate_limit_seconds} seconds before requesting another code'
+                # Check IP hourly limit
+                if ip_address:
+                    hour_ago = datetime.now() - timedelta(hours=1)
+                    count = repo.count_recent_by_ip(ip_address, hour_ago)
+                    if count >= self.code_ip_hourly_limit:
+                        return False, 'Too many verification code requests from this IP. Try again later.'
+                return True, 'allowed'
+        except Exception as e:
+            logger.error(f"Failed to check verification code rate limit: {e}")
+            return True, 'allowed'  # Fail open on DB errors
+
+    @staticmethod
+    def validate_password_strength(password: str) -> Tuple[bool, str]:
+        """Validate password meets minimum security requirements."""
+        if len(password) < 8:
+            return False, 'Password must be at least 8 characters long'
+        if not any(c.isupper() for c in password):
+            return False, 'Password must contain at least one uppercase letter'
+        if not any(c.islower() for c in password):
+            return False, 'Password must contain at least one lowercase letter'
+        if not any(c.isdigit() for c in password):
+            return False, 'Password must contain at least one digit'
+        return True, 'valid'

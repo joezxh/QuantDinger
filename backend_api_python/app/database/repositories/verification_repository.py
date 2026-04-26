@@ -98,6 +98,28 @@ class VerificationRepository(BaseRepository):
             return code.attempts
         return 0
 
+    def count_recent_by_email(self, email: str, since: datetime) -> int:
+        """Count verification codes sent to this email since the given time."""
+        stmt = (
+            select(func.count(VerificationCode.id))
+            .where(
+                VerificationCode.email == email,
+                VerificationCode.created_at > since,
+            )
+        )
+        return self.session.execute(stmt).scalar() or 0
+
+    def count_recent_by_ip(self, ip_address: str, since: datetime) -> int:
+        """Count verification codes sent from this IP since the given time."""
+        stmt = (
+            select(func.count(VerificationCode.id))
+            .where(
+                VerificationCode.ip_address == ip_address,
+                VerificationCode.created_at > since,
+            )
+        )
+        return self.session.execute(stmt).scalar() or 0
+
     def get_oauth_link_by_provider(self, provider: str, provider_user_id: str):
         stmt = (
             select(OAuthLink)

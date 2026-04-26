@@ -250,3 +250,102 @@ def info():
     except Exception as e:
         logger.error(f"info failed: {e}")
         return jsonify({'code': 500, 'msg': str(e), 'data': None}), 500
+
+
+@auth_bp.route('/send-code', methods=['POST'])
+def send_verification_code():
+    """发送邮箱验证码"""
+    ip_address = _get_client_ip()
+    try:
+        from app.services.security_service import get_security_service
+        from app.services.email_service import get_email_service
+        security = get_security_service()
+        email_service = get_email_service()
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 0, 'msg': 'No data provided', 'data': None}), 400
+        email = (data.get('email') or '').strip().lower()
+        code_type = data.get('type', 'register')
+        turnstile_token = data.get('turnstile_token')
+        if not email or not email_service.is_valid_email(email):
+            return jsonify({'code': 0, 'msg': 'Invalid email address', 'data': None}), 400
+        # For change_password type with logged-in user, skip Turnstile
+        skip_turnstile = False
+        if code_type == 'change_password':
+            from app.utils.auth import verify_token
+            auth_header = request.headers.get('Authorization')
+            if auth_header:
+                parts = auth_header.split()
+                if len(parts) == 2 and parts[0].lower() == 'bearer':
+                    payload = verify_token(parts[1])
+                    if payload and payload.get('user_id'):
+                        skip_turnstile = True
+        if not skip_turnstile:
+            turnstile_ok, turnstile_msg = security.verify_turnstile(turnstile_token, ip_address)
+            if not turnstile_ok:
+                return jsonify({'code': 0, 'msg': turnstile_msg, 'data': None}), 400
+        # Check rate limit
+        can_send, rate_msg = security.can_send_verification_code(email, ip_address)
+        if not can_send:
+            return jsonify({'code': 0, 'msg': rate_msg, 'data': None}), 429
+        # For registration, check if email already exists
+        if code_type == 'register':
+            from app.services.user_service import get_user_service
+            existing = get_user_service().get_user_by_email(email)
+            if existing:
+                return jsonify({'code': 0, 'msg': 'Email already registered', 'data': None}), 400
+        # For reset_password, check if email exists (but don't reveal)
+        if code_type == 'reset_password':
+            from app.services.user_service import get_user_service
+            existing = get_user_service().get_user_by_email(email)
+            if not existing:
+                return jsonify({'code': 1, 'msg': 'If the email exists, a verification code has been sent', 'data': None})
+        # Send verification code
+        success, msg = email_service.send_verification_code(email, code_type, ip_address)
+        if success:
+            security.log_security_event('verification_code_sent', None, ip_address, _get_user_agent(), {'email': email, 'type': code_type})
+            return jsonify({'code': 1, 'msg': 'Verification code sent', 'data': None})
+        else:
+            return jsonify({'code': 0, 'msg': msg, 'data': None}), 500
+    except Exception as e:
+        logger.error(f"send_verification_code error: {e}")
+        return jsonify({'code': 0, 'msg': 'Failed to send verification code', 'data': None}), 500
+
+
+@auth_bp.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    """使用验证码修改当前用户密码"""
+    try:
+        from app.services.email_service import get_email_service
+        from app.services.user_service import get_user_service
+        email_service = get_email_service()
+        user_service = get_user_service()
+        user_id = get_current_user_id()
+        data = request.get_json() or {}
+        code = data.get('code', '').strip()
+        new_password = data.get('new_password', '')
+        if not code:
+            return jsonify({'code': 0, 'msg': 'Verification code is required', 'data': None}), 400
+        if not new_password:
+            return jsonify({'code': 0, 'msg': 'New password required', 'data': None}), 400
+        if len(new_password) < 6:
+            return jsonify({'code': 0, 'msg': 'Password must be at least 6 characters', 'data': None}), 400
+        user = user_service.get_user_by_id(user_id)
+        if not user:
+            return jsonify({'code': 404, 'msg': 'User not found', 'data': None}), 404
+        email = user.get('email')
+        if not email:
+            return jsonify({'code': 0, 'msg': 'User has no email address', 'data': None}), 400
+        # Verify code
+        code_valid, code_msg = email_service.verify_code(email, code, 'change_password')
+        if not code_valid:
+            return jsonify({'code': 0, 'msg': code_msg, 'data': None}), 400
+        # Reset password
+        success = user_service.reset_password(user_id, new_password)
+        if success:
+            return jsonify({'code': 1, 'msg': 'Password changed successfully', 'data': None})
+        return jsonify({'code': 0, 'msg': 'Failed to change password', 'data': None}), 500
+    except Exception as e:
+        logger.error(f"change_password failed: {e}")
+        return jsonify({'code': 0, 'msg': str(e), 'data': None}), 500

@@ -71,7 +71,7 @@ class Role(Base, TimestampMixin):
         return f"<Role(id={self.id}, code='{self.role_code}', name='{self.name}')>"
 
 
-class UserRole(Base, TimestampMixin):
+class UserRole(Base):
     """用户-角色关联表"""
     __tablename__ = "sys_user_roles"
     __table_args__ = (UniqueConstraint("user_id", "role_id"),)
@@ -88,7 +88,7 @@ class UserRole(Base, TimestampMixin):
         return f"<UserRole(user_id={self.user_id}, role_id={self.role_id})>"
 
 
-class RolePermission(Base, TimestampMixin):
+class RolePermission(Base):
     """角色-权限关联表"""
     __tablename__ = "sys_role_permissions"
     __table_args__ = (UniqueConstraint("role_id", "permission_id"),)

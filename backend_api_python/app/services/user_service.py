@@ -72,13 +72,16 @@ class UserService:
             'avatar': user.avatar,
             'status': user.status,
             'role': user.role,
-            'credits': user.credits,
+            'credits': float(user.credits) if user.credits is not None else 0,
             'vip_expires_at': user.vip_expires_at,
             'timezone': user.timezone,
             'last_login_at': user.last_login_at,
             'created_at': user.created_at,
             'updated_at': user.updated_at,
             'token_version': getattr(user, 'token_version', 1),
+            'notification_settings': user.notification_settings or '',
+            'referred_by': user.referred_by,
+            'phone': user.phone,
         }
 
     def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
@@ -180,6 +183,144 @@ class UserService:
         except Exception as e:
             logger.error(f"list_users failed: {e}")
             return {"items": [], "total": 0, "page": page, "page_size": page_size}
+
+    def list_all_users_for_export(self, search: str = '') -> list:
+        """导出所有用户（不分页）"""
+        try:
+            with get_session() as session:
+                query = session.query(User)
+                if search:
+                    search_pattern = f"%{search}%"
+                    query = query.filter(
+                        (User.username.ilike(search_pattern)) |
+                        (User.email.ilike(search_pattern)) |
+                        (User.nickname.ilike(search_pattern))
+                    )
+                items = query.order_by(User.id).all()
+                return [self._user_to_dict(item) for item in items]
+        except Exception as e:
+            logger.error(f"list_all_users_for_export failed: {e}")
+            return []
+
+    def create_user(self, data: dict) -> int:
+        """创建用户，返回用户ID"""
+        username = (data.get('username') or '').strip()
+        email = (data.get('email') or '').strip().lower()
+        password = data.get('password', '')
+        nickname = (data.get('nickname') or '').strip()
+        role = data.get('role', 'user')
+        status = data.get('status', 'active')
+        referred_by = data.get('referred_by')
+
+        if not username:
+            raise ValueError('Username is required')
+        if len(password) < 6:
+            raise ValueError('Password must be at least 6 characters')
+        if role not in self.ROLES:
+            role = 'user'
+
+        try:
+            with get_session() as session:
+                # Check duplicates
+                if UserRepository(session).get_by_username(username):
+                    raise ValueError('Username already exists')
+                if email and UserRepository(session).get_by_email(email):
+                    raise ValueError('Email already registered')
+
+                user = User(
+                    username=username,
+                    password_hash=self.hash_password(password),
+                    email=email or None,
+                    nickname=nickname or username,
+                    role=role,
+                    status=status,
+                    referred_by=int(referred_by) if referred_by else None,
+                )
+                session.add(user)
+                session.flush()
+                user_id = user.id
+                return user_id
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error(f"create_user failed: {e}")
+            raise ValueError(f"Failed to create user: {e}")
+
+    def update_user(self, user_id: int, data: dict) -> bool:
+        """更新用户信息"""
+        try:
+            with get_session() as session:
+                user = UserRepository(session).get_by_id(user_id)
+                if not user:
+                    return False
+
+                allowed_fields = ['username', 'email', 'nickname', 'avatar', 'role', 'status', 'timezone']
+                for field in allowed_fields:
+                    if field in data:
+                        value = data[field]
+                        if field == 'email' and value:
+                            value = value.strip().lower()
+                            existing = UserRepository(session).get_by_email(value)
+                            if existing and existing.id != user_id:
+                                raise ValueError('Email already registered')
+                        if field == 'role' and value not in self.ROLES:
+                            value = 'user'
+                        setattr(user, field, value)
+                session.flush()
+                return True
+        except ValueError:
+            raise
+        except Exception as e:
+            logger.error(f"update_user failed: {e}")
+            return False
+
+    def delete_user(self, user_id: int) -> bool:
+        """删除用户"""
+        try:
+            with get_session() as session:
+                user = UserRepository(session).get_by_id(user_id)
+                if not user:
+                    return False
+                session.delete(user)
+                session.flush()
+                return True
+        except Exception as e:
+            logger.error(f"delete_user failed: {e}")
+            return False
+
+    def reset_password(self, user_id: int, new_password: str) -> bool:
+        """重置用户密码（无需旧密码）"""
+        if len(new_password) < 6:
+            raise ValueError('Password must be at least 6 characters')
+        try:
+            with get_session() as session:
+                user = UserRepository(session).get_by_id(user_id)
+                if not user:
+                    return False
+                user.password_hash = self.hash_password(new_password)
+                session.flush()
+                return True
+        except Exception as e:
+            logger.error(f"reset_password failed: {e}")
+            return False
+
+    def change_password(self, user_id: int, old_password: str, new_password: str) -> bool:
+        """修改密码（需要旧密码）"""
+        if len(new_password) < 6:
+            raise ValueError('Password must be at least 6 characters')
+        try:
+            with get_session() as session:
+                user = UserRepository(session).get_by_id(user_id)
+                if not user:
+                    return False
+                if not user.password_hash or not self.verify_password(old_password, user.password_hash):
+                    return False
+                user.password_hash = self.hash_password(new_password)
+                session.flush()
+                return True
+        except Exception as e:
+            logger.error(f"change_password failed: {e}")
+            return False
 
 
 def get_user_service() -> UserService:

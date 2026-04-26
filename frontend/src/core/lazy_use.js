@@ -50,6 +50,7 @@ import {
   Pagination,
   Rate,
   AutoComplete,
+  Tree,
   message,
   notification
 } from 'ant-design-vue'
@@ -111,6 +112,7 @@ Vue.use(Empty)
 Vue.use(Pagination)
 Vue.use(Rate)
 Vue.use(AutoComplete)
+Vue.use(Tree)
 // Textarea 是 Input 组件的一部分，通过 Vue.use(Input) 已自动注册
 
 Vue.prototype.$confirm = Modal.confirm

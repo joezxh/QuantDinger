@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from app.database.repositories.base import BaseRepository
 from app.models.billing import BillingRecord
+from app.models.membership import MembershipOrder
 from app.models.user import User
 
 
@@ -35,3 +36,16 @@ class BillingRepository(BaseRepository):
             'vip_expires_at': str(user.vip_expires_at) if user.vip_expires_at else None,
             'is_vip': bool(user.vip_expires_at)
         }
+
+    def create_membership_order(self, user_id: int, plan: str, price_usd: float, status: str = "paid") -> MembershipOrder:
+        """创建会员订单记录"""
+        order = MembershipOrder(
+            user_id=user_id,
+            plan=plan,
+            price_usd=price_usd,
+            status=status,
+        )
+        self.add(order)
+        self.flush()
+        self.refresh(order)
+        return order

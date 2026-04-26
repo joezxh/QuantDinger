@@ -145,7 +145,8 @@ export default {
       permRoleId: null,
       permTree: [],
       checkedKeys: [],
-      checkedPermIds: []
+      checkedPermIds: [],
+      permIdMap: {}  // treePermId -> permission_id 映射
     }
   },
   computed: {
@@ -236,10 +237,13 @@ export default {
           getPermissionTree(true),
           getRole(record.id)
         ])
-        // 为树节点添加唯一 key，避免重复
+        // 为树节点添加唯一 key，避免重复；同时构建 treePermId -> id 映射
+        this.permIdMap = {}
         const addUniqueKeys = (nodes, counter = { value: 0 }) => {
           return nodes.map(node => {
-            const result = { ...node, treePermId: `tree-${counter.value++}` }
+            const treePermId = `tree-${counter.value++}`
+            this.permIdMap[treePermId] = node.id
+            const result = { ...node, treePermId }
             if (node.children?.length) {
               result.children = addUniqueKeys(node.children, counter)
             }
@@ -247,8 +251,12 @@ export default {
           })
         }
         this.permTree = addUniqueKeys(treeRes.data || [])
-        this.checkedPermIds = roleRes.data?.permission_ids || []
-        this.checkedKeys = this.checkedPermIds.slice()
+        // 将后端返回的 permission_ids 转换为对应的 treePermId
+        const backendIds = roleRes.data?.permission_ids || []
+        const idToTreeKey = {}
+        Object.entries(this.permIdMap).forEach(([k, v]) => { idToTreeKey[v] = k })
+        this.checkedKeys = backendIds.map(id => idToTreeKey[id]).filter(Boolean)
+        this.checkedPermIds = backendIds.slice()
       } catch (e) {
         this.$message.error(this.$t('roleManage.permissionFetchFailed') || '加载权限数据失败')
       }
@@ -257,8 +265,10 @@ export default {
 
     onCheck (checkedKeys, info) {
       this.checkedKeys = checkedKeys
-      // Collect all leaf node ids
-      this.checkedPermIds = [...checkedKeys]
+      // 将 treePermId 转回真正的 permission_id
+      this.checkedPermIds = checkedKeys
+        .map(k => this.permIdMap[k])
+        .filter(id => id !== undefined)
     },
 
     async savePermissions () {

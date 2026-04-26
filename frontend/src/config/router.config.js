@@ -37,13 +37,7 @@ export const asyncRouterMap = [
           }
         ]
       },
-      // 指标 IDE（独立）
-      {
-        path: '/indicator-ide',
-        name: 'IndicatorIDE',
-        component: () => import('@/views/indicator-ide'),
-        meta: { title: 'menu.dashboard.indicatorIde', keepAlive: true, icon: 'code', permission: ['dashboard'] }
-      },
+
       // ========== 手风琴菜单：交易工具 ==========
       {
         path: '/trading-tools',
@@ -183,6 +177,13 @@ export const asyncRouterMap = [
         },
         redirect: '/indicator-community',
         children: [
+          // 指标 IDE
+          {
+            path: '/indicator-ide',
+            name: 'IndicatorIDE',
+            component: () => import('@/views/indicator-ide'),
+            meta: { title: 'menu.dashboard.indicatorIde', keepAlive: true, icon: 'code', permission: ['dashboard'] }
+          },
           // 指标市场
           {
             path: '/indicator-community',

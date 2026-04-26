@@ -221,7 +221,7 @@ export default {
       saving: false,
       schema: {},
       values: {},
-      activeKeys: ['auth', 'ai', 'trading'],
+      activeKeys: [],
       passwordVisible: {},
       showRestartTip: false,
       // OpenRouter 余额
