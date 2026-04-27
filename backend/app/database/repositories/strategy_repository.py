@@ -12,6 +12,10 @@ class StrategyRepository(BaseRepository):
         stmt = select(StrategyTrading).where(StrategyTrading.status == "running")
         return list(self.session.execute(stmt).scalars())
 
+    def list_strategies_by_user(self, user_id: int):
+        stmt = select(StrategyTrading).where(StrategyTrading.user_id == user_id)
+        return list(self.session.execute(stmt).scalars())
+
     def get_by_id(self, strategy_id: int):
         return self.session.get(StrategyTrading, strategy_id)
 

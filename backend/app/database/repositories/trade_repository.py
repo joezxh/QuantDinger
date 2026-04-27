@@ -38,3 +38,41 @@ class TradeRepository(BaseRepository):
         self.add(trade)
         self.flush()
         return trade
+
+    def count_strategy_trades_by_user(self, user_id: int):
+        from sqlalchemy import func, or_
+        from app.models.strategy import StrategyTrading
+        stmt = (
+            select(func.count(StrategyTrade.id))
+            .join(StrategyTrading, StrategyTrade.strategy_id == StrategyTrading.id)
+            .where(
+                StrategyTrade.user_id == user_id,
+                StrategyTrading.user_id == user_id,
+                or_(
+                    func.lower(func.trim(StrategyTrading.strategy_mode)) != "bot",
+                    StrategyTrading.strategy_mode == None,
+                    StrategyTrading.strategy_mode == ""
+                )
+            )
+        )
+        return self.session.execute(stmt).scalar() or 0
+
+    def list_strategy_trades_by_user(self, user_id: int, limit: int = 500):
+        from sqlalchemy import desc, or_, func
+        from app.models.strategy import StrategyTrading
+        stmt = (
+            select(StrategyTrade)
+            .join(StrategyTrading, StrategyTrade.strategy_id == StrategyTrading.id)
+            .where(
+                StrategyTrade.user_id == user_id,
+                StrategyTrading.user_id == user_id,
+                or_(
+                    func.lower(func.trim(StrategyTrading.strategy_mode)) != "bot",
+                    StrategyTrading.strategy_mode == None,
+                    StrategyTrading.strategy_mode == ""
+                )
+            )
+            .order_by(desc(StrategyTrade.created_at))
+            .limit(limit)
+        )
+        return list(self.session.execute(stmt).scalars())

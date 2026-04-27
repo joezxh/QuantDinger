@@ -11,12 +11,18 @@ class OrderRepository(BaseRepository):
     def get_pending_by_id(self, order_id: int):
         return self.session.get(PendingOrder, order_id)
 
-    def list_pending_by_user(self, user_id: int, limit: int = 50):
+    def count_pending_by_user(self, user_id: int):
+        from sqlalchemy import func
+        stmt = select(func.count(PendingOrder.id)).where(PendingOrder.user_id == user_id)
+        return self.session.execute(stmt).scalar() or 0
+
+    def list_pending_by_user_paginated(self, user_id: int, limit: int = 50, offset: int = 0):
         stmt = (
             select(PendingOrder)
             .where(PendingOrder.user_id == user_id)
-            .order_by(desc(PendingOrder.created_at))
+            .order_by(desc(PendingOrder.id))
             .limit(limit)
+            .offset(offset)
         )
         return list(self.session.execute(stmt).scalars())
 
@@ -44,15 +50,36 @@ class OrderRepository(BaseRepository):
             self.flush()
         return order
 
+    def delete_pending_by_user(self, order_id: int, user_id: int):
+        stmt = select(PendingOrder).where(PendingOrder.id == order_id, PendingOrder.user_id == user_id)
+        order = self.session.execute(stmt).scalar_one_or_none()
+        if order:
+            self.session.delete(order)
+            self.flush()
+            return True
+        return False
+
     def get_quick_trade_by_id(self, trade_id: int):
         return self.session.get(QuickTrade, trade_id)
 
-    def list_quick_trades_by_user(self, user_id: int, limit: int = 50):
+    def create_quick_trade(self, **kwargs):
+        trade = QuickTrade(**kwargs)
+        self.add(trade)
+        self.flush()
+        return trade
+
+    def count_quick_trades_by_user(self, user_id: int):
+        from sqlalchemy import func
+        stmt = select(func.count(QuickTrade.id)).where(QuickTrade.user_id == user_id)
+        return self.session.execute(stmt).scalar() or 0
+
+    def list_quick_trades_by_user(self, user_id: int, limit: int = 50, offset: int = 0):
         stmt = (
             select(QuickTrade)
             .where(QuickTrade.user_id == user_id)
             .order_by(desc(QuickTrade.created_at))
             .limit(limit)
+            .offset(offset)
         )
         return list(self.session.execute(stmt).scalars())
 
@@ -103,3 +130,20 @@ class OrderRepository(BaseRepository):
     def create_pending_order_full(self, **kwargs):
         """Create a pending order with all fields. Delegates to create_pending_order."""
         return self.create_pending_order(**kwargs)
+    def get_quick_trade_sums(self, user_id: int, credential_id: int, symbol: str, market_type: str):
+        from sqlalchemy import func, case
+        stmt = (
+            select(
+                func.coalesce(func.sum(case((QuickTrade.side == 'buy', QuickTrade.filled_amount), else_=0)), 0).label('b'),
+                func.coalesce(func.sum(case((QuickTrade.side == 'sell', QuickTrade.filled_amount), else_=0)), 0).label('s')
+            )
+            .where(
+                QuickTrade.user_id == user_id,
+                QuickTrade.credential_id == credential_id,
+                QuickTrade.symbol == symbol,
+                QuickTrade.market_type == market_type,
+                QuickTrade.status == 'filled',
+                func.coalesce(QuickTrade.filled_amount, 0) > 0
+            )
+        )
+        return self.session.execute(stmt).mappings().fetchone()

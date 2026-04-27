@@ -23,11 +23,12 @@ class MarketSymbolRepository(BaseRepository):
         return list(self.session.execute(stmt).scalars())
 
     def get_by_symbol(self, market: str, symbol: str):
+        from sqlalchemy import func
         stmt = (
             select(MarketSymbol)
             .where(
                 MarketSymbol.market == market,
-                MarketSymbol.symbol == symbol,
+                func.upper(MarketSymbol.symbol) == func.upper(symbol),
             )
         )
         return self.session.execute(stmt).scalar_one_or_none()
@@ -58,3 +59,28 @@ class MarketSymbolRepository(BaseRepository):
                 setattr(symbol, k, v)
             self.flush()
         return symbol
+
+    def search_symbols(self, market: str, keyword: str, limit: int = 20):
+        from sqlalchemy import or_, func
+        stmt = (
+            select(MarketSymbol)
+            .where(
+                MarketSymbol.market == market,
+                MarketSymbol.is_active == 1,
+                or_(
+                    func.upper(MarketSymbol.symbol).like(func.upper(f"%{keyword}%")),
+                    func.upper(MarketSymbol.name).like(func.upper(f"%{keyword}%"))
+                )
+            )
+            .order_by(desc(MarketSymbol.sort_order))
+            .limit(limit)
+        )
+        return list(self.session.execute(stmt).scalars())
+
+    def list_all(self, market: str = None):
+        stmt = select(MarketSymbol).where(MarketSymbol.is_active == 1)
+        if market:
+            stmt = stmt.where(MarketSymbol.market == market).order_by(desc(MarketSymbol.sort_order))
+        else:
+            stmt = stmt.order_by(MarketSymbol.market, desc(MarketSymbol.sort_order))
+        return list(self.session.execute(stmt).scalars())

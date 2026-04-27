@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from sqlalchemy import text
-
 from app.database.session import get_session
 from app.graph.importers.base import BaseGraphImporter
 from app.utils.logger import get_logger
@@ -42,19 +40,13 @@ class CryptoGraphImporter(BaseGraphImporter):
         assets: List[Dict[str, Any]] = []
         try:
             with get_session() as session:
-                result = session.execute(
-                    text("""
-                        SELECT symbol, name
-                        FROM qd_market_symbols
-                        WHERE market = 'Crypto'
-                        LIMIT :limit
-                    """),
-                    {"limit": self.batch_size},
-                )
-                for row in result.mappings():
+                from app.database.repositories.market_symbol_repository import MarketSymbolRepository
+                repo = MarketSymbolRepository(session)
+                symbols = repo.list_by_market("Crypto", is_active=1)
+                for sym in symbols[:self.batch_size]:
                     assets.append({
-                        "symbol": row["symbol"],
-                        "name": row["name"] or row["symbol"],
+                        "symbol": sym.symbol,
+                        "name": sym.name or sym.symbol,
                         "market": "Crypto",
                     })
         except Exception as e:

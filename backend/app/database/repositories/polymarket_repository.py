@@ -19,24 +19,61 @@ class PolymarketRepository(BaseRepository):
         stmt = select(PolymarketUser).where(PolymarketUser.address == address)
         return self.session.execute(stmt).scalar_one_or_none()
 
-    def upsert_market_snapshot(self, *, market_id: str, question: str, current_probability=None, end_date_iso=None, payload_json=None):
+    def upsert_market_snapshot(self, *, market_id: str, **kwargs):
         market = self.get_market_by_market_id(market_id)
         if market is None:
-            market = PolymarketMarket(
-                market_id=market_id,
-                question=question,
-                current_probability=current_probability,
-                end_date_iso=end_date_iso,
-                payload_json=payload_json,
-            )
+            market = PolymarketMarket(market_id=market_id, **kwargs)
             self.add(market)
         else:
-            market.question = question
-            market.current_probability = current_probability
-            market.end_date_iso = end_date_iso
-            market.payload_json = payload_json
+            for k, v in kwargs.items():
+                setattr(market, k, v)
         self.flush()
         return market
+
+    def search_active_markets(self, keyword: str, limit: int = 50):
+        from sqlalchemy import or_, func
+        stmt = (
+            select(PolymarketMarket)
+            .where(
+                PolymarketMarket.active == True,
+                or_(
+                    func.upper(PolymarketMarket.question).like(func.upper(f"%{keyword}%")),
+                    func.upper(PolymarketMarket.payload_json).like(func.upper(f"%{keyword}%"))
+                )
+            )
+            .order_by(PolymarketMarket.id.desc())
+            .limit(limit)
+        )
+        return list(self.session.execute(stmt).scalars())
+
+    def get_cached_markets(self, cutoff_time, active: bool = True):
+        stmt = (
+            select(PolymarketMarket)
+            .where(
+                PolymarketMarket.active == active,
+                PolymarketMarket.updated_at > cutoff_time
+            )
+            .order_by(PolymarketMarket.updated_at.desc())
+        )
+        return list(self.session.execute(stmt).scalars())
+
+    def list_markets(self, limit: int = 500):
+        """Fetch a batch of markets ordered by id."""
+        stmt = (
+            select(PolymarketMarket)
+            .order_by(PolymarketMarket.id)
+            .limit(limit)
+        )
+        return list(self.session.execute(stmt).scalars())
+
+    def list_users(self, limit: int = 500):
+        """Fetch a batch of users ordered by id."""
+        stmt = (
+            select(PolymarketUser)
+            .order_by(PolymarketUser.id)
+            .limit(limit)
+        )
+        return list(self.session.execute(stmt).scalars())
 
     def create_analysis(self, **kwargs):
         analysis = PolymarketAnalysis(**kwargs)

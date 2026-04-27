@@ -196,42 +196,35 @@ def seed_builtin_indicators_for_new_user(session: Any, user_id: int) -> int:
     """
     if not user_id:
         return 0
-    from sqlalchemy import text
+
+    from app.database.repositories.indicator_repository import IndicatorRepository
 
     now = int(time.time())
     try:
-        # Idempotency check
-        result = session.execute(
-            text("""
-                SELECT 1 AS x
-                FROM ind_indicator_codes
-                WHERE user_id = :user_id AND name = :name
-                LIMIT 1
-            """),
-            {"user_id": user_id, "name": _BUILTIN_PACK_ANCHOR_NAME},
-        )
-        if result.fetchone():
+        repo = IndicatorRepository(session)
+
+        # Idempotency check via ORM
+        existing = repo.get_indicator_for_call(_BUILTIN_PACK_ANCHOR_NAME, user_id)
+        if existing[0] is not None:
             return 0
 
         inserted = 0
         for spec in _builtin_specs():
-            session.execute(
-                text("""
-                    INSERT INTO ind_indicator_codes
-                      (user_id, is_buy, end_time, name, code, description,
-                       publish_to_community, pricing_type, price, preview_image, vip_free, review_status,
-                       createtime, updatetime, created_at, updated_at)
-                    VALUES (:user_id, 0, 1, :name, :code, :description, 0, 'free', 0, '', FALSE, NULL,
-                            :createtime, :updatetime, NOW(), NOW())
-                """),
-                {
-                    "user_id": user_id,
-                    "name": spec["name"],
-                    "code": spec["code"],
-                    "description": spec["description"],
-                    "createtime": now,
-                    "updatetime": now,
-                },
+            repo.create_indicator(
+                user_id=user_id,
+                is_buy=0,
+                end_time=1,
+                name=spec["name"],
+                code=spec["code"],
+                description=spec["description"],
+                publish_to_community=0,
+                pricing_type="free",
+                price=0,
+                preview_image="",
+                vip_free=False,
+                review_status=None,
+                createtime=now,
+                updatetime=now,
             )
             inserted += 1
         session.commit()

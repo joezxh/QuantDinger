@@ -16,6 +16,15 @@ class ExchangeRepository(BaseRepository):
             .order_by(desc(ExchangeCredential.created_at))
         )
         return list(self.session.execute(stmt).scalars())
+    def get_credential_by_user(self, credential_id: int, user_id: int):
+        stmt = (
+            select(ExchangeCredential)
+            .where(
+                ExchangeCredential.id == credential_id,
+                ExchangeCredential.user_id == user_id,
+            )
+        )
+        return self.session.execute(stmt).scalar_one_or_none()
 
     def get_by_exchange(self, user_id: int, exchange_id: str):
         stmt = (

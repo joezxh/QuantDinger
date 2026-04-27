@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from sqlalchemy import text
-
 from app.database.session import get_session
 from app.graph.importers.base import BaseGraphImporter
 from app.utils.logger import get_logger
@@ -38,47 +36,35 @@ class PolymarketGraphImporter(BaseGraphImporter):
         return counters
 
     def _fetch_markets(self) -> List[Dict[str, Any]]:
-        """Fetch Polymarket markets from qd_polymarket_markets."""
+        """Fetch Polymarket markets from trade_polymarket_markets."""
         markets: List[Dict[str, Any]] = []
         try:
             with get_session() as session:
-                result = session.execute(
-                    text("""
-                        SELECT id, market_id, question, category, resolution
-                        FROM qd_polymarket_markets
-                        LIMIT :limit
-                    """),
-                    {"limit": self.batch_size},
-                )
-                for row in result.mappings():
+                from app.database.repositories.polymarket_repository import PolymarketRepository
+                repo = PolymarketRepository(session)
+                for m in repo.list_markets(limit=self.batch_size):
                     markets.append({
-                        "market_id": str(row["market_id"]),
-                        "question": row["question"] or "",
-                        "category": row["category"],
-                        "resolution": row["resolution"],
+                        "market_id": str(m.market_id),
+                        "question": m.question or "",
+                        "category": m.category,
+                        "resolution": None,  # not stored in ORM model
                     })
         except Exception as e:
             logger.warning("Fetch polymarket markets failed: %s", e)
         return markets
 
     def _fetch_users(self) -> List[Dict[str, Any]]:
-        """Fetch Polymarket users from qd_polymarket_users."""
+        """Fetch Polymarket users from trade_polymarket_users."""
         users: List[Dict[str, Any]] = []
         try:
             with get_session() as session:
-                result = session.execute(
-                    text("""
-                        SELECT address, win_rate, profit
-                        FROM qd_polymarket_users
-                        LIMIT :limit
-                    """),
-                    {"limit": self.batch_size},
-                )
-                for row in result.mappings():
+                from app.database.repositories.polymarket_repository import PolymarketRepository
+                repo = PolymarketRepository(session)
+                for u in repo.list_users(limit=self.batch_size):
                     users.append({
-                        "address": row["address"],
-                        "win_rate": float(row["win_rate"]) if row["win_rate"] else 0.0,
-                        "profit": float(row["profit"]) if row["profit"] else 0.0,
+                        "address": u.address,
+                        "win_rate": float(u.win_rate) if u.win_rate else 0.0,
+                        "profit": 0.0,  # not stored as separate column; use payload_json if needed
                     })
         except Exception as e:
             logger.warning("Fetch polymarket users failed: %s", e)

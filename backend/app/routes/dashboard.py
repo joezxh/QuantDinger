@@ -22,6 +22,10 @@ from sqlalchemy import text
 from app.database.session import get_session
 from app.utils.logger import get_logger
 from app.utils.auth import login_required
+from app.database.repositories.strategy_repository import StrategyRepository
+from app.database.repositories.portfolio_repository import PortfolioRepository
+from app.database.repositories.trade_repository import TradeRepository
+from app.database.repositories.order_repository import OrderRepository
 
 logger = get_logger(__name__)
 
@@ -374,15 +378,19 @@ def summary():
         
         # Strategy counts (filtered by user_id)
         with get_session() as session:
-            result = session.execute(
-                text("""
-                    SELECT id, strategy_name, strategy_type, status, initial_capital, trading_config, strategy_mode
-                    FROM trade_strategies_trading
-                    WHERE user_id = :user_id
-                """),
-                {"user_id": user_id},
-            )
-            strategies = result.mappings().fetchall() or []
+            strategy_repo = StrategyRepository(session)
+            strategies_orm = strategy_repo.list_strategies_by_user(user_id)
+            strategies = []
+            for s in strategies_orm:
+                strategies.append({
+                    "id": s.id,
+                    "strategy_name": s.strategy_name,
+                    "strategy_type": s.strategy_type,
+                    "status": s.status,
+                    "initial_capital": float(s.initial_capital) if s.initial_capital else 0.0,
+                    "trading_config": s.trading_config,
+                    "strategy_mode": s.strategy_mode,
+                })
 
         strategies = [s for s in strategies if not _is_bot_strategy(s)]
         running = [s for s in strategies if (s.get("status") or "").strip().lower() == "running"]
@@ -407,19 +415,26 @@ def summary():
 
         # Positions (best-effort, filtered by user_id)
         with get_session() as session:
-            result = session.execute(
-                text("""
-                    SELECT p.*, s.strategy_name, s.initial_capital, s.leverage, s.market_type
-                    FROM trade_strategy_positions p
-                    INNER JOIN trade_strategies_trading s ON s.id = p.strategy_id
-                    WHERE p.user_id = :user_id
-                      AND s.user_id = :user_id
-                      AND COALESCE(LOWER(TRIM(s.strategy_mode)), 'signal') <> 'bot'
-                    ORDER BY p.updated_at DESC
-                """),
-                {"user_id": user_id},
-            )
-            rows = result.mappings().fetchall() or []
+            portfolio_repo = PortfolioRepository(session)
+            positions_orm = portfolio_repo.list_strategy_positions_by_user(user_id)
+            rows = []
+            for p in positions_orm:
+                st = p.strategy
+                rows.append({
+                    "side": p.side,
+                    "entry_price": float(p.entry_price or 0.0),
+                    "current_price": float(p.current_price or 0.0),
+                    "size": float(p.size or 0.0),
+                    "leverage": float(st.leverage or 1.0) if st else 1.0,
+                    "market_type": st.market_type if st else "spot",
+                    "strategy_name": st.strategy_name if st else "",
+                    "strategy_id": p.strategy_id,
+                    "symbol": p.symbol,
+                    "highest_price": float(p.highest_price or 0.0),
+                    "lowest_price": float(p.lowest_price or 0.0),
+                    "equity": float(p.equity or 0.0),
+                    "updated_at": p.updated_at,
+                })
 
         current_positions: List[Dict[str, Any]] = []
         total_unrealized_pnl = 0.0
@@ -450,34 +465,26 @@ def summary():
         # Recent trades (best-effort, filtered by user_id)
         # Also compute all-time trade count for dashboard top cards.
         with get_session() as session:
-            result = session.execute(
-                text("""
-                    SELECT COUNT(1) AS cnt
-                    FROM trade_strategy_trades t
-                    INNER JOIN trade_strategies_trading s ON s.id = t.strategy_id
-                    WHERE t.user_id = :user_id
-                      AND s.user_id = :user_id
-                      AND COALESCE(LOWER(TRIM(s.strategy_mode)), 'signal') <> 'bot'
-                """),
-                {"user_id": user_id},
-            )
-            row = result.mappings().fetchone() or {}
-            total_trades_all = int(row.get("cnt") or 0)
-
-            result = session.execute(
-                text("""
-                    SELECT t.*, s.strategy_name
-                    FROM trade_strategy_trades t
-                    INNER JOIN trade_strategies_trading s ON s.id = t.strategy_id
-                    WHERE t.user_id = :user_id
-                      AND s.user_id = :user_id
-                      AND COALESCE(LOWER(TRIM(s.strategy_mode)), 'signal') <> 'bot'
-                    ORDER BY t.created_at DESC
-                    LIMIT 500
-                """),
-                {"user_id": user_id},
-            )
-            recent_trades_raw = result.mappings().fetchall() or []
+            trade_repo = TradeRepository(session)
+            total_trades_all = trade_repo.count_strategy_trades_by_user(user_id)
+            trades_orm = trade_repo.list_strategy_trades_by_user(user_id, limit=500)
+            
+            recent_trades_raw = []
+            for t in trades_orm:
+                st = t.strategy
+                recent_trades_raw.append({
+                    "id": t.id,
+                    "user_id": t.user_id,
+                    "strategy_id": t.strategy_id,
+                    "strategy_name": st.strategy_name if st else "",
+                    "symbol": t.symbol,
+                    "side": t.side,
+                    "profit": float(t.profit or 0.0),
+                    "commission": float(t.commission or 0.0),
+                    "price": float(t.price or 0.0),
+                    "amount": float(t.amount or 0.0),
+                    "created_at": t.created_at,
+                })
         
         # Convert datetime to timestamp for frontend compatibility
         from datetime import timezone as _tz
@@ -703,35 +710,13 @@ def pending_orders():
         offset = (page - 1) * page_size
 
         with get_session() as session:
-            result = session.execute(
-                text("SELECT COUNT(1) AS cnt FROM pending_orders WHERE user_id = :user_id"),
-                {"user_id": user_id},
-            )
-            row = result.mappings().fetchone() or {}
-            total = int(row.get("cnt") or 0)
-
-            result = session.execute(
-                text("""
-                    SELECT o.*,
-                           s.strategy_name,
-                           s.notification_config AS strategy_notification_config,
-                           s.exchange_config AS strategy_exchange_config,
-                           s.market_type AS strategy_market_type,
-                           s.market_category AS strategy_market_category,
-                           s.execution_mode AS strategy_execution_mode
-                    FROM pending_orders o
-                    LEFT JOIN trade_strategies_trading s ON s.id = o.strategy_id
-                    WHERE o.user_id = :user_id
-                    ORDER BY o.id DESC
-                    LIMIT :limit OFFSET :offset
-                """),
-                {"user_id": user_id, "limit": int(page_size), "offset": int(offset)},
-            )
-            rows = result.mappings().fetchall() or []
+            repo = OrderRepository(session)
+            total = repo.count_pending_by_user(user_id)
+            orders = repo.list_pending_by_user_paginated(user_id, limit=page_size, offset=offset)
 
         out: List[Dict[str, Any]] = []
-        for r in rows:
-            status = (r.get("status") or "").strip().lower()
+        for r in orders:
+            status = (r.status or "").strip().lower()
             if status == "sent":
                 status = "completed"
             if status == "deferred":
@@ -739,19 +724,27 @@ def pending_orders():
 
             # Frontend expects these keys:
             # - filled_amount, filled_price, error_message
-            filled_amount = float(r.get("filled") or 0.0)
-            filled_price = float(r.get("avg_price") or 0.0) if float(r.get("avg_price") or 0.0) > 0 else float(r.get("price") or 0.0)
+            filled_amount = float(r.filled or 0.0)
+            filled_price = float(r.avg_price or 0.0) if float(r.avg_price or 0.0) > 0 else float(r.price or 0.0)
+
+            strategy = r.strategy
+            strategy_name = strategy.strategy_name if strategy else ""
+            strategy_exchange_config = strategy.exchange_config if strategy else "{}"
+            strategy_notification_config = strategy.notification_config if strategy else "{}"
+            strategy_market_type = strategy.market_type if strategy else ""
+            strategy_market_category = getattr(strategy, "market_category", "") if strategy else ""
+            strategy_execution_mode = strategy.execution_mode if strategy else ""
 
             # Derive exchange_id + notify channels without leaking secrets to frontend.
-            ex_cfg = _safe_json_loads(r.get("strategy_exchange_config"), {}) or {}
-            notify_cfg = _safe_json_loads(r.get("strategy_notification_config"), {}) or {}
-            exchange_id = (r.get("exchange_id") or ex_cfg.get("exchange_id") or ex_cfg.get("exchangeId") or "").strip().lower()
+            ex_cfg = _safe_json_loads(strategy_exchange_config, {}) or {}
+            notify_cfg = _safe_json_loads(strategy_notification_config, {}) or {}
+            exchange_id = (r.exchange_id or ex_cfg.get("exchange_id") or ex_cfg.get("exchangeId") or "").strip().lower()
             notify_channels = _as_list((notify_cfg or {}).get("channels"))
             if not notify_channels:
                 notify_channels = ["browser"]
-            market_type = (r.get("market_type") or r.get("strategy_market_type") or ex_cfg.get("market_type") or ex_cfg.get("marketType") or "").strip().lower()
-            market_category = str(r.get("strategy_market_category") or "").strip().lower()
-            execution_mode = str(r.get("strategy_execution_mode") or r.get("execution_mode") or "").strip().lower()
+            market_type = (r.market_type or strategy_market_type or ex_cfg.get("market_type") or ex_cfg.get("marketType") or "").strip().lower()
+            market_category = str(strategy_market_category).strip().lower()
+            execution_mode = str(strategy_execution_mode or r.execution_mode or "").strip().lower()
 
             # If non-crypto markets are "signal-only", show SIGNAL instead of blank exchange.
             exchange_display = exchange_id
@@ -761,35 +754,43 @@ def pending_orders():
 
             out.append(
                 {
-                    **r,
-                    "strategy_name": r.get("strategy_name") or "",
+                    "id": r.id,
+                    "user_id": r.user_id,
+                    "strategy_id": r.strategy_id,
+                    "symbol": r.symbol,
+                    "signal_type": r.signal_type,
+                    "signal_ts": r.signal_ts,
+                    "market_type": market_type,
+                    "order_type": r.order_type,
+                    "amount": float(r.amount or 0.0),
+                    "price": float(r.price or 0.0),
+                    "execution_mode": r.execution_mode,
                     "status": status,
+                    "priority": r.priority,
+                    "attempts": r.attempts,
+                    "max_attempts": r.max_attempts,
+                    "last_error": r.last_error,
+                    "payload_json": r.payload_json,
+                    "dispatch_note": r.dispatch_note,
+                    "exchange_id": exchange_id,
+                    "exchange_order_id": r.exchange_order_id,
+                    "exchange_response_json": r.exchange_response_json,
+                    "filled": float(r.filled or 0.0),
+                    "avg_price": float(r.avg_price or 0.0),
+                    "strategy_name": strategy_name,
                     "filled_amount": filled_amount,
                     "filled_price": filled_price,
-                    "error_message": r.get("last_error") or "",
-                    "exchange_id": exchange_id,
+                    "error_message": r.last_error or "",
                     "exchange_display": exchange_display,
                     "notify_channels": notify_channels,
-                    "market_type": market_type or (r.get("market_type") or ""),
                     # Format datetime fields for JSON serialization
-                    "created_at": _format_datetime(r.get("created_at")),
-                    "updated_at": _format_datetime(r.get("updated_at")),
-                    "executed_at": _format_datetime(r.get("executed_at")),
-                    "processed_at": _format_datetime(r.get("processed_at")),
-                    "sent_at": _format_datetime(r.get("sent_at")),
+                    "created_at": _format_datetime(r.created_at),
+                    "updated_at": _format_datetime(r.updated_at),
+                    "executed_at": _format_datetime(r.executed_at),
+                    "processed_at": _format_datetime(r.processed_at),
+                    "sent_at": _format_datetime(r.sent_at),
                 }
             )
-
-        # Never expose these strategy-level config blobs.
-        for item in out:
-            try:
-                item.pop("strategy_exchange_config", None)
-                item.pop("strategy_notification_config", None)
-                item.pop("strategy_market_type", None)
-                item.pop("strategy_market_category", None)
-                item.pop("strategy_execution_mode", None)
-            except Exception:
-                pass
 
         return jsonify(
             {
@@ -860,22 +861,15 @@ def delete_pending_order(order_id: int):
             return jsonify({"code": 0, "msg": "invalid_id", "data": None}), 400
 
         with get_session() as session:
-            # Verify the order belongs to current user
-            result = session.execute(
-                text("SELECT id, status FROM pending_orders WHERE id = :oid AND user_id = :user_id"),
-                {"oid": oid, "user_id": user_id},
-            )
-            row = result.mappings().fetchone() or {}
-            if not row:
+            repo = OrderRepository(session)
+            order = repo.get_pending_by_id(oid)
+            if not order or order.user_id != user_id:
                 return jsonify({"code": 0, "msg": "not_found", "data": None}), 404
-            st = (row.get("status") or "").strip().lower()
-            if st == "processing":
+
+            if (order.status or "").strip().lower() == "processing":
                 return jsonify({"code": 0, "msg": "cannot_delete_processing", "data": None}), 400
-            session.execute(
-                text("DELETE FROM pending_orders WHERE id = :oid AND user_id = :user_id"),
-                {"oid": oid, "user_id": user_id},
-            )
-            # session 由 get_session() 上下文管理器自动 commit
+
+            repo.delete_pending_by_user(oid, user_id)
 
         return jsonify({"code": 1, "msg": "success", "data": {"id": oid}})
     except Exception as e:

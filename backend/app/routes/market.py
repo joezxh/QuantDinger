@@ -12,6 +12,7 @@ from app.database.repositories.market_route_repository import MarketRouteReposit
 from app.database.session import get_session
 from app.utils.config_loader import load_addon_config
 from app.utils.auth import login_required
+from app.database.repositories.market_repository import MarketRepository
 from app.data.market_symbols_seed import get_hot_symbols as seed_get_hot_symbols, search_symbols as seed_search_symbols, get_symbol_name as seed_get_symbol_name
 from app.services.symbol_name import resolve_symbol_name
 
@@ -33,6 +34,31 @@ executor = ThreadPoolExecutor(max_workers=_market_executor_workers())
 
 def _normalize_symbol(symbol: str) -> str:
     return (symbol or '').strip().upper()
+
+
+@market_bp.route('/types', methods=['GET'])
+def get_market_types():
+    """
+    ---
+    tags:
+      - Market
+    summary: "Get market types"
+    description: "Returns a list of available market types."
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Successful response
+    """
+    try:
+        with get_session() as session:
+            markets = MarketRepository(session).get_market_types()
+            if not markets:
+                markets = ['Crypto', 'USStock', 'AStock', 'Forex', 'Futures', 'Options']
+            return jsonify({'code': 1, 'msg': 'success', 'data': markets})
+    except Exception as e:
+        logger.error(f"get_market_types failed: {e}")
+        return jsonify({'code': 0, 'msg': str(e), 'data': []}), 500
 
 
 @market_bp.route('/watchlist/get', methods=['GET'])

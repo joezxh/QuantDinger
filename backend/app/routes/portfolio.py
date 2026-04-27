@@ -8,6 +8,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from app.database.repositories.portfolio_route_repository import PortfolioRouteRepository
+from app.database.repositories.portfolio_repository import PortfolioRepository
 from app.database.session import get_session
 from app.services.kline import KlineService
 from app.utils.logger import get_logger
@@ -71,6 +72,59 @@ def _get_single_price(market: str, symbol: str, force_refresh: bool = False) -> 
     except Exception as e:
         logger.error(f"Failed to fetch price {market}:{symbol} - {str(e)}")
         return {'market': market, 'symbol': symbol, 'price': 0, 'change': 0, 'changePercent': 0, 'source': 'error'}
+
+
+@portfolio_bp.route('/positions', methods=['GET'])
+@login_required
+def list_positions():
+    """Get portfolio positions"""
+    try:
+        user_id = g.user_id
+        with get_session() as session:
+            rows = PortfolioRouteRepository(session).list_positions(user_id)
+            out = []
+            for row in rows:
+                out.append({
+                    'id': row.id,
+                    'market': row.market,
+                    'symbol': row.symbol,
+                    'side': getattr(row, 'side', 'long'),
+                    'quantity': float(row.quantity or 0),
+                    'entry_price': float(row.entry_price or 0)
+                })
+            return jsonify({'code': 1, 'msg': 'success', 'data': {'items': out}})
+    except Exception as e:
+        logger.error(f"list_positions failed: {e}")
+        return jsonify({'code': 0, 'msg': str(e), 'data': {'items': []}}), 500
+
+
+@portfolio_bp.route('/monitors', methods=['GET'])
+@login_required
+def list_monitors():
+    """Get portfolio monitors"""
+    try:
+        user_id = g.user_id
+        with get_session() as session:
+            rows = PortfolioRepository(session).list_monitors(user_id)
+            out = []
+            for row in rows:
+                out.append({
+                    'id': row.id,
+                    'name': row.name,
+                    'position_ids': row.position_ids,
+                    'monitor_type': row.monitor_type,
+                    'config': row.config,
+                    'notification_config': row.notification_config,
+                    'is_active': row.is_active,
+                    'last_run_at': row.last_run_at.isoformat() if row.last_run_at else None,
+                    'next_run_at': row.next_run_at.isoformat() if row.next_run_at else None,
+                    'last_result': row.last_result,
+                    'run_count': row.run_count
+                })
+            return jsonify({'code': 1, 'msg': 'success', 'data': {'items': out}})
+    except Exception as e:
+        logger.error(f"list_monitors failed: {e}")
+        return jsonify({'code': 0, 'msg': str(e), 'data': {'items': []}}), 500
 
 
 @portfolio_bp.route('/summary', methods=['GET'])

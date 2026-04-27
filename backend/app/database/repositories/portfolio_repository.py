@@ -3,7 +3,7 @@ from sqlalchemy import delete, func, select
 
 from app.database.repositories.base import BaseRepository
 from app.models.order import PendingOrder
-from app.models.position import ManualPosition, StrategyPosition
+from app.models.position import ManualPosition, StrategyPosition, PositionMonitor
 
 
 class PortfolioRepository(BaseRepository):
@@ -19,6 +19,25 @@ class PortfolioRepository(BaseRepository):
             stmt = stmt.where(StrategyPosition.strategy_id == strategy_id)
         return list(self.session.execute(stmt).scalars())
 
+    def list_strategy_positions_by_user(self, user_id: int):
+        from sqlalchemy import or_, desc
+        from app.models.strategy import StrategyTrading
+        stmt = (
+            select(StrategyPosition)
+            .join(StrategyTrading, StrategyPosition.strategy_id == StrategyTrading.id)
+            .where(
+                StrategyPosition.user_id == user_id,
+                StrategyTrading.user_id == user_id,
+                or_(
+                    func.lower(func.trim(StrategyTrading.strategy_mode)) != "bot",
+                    StrategyTrading.strategy_mode == None,
+                    StrategyTrading.strategy_mode == ""
+                )
+            )
+            .order_by(desc(StrategyPosition.updated_at))
+        )
+        return list(self.session.execute(stmt).scalars())
+
     def update_strategy_position_snapshot(self, position_id: int, *, current_price: float, unrealized_pnl: float, pnl_percent: float):
         row = self.session.get(StrategyPosition, position_id)
         if not row:
@@ -29,6 +48,10 @@ class PortfolioRepository(BaseRepository):
         row.updated_at = func.now()
         self.flush()
         return row
+
+    def list_monitors(self, user_id: int):
+        stmt = select(PositionMonitor).where(PositionMonitor.user_id == user_id).order_by(PositionMonitor.id.desc())
+        return list(self.session.execute(stmt).scalars())
 
 
 class PendingOrderRepository(BaseRepository):

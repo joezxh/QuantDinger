@@ -32,3 +32,8 @@ class MarketRepository(BaseRepository):
     def get_collection_record_by_hash(self, content_hash: str):
         stmt = select(CollectionRecord).where(CollectionRecord.content_hash == content_hash)
         return self.session.execute(stmt).scalar_one_or_none()
+
+    def get_market_types(self):
+        from app.models.market_symbol import MarketSymbol
+        stmt = select(MarketSymbol.market).where(MarketSymbol.is_active == 1).distinct()
+        return list(self.session.execute(stmt).scalars())

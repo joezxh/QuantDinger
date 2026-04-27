@@ -100,44 +100,35 @@ class PolymarketDataSource:
             # 先从数据库读取
             try:
                 with get_session() as session:
-                    result = session.execute(
-                        text("""
-                            SELECT market_id, question, category, current_probability,
-                                   volume_24h, liquidity, end_date_iso, status, outcome_tokens
-                            FROM qd_polymarket_markets
-                            WHERE market_id = :market_id
-                        """),
-                        {"market_id": market_id},
-                    )
-                    row = result.mappings().fetchone()
+                    from app.database.repositories.polymarket_repository import PolymarketRepository
+                    repo = PolymarketRepository(session)
+                    market = repo.get_market_by_market_id(market_id)
 
-                    if row:
-                        # RealDictCursor返回字典，使用键访问
-                        db_market_id = str(row.get('market_id') or market_id)
-                        # 解析outcome_tokens（可能是JSON字符串）
-                        outcome_tokens = {}
-                        outcome_tokens_raw = row.get('outcome_tokens')
-                        if outcome_tokens_raw:
+                    if market:
+                        payload = market.payload_json
+                        if isinstance(payload, str):
                             try:
-                                if isinstance(outcome_tokens_raw, str):
-                                    outcome_tokens = json.loads(outcome_tokens_raw)
-                                else:
-                                    outcome_tokens = outcome_tokens_raw if isinstance(outcome_tokens_raw, dict) else {}
-                            except:
-                                outcome_tokens = {}
-                        
+                                payload = json.loads(payload)
+                            except Exception:
+                                payload = {}
+                        elif payload is None:
+                            payload = {}
+                            
+                        outcome_tokens = payload.get('outcome_tokens', {})
+                        slug = payload.get('slug')
+
                         return {
-                            "market_id": db_market_id,
-                            "question": row.get('question') or '',
-                            "category": row.get('category') or 'other',
-                            "current_probability": float(row.get('current_probability') or 0),
-                            "volume_24h": float(row.get('volume_24h') or 0),
-                            "liquidity": float(row.get('liquidity') or 0),
-                            "end_date_iso": row.get('end_date_iso'),
-                            "status": row.get('status') or 'active',
+                            "market_id": market.market_id,
+                            "question": market.question or '',
+                            "category": market.category or 'other',
+                            "current_probability": float(market.current_probability or 0),
+                            "volume_24h": float(payload.get('volume_24h', 0)),
+                            "liquidity": float(payload.get('liquidity', 0)),
+                            "end_date_iso": market.end_date_iso,
+                            "status": payload.get('status', 'active') if market.active else 'closed',
                             "outcome_tokens": outcome_tokens,
-                            "polymarket_url": self._build_polymarket_url(row.get('slug'), db_market_id),
-                            "slug": row.get('slug') if row.get('slug') and not str(row.get('slug', '')).isdigit() else None
+                            "polymarket_url": self._build_polymarket_url(slug, market.market_id),
+                            "slug": slug if slug and not str(slug).isdigit() else None
                         }
             except Exception as db_error:
                 logger.warning(f"Database query failed for market {market_id}: {db_error}")
@@ -182,71 +173,39 @@ class PolymarketDataSource:
             # 如果允许使用缓存，先尝试从数据库搜索
             if use_cache:
                 with get_session() as session:
-                    # 改进搜索：同时搜索question和slug字段，也支持market_id精确匹配
-                    keyword_lower = keyword.lower()
-                    is_numeric = keyword_lower.isdigit()
-                    has_hyphens = '-' in keyword_lower
+                    from app.database.repositories.polymarket_repository import PolymarketRepository
+                    repo = PolymarketRepository(session)
+                    markets = repo.search_active_markets(keyword, limit=limit)
 
-                    if is_numeric:
-                        # 如果是纯数字，可能是market_id，精确匹配
-                        result = session.execute(
-                            text("""
-                                SELECT market_id, question, category, current_probability,
-                                       volume_24h, liquidity, end_date_iso, status, slug
-                                FROM qd_polymarket_markets
-                                WHERE market_id = :keyword AND status = 'active'
-                                ORDER BY volume_24h DESC
-                                LIMIT :limit
-                            """),
-                            {"keyword": keyword, "limit": limit},
-                        )
-                    elif has_hyphens:
-                        # 如果包含连字符，可能是slug，优先匹配slug
-                        pattern = f"%{keyword}%"
-                        result = session.execute(
-                            text("""
-                                SELECT market_id, question, category, current_probability,
-                                       volume_24h, liquidity, end_date_iso, status, slug
-                                FROM qd_polymarket_markets
-                                WHERE (slug ILIKE :pattern OR question ILIKE :pattern) AND status = 'active'
-                                ORDER BY
-                                    CASE WHEN slug ILIKE :pattern THEN 1 ELSE 2 END,
-                                    volume_24h DESC
-                                LIMIT :limit
-                            """),
-                            {"pattern": pattern, "limit": limit},
-                        )
-                    else:
-                        # 普通文本搜索
-                        pattern = f"%{keyword}%"
-                        result = session.execute(
-                            text("""
-                                SELECT market_id, question, category, current_probability,
-                                       volume_24h, liquidity, end_date_iso, status, slug
-                                FROM qd_polymarket_markets
-                                WHERE (question ILIKE :pattern OR slug ILIKE :pattern) AND status = 'active'
-                                ORDER BY volume_24h DESC
-                                LIMIT :limit
-                            """),
-                            {"pattern": pattern, "limit": limit},
-                        )
-
-                    rows = result.mappings().fetchall()
-
-                    if rows:
-                        logger.info(f"Found {len(rows)} markets in database for keyword '{keyword}'")
-                        return [{
-                            "market_id": str(row.get('market_id') or ''),
-                            "question": row.get('question') or '',
-                            "category": row.get('category') or 'other',
-                            "current_probability": float(row.get('current_probability') or 0),
-                            "volume_24h": float(row.get('volume_24h') or 0),
-                            "liquidity": float(row.get('liquidity') or 0),
-                            "end_date_iso": row.get('end_date_iso'),
-                            "status": row.get('status') or 'active',
-                            "polymarket_url": self._build_polymarket_url(row.get('slug'), row.get('market_id') or ''),
-                            "slug": row.get('slug') if row.get('slug') and not str(row.get('slug', '')).isdigit() else None
-                        } for row in rows]
+                    if markets:
+                        logger.info(f"Found {len(markets)} markets in database for keyword '{keyword}'")
+                        result_rows = []
+                        for market in markets:
+                            payload = market.payload_json
+                            if isinstance(payload, str):
+                                try:
+                                    payload = json.loads(payload)
+                                except Exception:
+                                    payload = {}
+                            elif payload is None:
+                                payload = {}
+                                
+                            slug = payload.get('slug')
+                            result_rows.append({
+                                "market_id": market.market_id,
+                                "question": market.question or '',
+                                "category": market.category or 'other',
+                                "current_probability": float(market.current_probability or 0),
+                                "volume_24h": float(payload.get('volume_24h', 0)),
+                                "liquidity": float(payload.get('liquidity', 0)),
+                                "end_date_iso": market.end_date_iso,
+                                "status": payload.get('status', 'active') if market.active else 'closed',
+                                "polymarket_url": self._build_polymarket_url(slug, market.market_id),
+                                "slug": slug if slug and not str(slug).isdigit() else None
+                            })
+                            
+                        result_rows.sort(key=lambda x: x.get('volume_24h', 0), reverse=True)
+                        return result_rows[:limit]
             
             # 直接从Gamma API获取并过滤（AI分析时使用）
             logger.info(f"Fetching from API for keyword '{keyword}' (use_cache={use_cache})...")
@@ -387,48 +346,46 @@ class PolymarketDataSource:
         """从数据库缓存读取市场数据"""
         try:
             with get_session() as session:
+                from app.database.repositories.polymarket_repository import PolymarketRepository
+                repo = PolymarketRepository(session)
+                
                 # 检查缓存是否新鲜（5分钟内）
                 cutoff_time = datetime.now() - timedelta(seconds=self.cache_ttl)
-
-                query = """
-                    SELECT market_id, question, category, current_probability,
-                           volume_24h, liquidity, end_date_iso, status, outcome_tokens
-                    FROM qd_polymarket_markets
-                    WHERE status = 'active' AND updated_at > :cutoff_time
-                """
-                params = {"cutoff_time": cutoff_time}
-
+                markets = repo.get_cached_markets(cutoff_time, active=True)
+                
                 if category:
-                    query += " AND category = :category"
-                    params["category"] = category
-
-                query += " ORDER BY volume_24h DESC LIMIT :limit"
-                params["limit"] = limit
-
-                result = session.execute(text(query), params)
-                rows = result.mappings().fetchall()
-
-                if rows:
+                    markets = [m for m in markets if m.category == category]
+                
+                if markets:
                     result_rows = []
-                    for row in rows:
-                        market_id = str(row.get('market_id') or '')
-                        slug = row.get('slug')
-                        # 确保使用正确的URL构建方法
-                        polymarket_url = self._build_polymarket_url(slug, market_id)
+                    for market in markets:
+                        payload = market.payload_json
+                        if isinstance(payload, str):
+                            try:
+                                payload = json.loads(payload)
+                            except Exception:
+                                payload = {}
+                        elif payload is None:
+                            payload = {}
+                            
+                        slug = payload.get('slug')
+                        polymarket_url = self._build_polymarket_url(slug, market.market_id)
                         result_rows.append({
-                            "market_id": market_id,
-                            "question": row.get('question') or '',
-                            "category": row.get('category') or 'other',
-                            "current_probability": float(row.get('current_probability') or 0),
-                            "volume_24h": float(row.get('volume_24h') or 0),
-                            "liquidity": float(row.get('liquidity') or 0),
-                            "end_date_iso": row.get('end_date_iso'),
-                            "status": row.get('status') or 'active',
-                            "outcome_tokens": row.get('outcome_tokens') if row.get('outcome_tokens') else {},
+                            "market_id": market.market_id,
+                            "question": market.question or '',
+                            "category": market.category or 'other',
+                            "current_probability": float(market.current_probability or 0),
+                            "volume_24h": float(payload.get('volume_24h', 0)),
+                            "liquidity": float(payload.get('liquidity', 0)),
+                            "end_date_iso": market.end_date_iso,
+                            "status": payload.get('status', 'active') if market.active else 'closed',
+                            "outcome_tokens": payload.get('outcome_tokens', {}),
                             "polymarket_url": polymarket_url,
                             "slug": slug if slug and not str(slug).isdigit() else None
                         })
-                    return result_rows
+                    
+                    result_rows.sort(key=lambda x: x.get('volume_24h', 0), reverse=True)
+                    return result_rows[:limit]
 
             return None
         except Exception as e:
@@ -1174,52 +1131,36 @@ class PolymarketDataSource:
         """保存市场数据到数据库"""
         try:
             with get_session() as session:
+                from app.database.repositories.polymarket_repository import PolymarketRepository
+                repo = PolymarketRepository(session)
                 for market in markets:
                     # 获取slug，但如果是数字则不要使用（数字不是有效的slug）
                     slug = market.get('slug') or None
-                    # 如果slug是数字，说明不是有效的slug，设置为None
                     if slug and str(slug).isdigit():
                         slug = None
-                    # 清理slug，只保留字母数字和连字符
                     import re
                     if slug:
                         slug = re.sub(r'[^a-zA-Z0-9\-]', '-', str(slug))
                         slug = slug.strip('-')
-                        # 如果清理后为空或仍然是数字，设置为None
                         if not slug or slug.isdigit():
                             slug = None
-
-                    session.execute(
-                        text("""
-                            INSERT INTO qd_polymarket_markets
-                            (market_id, question, category, current_probability, volume_24h,
-                             liquidity, end_date_iso, status, outcome_tokens, slug, updated_at)
-                            VALUES (:market_id, :question, :category, :current_probability, :volume_24h,
-                                    :liquidity, :end_date_iso, :status, :outcome_tokens, :slug, NOW())
-                            ON CONFLICT (market_id) DO UPDATE SET
-                                question = EXCLUDED.question,
-                                category = EXCLUDED.category,
-                                current_probability = EXCLUDED.current_probability,
-                                volume_24h = EXCLUDED.volume_24h,
-                                liquidity = EXCLUDED.liquidity,
-                                end_date_iso = EXCLUDED.end_date_iso,
-                                status = EXCLUDED.status,
-                                outcome_tokens = EXCLUDED.outcome_tokens,
-                                slug = EXCLUDED.slug,
-                                updated_at = NOW()
-                        """),
-                        {
-                            "market_id": market.get('market_id'),
-                            "question": market.get('question'),
-                            "category": market.get('category', 'other'),
-                            "current_probability": market.get('current_probability', 50.0),
-                            "volume_24h": market.get('volume_24h', 0),
-                            "liquidity": market.get('liquidity', 0),
-                            "end_date_iso": market.get('end_date_iso'),
-                            "status": market.get('status', 'active'),
-                            "outcome_tokens": json.dumps(market.get('outcome_tokens', {})),
-                            "slug": slug,
-                        },
+                    
+                    payload = {
+                        "volume_24h": market.get('volume_24h', 0),
+                        "liquidity": market.get('liquidity', 0),
+                        "status": market.get('status', 'active'),
+                        "outcome_tokens": market.get('outcome_tokens', {}),
+                        "slug": slug
+                    }
+                    
+                    repo.upsert_market_snapshot(
+                        market_id=market.get('market_id'),
+                        question=market.get('question'),
+                        category=market.get('category', 'other'),
+                        current_probability=market.get('current_probability', 50.0),
+                        end_date_iso=market.get('end_date_iso'),
+                        active=(market.get('status') == 'active'),
+                        payload_json=json.dumps(payload)
                     )
                 # session 由 get_session() 上下文管理器自动 commit
         except Exception as e:

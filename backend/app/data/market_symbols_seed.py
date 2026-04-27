@@ -34,17 +34,10 @@ def get_hot_symbols(market: str, limit: int = 10) -> List[Dict]:
     
     try:
         with get_session() as session:
-            result = session.execute(
-                text("""
-                    SELECT market, symbol, name FROM qd_market_symbols
-                    WHERE market = :market AND is_active = 1 AND is_hot = 1
-                    ORDER BY sort_order DESC
-                    LIMIT :limit
-                """),
-                {"market": market, "limit": max(limit, 0)},
-            )
-            rows = result.mappings().fetchall() or []
-            return [{'market': r['market'], 'symbol': r['symbol'], 'name': r.get('name') or ''} for r in rows]
+            from app.database.repositories.market_symbol_repository import MarketSymbolRepository
+            repo = MarketSymbolRepository(session)
+            symbols = repo.list_hot_by_market(market, limit=max(limit, 0))
+            return [{'market': s.market, 'symbol': s.symbol, 'name': s.name or ''} for s in symbols]
     except Exception as e:
         logger.debug(f"get_hot_symbols from DB failed: {e}")
         return []
@@ -66,24 +59,12 @@ def search_symbols(market: str, keyword: str, limit: int = 20) -> List[Dict]:
     kw = (keyword or '').strip()
     if not market or not kw:
         return []
-    
-    # Use ILIKE for case-insensitive search in PostgreSQL
-    pattern = f'%{kw}%'
-    
     try:
         with get_session() as session:
-            result = session.execute(
-                text("""
-                    SELECT market, symbol, name FROM qd_market_symbols
-                    WHERE market = :market AND is_active = 1
-                      AND (UPPER(symbol) LIKE UPPER(:pattern) OR UPPER(name) LIKE UPPER(:pattern))
-                    ORDER BY sort_order DESC
-                    LIMIT :limit
-                """),
-                {"market": market, "pattern": pattern, "limit": max(limit, 0)},
-            )
-            rows = result.mappings().fetchall() or []
-            return [{'market': r['market'], 'symbol': r['symbol'], 'name': r.get('name') or ''} for r in rows]
+            from app.database.repositories.market_symbol_repository import MarketSymbolRepository
+            repo = MarketSymbolRepository(session)
+            symbols = repo.search_symbols(market, keyword, limit=max(limit, 0))
+            return [{'market': s.market, 'symbol': s.symbol, 'name': s.name or ''} for s in symbols]
     except Exception as e:
         logger.debug(f"search_symbols from DB failed: {e}")
         return []
@@ -125,14 +106,12 @@ def get_symbol_name(market: str, symbol: str) -> Optional[str]:
 
     try:
         with get_session() as session:
+            from app.database.repositories.market_symbol_repository import MarketSymbolRepository
+            repo = MarketSymbolRepository(session)
             for cand in candidate_symbols:
-                result = session.execute(
-                    text("SELECT name FROM qd_market_symbols WHERE market = :market AND UPPER(symbol) = :symbol"),
-                    {"market": m, "symbol": cand.upper()},
-                )
-                row = result.mappings().fetchone()
-                if row and row.get('name'):
-                    return str(row['name'])
+                symbol_obj = repo.get_by_symbol(m, cand)
+                if symbol_obj and symbol_obj.name:
+                    return str(symbol_obj.name)
     except Exception as e:
         logger.debug(f"get_symbol_name from DB failed: {e}")
 
@@ -151,27 +130,21 @@ def get_all_symbols(market: str = None) -> List[Dict]:
     """
     try:
         with get_session() as session:
-            if market:
-                result = session.execute(
-                    text("""
-                        SELECT market, symbol, name, exchange, currency, is_hot, sort_order
-                        FROM qd_market_symbols
-                        WHERE market = :market AND is_active = 1
-                        ORDER BY sort_order DESC
-                    """),
-                    {"market": market.strip()},
-                )
-            else:
-                result = session.execute(
-                    text("""
-                        SELECT market, symbol, name, exchange, currency, is_hot, sort_order
-                        FROM qd_market_symbols
-                        WHERE is_active = 1
-                        ORDER BY market, sort_order DESC
-                    """),
-                )
-            rows = result.mappings().fetchall() or []
-            return [dict(r) for r in rows]
+            from app.database.repositories.market_symbol_repository import MarketSymbolRepository
+            repo = MarketSymbolRepository(session)
+            symbols = repo.list_all(market=market.strip() if market else None)
+            return [
+                {
+                    'market': s.market,
+                    'symbol': s.symbol,
+                    'name': s.name,
+                    'exchange': s.exchange,
+                    'currency': s.currency,
+                    'is_hot': s.is_hot,
+                    'sort_order': s.sort_order
+                }
+                for s in symbols
+            ]
     except Exception as e:
         logger.debug(f"get_all_symbols from DB failed: {e}")
         return []

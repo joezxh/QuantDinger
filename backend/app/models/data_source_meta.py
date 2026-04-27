@@ -26,7 +26,7 @@ class DataSourceConfig(Base):
     (base URLs, timeout, retry, default exchange, etc.) and load balancing
     strategy.
 
-    Actual API key values are stored encrypted in the qd_api_keys table,
+    Actual API key values are stored encrypted in the llm_api_keys table,
     associated via source_config_id → api_keys relationship.
     """
 

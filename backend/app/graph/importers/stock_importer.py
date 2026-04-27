@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from sqlalchemy import text
-
 from app.database.session import get_session
 from app.graph.importers.base import BaseGraphImporter
 from app.utils.logger import get_logger
@@ -43,24 +41,23 @@ class StockGraphImporter(BaseGraphImporter):
     def _fetch_companies(self) -> List[Dict[str, Any]]:
         """Fetch stock company candidates from market symbols and indicators."""
         companies: List[Dict[str, Any]] = []
+        stock_markets = ('USStock', 'HKStock', 'CNStock', 'Stock')
         try:
             with get_session() as session:
-                # From market symbols (stock markets)
-                result = session.execute(
-                    text("""
-                        SELECT symbol, name, market
-                        FROM qd_market_symbols
-                        WHERE market IN ('USStock', 'HKStock', 'CNStock', 'Stock')
-                        LIMIT :limit
-                    """),
-                    {"limit": self.batch_size},
-                )
-                for row in result.mappings():
-                    companies.append({
-                        "ticker": row["symbol"],
-                        "name": row["name"] or row["symbol"],
-                        "market": row["market"],
-                    })
+                from app.database.repositories.market_symbol_repository import MarketSymbolRepository
+                repo = MarketSymbolRepository(session)
+                for market in stock_markets:
+                    symbols = repo.list_by_market(market, is_active=1)
+                    for sym in symbols:
+                        companies.append({
+                            "ticker": sym.symbol,
+                            "name": sym.name or sym.symbol,
+                            "market": sym.market,
+                        })
+                        if len(companies) >= self.batch_size:
+                            break
+                    if len(companies) >= self.batch_size:
+                        break
         except Exception as e:
             logger.warning("Fetch companies failed: %s", e)
         return companies

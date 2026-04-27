@@ -109,6 +109,12 @@ def start_pending_order_worker():
 
 def create_app():
     app = Flask(__name__)
+    
+    # Sync Flask logger with root logger configured in setup_logger()
+    # This ensures app.logger calls (and unhandled exceptions) use our console/file handlers.
+    app.logger.handlers = logging.getLogger().handlers
+    app.logger.setLevel(logging.getLogger().level)
+
     app.json = SafeJSONProvider(app)
     CORS(app)
     if Swagger is not None:
@@ -117,6 +123,9 @@ def create_app():
     # 全局错误处理：捕获未处理的异常并输出详细 traceback
     @app.errorhandler(Exception)
     def handle_unhandled_exception(e):
+        from werkzeug.exceptions import HTTPException
+        if isinstance(e, HTTPException):
+            return e  # Let Flask handle 404, 405 etc normally
         logger.exception(f"Unhandled exception: {e}")
         return {"code": 0, "msg": "internal_server_error", "data": None}, 500
 
@@ -124,6 +133,16 @@ def create_app():
     def handle_500(e):
         logger.exception(f"Internal Server Error: {e}")
         return {"code": 0, "msg": "internal_server_error", "data": None}, 500
+
+    @app.after_request
+    def log_500_errors(response):
+        """Log 500 errors to console since Werkzeug INFO logs are suppressed."""
+        if response.status_code >= 500:
+            from flask import request
+            error_msg = f"HTTP {response.status_code} Error on {request.method} {request.path}"
+            logger.error(error_msg)
+            print(f"[ERROR] {error_msg}")  # Guaranteed console output
+        return response
 
     from app.routes import register_routes
     register_routes(app)

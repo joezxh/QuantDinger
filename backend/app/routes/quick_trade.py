@@ -260,14 +260,16 @@ def _safe_json(v, default=None):
 
 def _load_credential(credential_id: int, user_id: int) -> Dict[str, Any]:
     """Load exchange credential JSON for the given user."""
+    from app.database.repositories.exchange_repository import ExchangeRepository
     with get_session() as session:
-        result = session.execute(
-            text("SELECT encrypted_config FROM trade_exchange_credentials WHERE id = :cid AND user_id = :uid"),
-            {"cid": int(credential_id), "uid": int(user_id)},
-        )
-        row = result.mappings().fetchone() or {}
+        repo = ExchangeRepository(session)
+        cred = repo.get_credential_by_user(credential_id, user_id)
+        if not cred:
+            return {}
+        encrypted_config = cred.encrypted_config
+
     try:
-        plain = decrypt_credential_blob(row.get("encrypted_config"))
+        plain = decrypt_credential_blob(encrypted_config)
     except ValueError as e:
         logger.warning(f"decrypt credential_id={credential_id}: {e}")
         return {}
@@ -314,45 +316,32 @@ def _record_quick_trade(
     raw_result: Dict[str, Any],
 ):
     """Insert a quick trade record into the database."""
+    from app.database.repositories.order_repository import OrderRepository
     try:
         with get_session() as session:
-            result = session.execute(
-                text("""
-                    INSERT INTO trade_quick_trades
-                        (user_id, credential_id, exchange_id, symbol, side, order_type,
-                         amount, price, leverage, market_type, tp_price, sl_price,
-                         status, exchange_order_id, filled_amount, avg_fill_price,
-                         error_msg, source, raw_result, created_at)
-                    VALUES (:user_id, :credential_id, :exchange_id, :symbol, :side, :order_type,
-                            :amount, :price, :leverage, :market_type, :tp_price, :sl_price,
-                            :status, :exchange_order_id, :filled, :avg_price,
-                            :error_msg, :source, :raw_result, NOW())
-                    RETURNING id
-                """),
-                {
-                    "user_id": user_id,
-                    "credential_id": credential_id,
-                    "exchange_id": exchange_id,
-                    "symbol": symbol,
-                    "side": side,
-                    "order_type": order_type,
-                    "amount": amount,
-                    "price": price,
-                    "leverage": leverage,
-                    "market_type": market_type,
-                    "tp_price": tp_price,
-                    "sl_price": sl_price,
-                    "status": status,
-                    "exchange_order_id": exchange_order_id,
-                    "filled": filled,
-                    "avg_price": avg_price,
-                    "error_msg": error_msg,
-                    "source": source,
-                    "raw_result": json.dumps(raw_result or {}),
-                },
+            repo = OrderRepository(session)
+            trade = repo.create_quick_trade(
+                user_id=user_id,
+                credential_id=credential_id,
+                exchange_id=exchange_id,
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                amount=amount,
+                price=price,
+                leverage=leverage,
+                market_type=market_type,
+                tp_price=tp_price,
+                sl_price=sl_price,
+                status=status,
+                exchange_order_id=exchange_order_id,
+                filled_amount=filled,
+                avg_fill_price=avg_price,
+                error_msg=error_msg,
+                source=source,
+                raw_result=raw_result or {},
             )
-            row = result.mappings().fetchone()
-            return (row or {}).get("id")
+            return trade.id
     except Exception as e:
         logger.error(f"Failed to record quick trade: {e}")
         return None
@@ -1351,19 +1340,15 @@ def _quick_trade_net_base_qty(
     mt = (market_type or "swap").strip().lower()
     ps = (position_side or "").strip().lower()
     sym = str(symbol or "").strip()
+    from app.database.repositories.order_repository import OrderRepository
     with get_session() as session:
-        result = session.execute(
-            text("""
-                SELECT
-                  COALESCE(SUM(CASE WHEN side = 'buy' THEN filled_amount ELSE 0 END), 0) AS b,
-                  COALESCE(SUM(CASE WHEN side = 'sell' THEN filled_amount ELSE 0 END), 0) AS s
-                FROM trade_quick_trades
-                WHERE user_id = :user_id AND credential_id = :credential_id AND symbol = :symbol AND market_type = :market_type
-                  AND status = 'filled' AND COALESCE(filled_amount, 0) > 0
-            """),
-            {"user_id": int(user_id), "credential_id": int(credential_id), "symbol": sym, "market_type": mt},
-        )
-        row = result.mappings().fetchone() or {}
+        repo = OrderRepository(session)
+        row = repo.get_quick_trade_sums(
+            user_id=int(user_id),
+            credential_id=int(credential_id),
+            symbol=sym,
+            market_type=mt
+        ) or {}
     buy_sum = float(row.get("b") or 0)
     sell_sum = float(row.get("s") or 0)
     if ps == "long":
@@ -1742,42 +1727,31 @@ def get_history():
         offset = int(request.args.get("offset") or 0)
 
         with get_session() as session:
-            result = session.execute(
-                text("""
-                    SELECT id, exchange_id, symbol, side, order_type, amount, price,
-                           leverage, market_type, tp_price, sl_price, status,
-                           exchange_order_id, filled_amount, avg_fill_price,
-                           error_msg, source, created_at
-                    FROM trade_quick_trades
-                    WHERE user_id = :user_id
-                    ORDER BY created_at DESC
-                    LIMIT :limit OFFSET :offset
-                """),
-                {"user_id": user_id, "limit": limit, "offset": offset},
-            )
-            rows = result.mappings().fetchall() or []
+            from app.database.repositories.order_repository import OrderRepository
+            repo = OrderRepository(session)
+            trades_orm = repo.list_quick_trades_by_user(user_id, limit=limit, offset=offset)
 
         trades = []
-        for r in rows:
+        for r in trades_orm:
             trades.append({
-                "id": r.get("id"),
-                "exchange_id": r.get("exchange_id") or "",
-                "symbol": r.get("symbol") or "",
-                "side": r.get("side") or "",
-                "order_type": r.get("order_type") or "market",
-                "amount": float(r.get("amount") or 0),
-                "price": float(r.get("price") or 0),
-                "leverage": int(r.get("leverage") or 1),
-                "market_type": r.get("market_type") or "swap",
-                "tp_price": float(r.get("tp_price") or 0),
-                "sl_price": float(r.get("sl_price") or 0),
-                "status": r.get("status") or "",
-                "exchange_order_id": r.get("exchange_order_id") or "",
-                "filled_amount": float(r.get("filled_amount") or 0),
-                "avg_fill_price": float(r.get("avg_fill_price") or 0),
-                "error_msg": r.get("error_msg") or "",
-                "source": r.get("source") or "",
-                "created_at": str(r.get("created_at") or ""),
+                "id": r.id,
+                "exchange_id": r.exchange_id or "",
+                "symbol": r.symbol or "",
+                "side": r.side or "",
+                "order_type": r.order_type or "market",
+                "amount": float(r.amount or 0),
+                "price": float(r.price or 0),
+                "leverage": int(r.leverage or 1),
+                "market_type": r.market_type or "swap",
+                "tp_price": float(r.tp_price or 0),
+                "sl_price": float(r.sl_price or 0),
+                "status": r.status or "",
+                "exchange_order_id": r.exchange_order_id or "",
+                "filled_amount": float(r.filled_amount or 0),
+                "avg_fill_price": float(r.avg_fill_price or 0),
+                "error_msg": r.error_msg or "",
+                "source": r.source or "",
+                "created_at": str(r.created_at or ""),
             })
 
         return jsonify({"code": 1, "msg": "success", "data": {"trades": trades}})
