@@ -133,9 +133,9 @@ export default {
         contentWidth: defaultSettings.layout === 'sidemenu' ? CONTENT_WIDTH_TYPE.Fluid : defaultSettings.contentWidth,
         // 主题 'dark' | 'light' — 自定义主题(skyblue/xp/realSkyblue)映射为 'light'
         theme: (() => {
-          const customThemes = ['skyblue', 'xp', 'realSkyblue']
+          const lightThemes = ['light', 'skyblue', 'xp', 'realSkyblue']
           const navTheme = defaultSettings.navTheme
-          return customThemes.includes(navTheme) ? 'light' : navTheme
+          return lightThemes.includes(navTheme) ? 'light' : 'dark'
         })(),
         // 主色调
         primaryColor: defaultSettings.primaryColor,
@@ -200,9 +200,8 @@ export default {
     // menus is now a computed property - no need to set here
     // 从 store 同步主题设置（从 localStorage 恢复）
     const savedTheme = this.$store.state.app.theme
-    // pro-layout 只支持 light/dark/realdark，自定义主题映射为 light
-    const customThemes = ['skyblue', 'xp', 'realSkyblue']
-    this.settings.theme = customThemes.includes(savedTheme) ? 'light' : savedTheme
+    const lightThemes = ['light', 'skyblue', 'xp', 'realSkyblue']
+    this.settings.theme = lightThemes.includes(savedTheme) ? 'light' : 'dark'
     this.settings.primaryColor = this.$store.state.app.color || defaultSettings.primaryColor
     // 处理侧栏收起状态
     this.$watch('collapsed', () => {
@@ -213,9 +212,9 @@ export default {
     })
     // 监听 store 中的主题变化，同步到 settings 和 body 类名
     this.$watch('$store.state.app.theme', (val) => {
-      // pro-layout 只支持 light/dark/realdark，自定义主题映射为 light
-      const customThemes = ['skyblue', 'xp', 'realSkyblue']
-      this.settings.theme = customThemes.includes(val) ? 'light' : val
+      // pro-layout 只支持 light/dark，自定义主题映射为 light，其余（如 realdark）映射为 dark
+      const lightThemes = ['light', 'skyblue', 'xp', 'realSkyblue']
+      this.settings.theme = lightThemes.includes(val) ? 'light' : 'dark'
       // 应用主题类名（body 类名保留原始主题值）
       this.applyThemeClass(val)
     }, { immediate: true })
@@ -523,7 +522,12 @@ export default {
       })
     },
     handleSettingChange ({ type, value }) {
-      type && (this.settings[type] = value)
+      if (type === 'theme') {
+        const lightThemes = ['light', 'skyblue', 'xp', 'realSkyblue']
+        this.settings.theme = lightThemes.includes(value) ? 'light' : 'dark'
+      } else {
+        type && (this.settings[type] = value)
+      }
       switch (type) {
         case 'theme':
           this.$store.commit(TOGGLE_NAV_THEME, value)
