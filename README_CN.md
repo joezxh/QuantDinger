@@ -105,21 +105,6 @@ QuantDinger 真正想提供的，不只是一个“量化工具”，而是：
 
 <table align="center" width="100%">
   <tr>
-    <td colspan="2" align="center">
-      <a href="https://www.youtube.com/watch?v=tNAZ9uMiUUw">
-        <img src="screenshots/video_demo.png" alt="产品演示视频" width="80%" style="border-radius: 12px;">
-      </a>
-      <br/>
-      <sub>
-        <a href="https://www.youtube.com/watch?v=tNAZ9uMiUUw">
-          <strong>▶ 观看产品演示视频</strong>
-        </a>
-      </sub>
-      <br/>
-      <sub>点击上方预览卡片，即可跳转到完整视频讲解。</sub>
-    </td>
-  </tr>
-  <tr>
     <td width="50%" align="center"><img src="screenshots/v31.png" alt="Indicator IDE" style="border-radius: 6px;"><br/><sub>指标 IDE、图表研究、回测与快速交易</sub></td>
     <td width="50%" align="center"><img src="screenshots/v32.png" alt="AI Asset Analysis" style="border-radius: 6px;"><br/><sub>AI 资产分析与机会雷达</sub></td>
   </tr>

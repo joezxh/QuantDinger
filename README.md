@@ -106,21 +106,6 @@ QuantDinger gives you something most trading tools do not:
 
 <table align="center" width="100%">
   <tr>
-    <td colspan="2" align="center">
-      <a href="https://www.youtube.com/watch?v=tNAZ9uMiUUw">
-        <img src="docs/screenshots/video_demo.png" alt="Video Demo" width="80%" style="border-radius: 12px;">
-      </a>
-      <br/>
-      <sub>
-        <a href="https://www.youtube.com/watch?v=tNAZ9uMiUUw">
-          <strong>▶ Watch Product Demo on YouTube</strong>
-        </a>
-      </sub>
-      <br/>
-      <sub>Click the preview card above to open the full video walkthrough.</sub>
-    </td>
-  </tr>
-  <tr>
     <td width="50%" align="center"><img src="docs/screenshots/v31.png" alt="Indicator IDE" style="border-radius: 6px;"><br/><sub>Indicator IDE, charting, backtest, and quick trade</sub></td>
     <td width="50%" align="center"><img src="docs/screenshots/v32.png" alt="AI Asset Analysis" style="border-radius: 6px;"><br/><sub>AI asset analysis and opportunity radar</sub></td>
   </tr>
