@@ -239,22 +239,22 @@ export const asyncRouterMap = [
             name: 'Settings',
             component: () => import('@/views/settings'),
             meta: { title: 'menu.settings', keepAlive: false, icon: 'setting', permission: ['admin'] }
+          },
+          // 个人中心
+          {
+            path: '/profile',
+            name: 'Profile',
+            component: () => import('@/views/profile'),
+            meta: { title: 'menu.myProfile', keepAlive: false, icon: 'user', permission: ['dashboard'] }
+          },
+          // 会员/充值
+          {
+            path: '/billing',
+            name: 'Billing',
+            component: () => import('@/views/billing'),
+            meta: { title: 'menu.billing', keepAlive: false, icon: 'wallet', permission: ['dashboard'] }
           }
         ]
-      },
-      // 个人中心
-      {
-        path: '/profile',
-        name: 'Profile',
-        component: () => import('@/views/profile'),
-        meta: { title: 'menu.myProfile', keepAlive: false, icon: 'user', permission: ['dashboard'] }
-      },
-      // 会员/充值
-      {
-        path: '/billing',
-        name: 'Billing',
-        component: () => import('@/views/billing'),
-        meta: { title: 'menu.billing', keepAlive: false, icon: 'wallet', permission: ['dashboard'] }
       }
 
       // other

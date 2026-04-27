@@ -146,7 +146,7 @@ export default {
       permTree: [],
       checkedKeys: [],
       checkedPermIds: [],
-      permIdMap: {}  // treePermId -> permission_id 映射
+      permIdMap: {} // treePermId -> permission_id 映射
     }
   },
   computed: {

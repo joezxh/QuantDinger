@@ -1,12 +1,15 @@
 # 认证API
 
 <cite>
-**本文引用的文件**
+**本文档引用的文件**
 - [backend_api_python/app/routes/auth.py](file://backend_api_python/app/routes/auth.py)
 - [backend_api_python/app/utils/auth.py](file://backend_api_python/app/utils/auth.py)
 - [backend_api_python/app/services/oauth_service.py](file://backend_api_python/app/services/oauth_service.py)
 - [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)
 - [backend_api_python/app/services/user_service.py](file://backend_api_python/app/services/user_service.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
+- [backend_api_python/app/database/repositories/verification_repository.py](file://backend_api_python/app/database/repositories/verification_repository.py)
+- [backend_api_python/app/models/verification.py](file://backend_api_python/app/models/verification.py)
 - [backend_api_python/app/config/settings.py](file://backend_api_python/app/config/settings.py)
 - [backend_api_python/env.example](file://backend_api_python/env.example)
 - [frontend/src/api/auth.js](file://frontend/src/api/auth.js)
@@ -15,6 +18,14 @@
 - [docs/multi-user-setup.md](file://docs/multi-user-setup.md)
 - [docs/CLOUD_DEPLOYMENT_EN.md](file://docs/CLOUD_DEPLOYMENT_EN.md)
 </cite>
+
+## 更新摘要
+**所做更改**
+- 新增验证码发送和密码修改API端点的详细文档
+- 更新认证流程和安全验证机制说明
+- 增强验证码类型支持和发送频率限制机制
+- 完善密码修改的已登录用户流程说明
+- 更新安全配置和错误处理机制
 
 ## 目录
 1. [简介](#简介)
@@ -45,6 +56,8 @@ UT["认证工具<br/>utils/auth.py"]
 SEC["安全服务<br/>services/security_service.py"]
 US["用户服务<br/>services/user_service.py"]
 OA["OAuth服务<br/>services/oauth_service.py"]
+ES["邮件服务<br/>services/email_service.py"]
+VR["验证码仓库<br/>repositories/verification_repository.py"]
 CFG["配置<br/>config/settings.py"]
 end
 FE_Login --> BP
@@ -52,6 +65,8 @@ BP --> UT
 BP --> SEC
 BP --> US
 BP --> OA
+BP --> ES
+ES --> VR
 UT --> CFG
 ```
 
@@ -61,6 +76,8 @@ UT --> CFG
 - [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)
 - [backend_api_python/app/services/user_service.py](file://backend_api_python/app/services/user_service.py)
 - [backend_api_python/app/services/oauth_service.py](file://backend_api_python/app/services/oauth_service.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
+- [backend_api_python/app/database/repositories/verification_repository.py](file://backend_api_python/app/database/repositories/verification_repository.py)
 - [backend_api_python/app/config/settings.py](file://backend_api_python/app/config/settings.py)
 
 **章节来源**
@@ -69,6 +86,8 @@ UT --> CFG
 - [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)
 - [backend_api_python/app/services/user_service.py](file://backend_api_python/app/services/user_service.py)
 - [backend_api_python/app/services/oauth_service.py](file://backend_api_python/app/services/oauth_service.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
+- [backend_api_python/app/database/repositories/verification_repository.py](file://backend_api_python/app/database/repositories/verification_repository.py)
 - [backend_api_python/app/config/settings.py](file://backend_api_python/app/config/settings.py)
 
 ## 核心组件
@@ -77,6 +96,8 @@ UT --> CFG
 - 安全服务层：Cloudflare Turnstile 人机验证、登录尝试记录与限流、验证码发送频率限制、安全事件审计。
 - 用户服务层：多用户认证、密码哈希与校验、角色权限映射、token_version 单客户端强制登录。
 - OAuth 服务层：Google/GitHub 授权链接生成、回调处理、用户拉取与账户绑定、OAuth 状态持久化与防重放。
+- 邮件服务层：验证码生成与发送、邮件模板渲染、SMTP 配置与发送。
+- 验证码仓库层：验证码存储、验证、过期管理、尝试次数限制。
 - 配置层：SECRET_KEY、管理员账号、OAuth 回调地址、注册开关、Turnstile 开关等。
 
 **章节来源**
@@ -85,15 +106,18 @@ UT --> CFG
 - [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)
 - [backend_api_python/app/services/user_service.py](file://backend_api_python/app/services/user_service.py)
 - [backend_api_python/app/services/oauth_service.py](file://backend_api_python/app/services/oauth_service.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
+- [backend_api_python/app/database/repositories/verification_repository.py](file://backend_api_python/app/database/repositories/verification_repository.py)
 - [backend_api_python/app/config/settings.py](file://backend_api_python/app/config/settings.py)
 
 ## 架构总览
-认证系统采用“无状态令牌 + 多层防护”的设计：
+认证系统采用"无状态令牌 + 多层防护"的设计：
 - 前端通过统一 API 发起认证请求，后端返回 JWT 令牌。
 - 后端使用 SECRET_KEY 对令牌进行签名与校验，确保完整性与防篡改。
 - 登录流程集成 Turnstile 人机验证、IP/账号级速率限制与暴力破解保护。
 - OAuth 流程通过 state 防重放，回调后将用户信息与本地账户关联或自动创建新用户。
 - 单客户端登录通过 token_version 实现，每次登录/授权后递增，旧令牌立即失效。
+- 验证码系统支持多种类型（注册、登录、密码重置、密码修改、邮箱修改），具有严格的频率限制和安全保护。
 
 ```mermaid
 sequenceDiagram
@@ -101,6 +125,7 @@ participant FE as "前端"
 participant AUTH as "认证路由<br/>routes/auth.py"
 participant SEC as "安全服务<br/>security_service.py"
 participant US as "用户服务<br/>user_service.py"
+participant ES as "邮件服务<br/>email_service.py"
 participant UT as "认证工具<br/>utils/auth.py"
 FE->>AUTH : POST /api/auth/login
 AUTH->>SEC : Turnstile校验/登录尝试记录
@@ -128,7 +153,7 @@ AUTH-->>FE : 返回token与用户信息
   - password：明文密码
   - turnstile_token：可选的人机验证令牌
 - 响应格式
-  - 成功：返回 code=1、msg=“登录成功”、data.token 与 data.userinfo
+  - 成功：返回 code=1、msg="登录成功"、data.token 与 data.userinfo
   - 失败：返回 code、msg、data=null
 - 安全特性
   - 可选 Turnstile 校验
@@ -227,10 +252,19 @@ RecordSuccess --> Return200["返回200与token"]
 - 行为说明
   - change_password 类型在已登录场景下可跳过 Turnstile
   - 针对不同类型的发送频率与IP小时上限进行限制
+  - 支持的验证码类型：
+    - register：注册验证码
+    - login：登录验证码
+    - reset_password：密码重置验证码
+    - change_password：密码修改验证码
+    - change_email：邮箱修改验证码
+
+**更新** 新增验证码类型支持和智能跳过机制
 
 **章节来源**
 - [backend_api_python/app/routes/auth.py](file://backend_api_python/app/routes/auth.py)
 - [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
 
 ### 5) 密码重置
 - HTTP 方法与URL
@@ -243,10 +277,15 @@ RecordSuccess --> Return200["返回200与token"]
 - 响应格式
   - 成功：返回 code=1、msg
   - 失败：返回 code、msg、data=null
+- 安全特性
+  - 密码强度验证（至少8位，包含大小写字母和数字）
+  - 验证码一次性使用和过期保护
+  - 防暴力破解尝试限制
 
 **章节来源**
 - [backend_api_python/app/routes/auth.py](file://backend_api_python/app/routes/auth.py)
 - [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
 
 ### 6) 修改密码（已登录用户）
 - HTTP 方法与URL
@@ -258,10 +297,18 @@ RecordSuccess --> Return200["返回200与token"]
 - 响应格式
   - 成功：返回 code=1、msg
   - 失败：返回 code、msg、data=null
+- 安全特性
+  - 已登录用户身份验证
+  - 密码强度验证
+  - 验证码一次性使用和过期保护
+  - change_password 类型验证码自动跳过 Turnstile 校验
+
+**更新** 增强已登录用户的密码修改流程
 
 **章节来源**
 - [backend_api_python/app/routes/auth.py](file://backend_api_python/app/routes/auth.py)
 - [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
 
 ### 7) OAuth 第三方登录
 - Google 授权
@@ -381,8 +428,31 @@ AuthUtils --> UserService : "获取权限"
 - [backend_api_python/app/config/api_keys.py](file://backend_api_python/app/config/api_keys.py)
 - [backend_api_python/env.example](file://backend_api_python/env.example)
 
+### 12) 验证码系统详细说明
+- 验证码类型
+  - register：注册时使用，检查邮箱未被注册
+  - login：快速登录使用
+  - reset_password：密码重置使用
+  - change_password：已登录用户修改密码使用
+  - change_email：邮箱修改使用
+- 发送频率限制
+  - 单个邮箱每分钟最多1个验证码
+  - 单个IP每小时最多10个验证码
+  - 验证码有效期10分钟
+- 安全保护
+  - 最多5次尝试机会，超过则锁定30分钟
+  - 验证码一次性使用，使用后立即失效
+  - 防重放攻击，每个验证码只能使用一次
+
+**新增** 详细的验证码系统实现说明
+
+**章节来源**
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
+- [backend_api_python/app/database/repositories/verification_repository.py](file://backend_api_python/app/database/repositories/verification_repository.py)
+- [backend_api_python/app/models/verification.py](file://backend_api_python/app/models/verification.py)
+
 ## 依赖关系分析
-- 认证路由依赖安全服务（人机验证、速率限制）、用户服务（认证与权限）、OAuth 服务（第三方登录）、认证工具（JWT 生成与校验）
+- 认证路由依赖安全服务（人机验证、速率限制）、用户服务（认证与权限）、OAuth 服务（第三方登录）、认证工具（JWT 生成与校验）、邮件服务（验证码发送）
 - 前端通过统一 API 封装调用后端认证接口
 
 ```mermaid
@@ -391,6 +461,8 @@ FE["前端API封装<br/>frontend/src/api/*.js"] --> AUTH["认证路由<br/>route
 AUTH --> SEC["安全服务<br/>security_service.py"]
 AUTH --> US["用户服务<br/>user_service.py"]
 AUTH --> OA["OAuth服务<br/>oauth_service.py"]
+AUTH --> ES["邮件服务<br/>email_service.py"]
+ES --> VR["验证码仓库<br/>verification_repository.py"]
 AUTH --> UT["认证工具<br/>auth.py"]
 UT --> CFG["配置<br/>settings.py"]
 ```
@@ -402,6 +474,8 @@ UT --> CFG["配置<br/>settings.py"]
 - [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)
 - [backend_api_python/app/services/user_service.py](file://backend_api_python/app/services/user_service.py)
 - [backend_api_python/app/services/oauth_service.py](file://backend_api_python/app/services/oauth_service.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
+- [backend_api_python/app/database/repositories/verification_repository.py](file://backend_api_python/app/database/repositories/verification_repository.py)
 - [backend_api_python/app/utils/auth.py](file://backend_api_python/app/utils/auth.py)
 - [backend_api_python/app/config/settings.py](file://backend_api_python/app/config/settings.py)
 
@@ -417,8 +491,7 @@ UT --> CFG["配置<br/>settings.py"]
 - 速率限制：通过 IP/账号维度的滑动窗口限制，防止暴力破解与滥用
 - 缓存策略：对只读数据（如公开安全配置）可结合缓存减少数据库压力
 - OAuth 状态持久化：使用数据库而非内存，保证多进程/多副本一致性
-
-[本节为通用指导，无需特定文件引用]
+- 验证码存储优化：使用索引优化查询性能，定期清理过期验证码
 
 ## 故障排查指南
 - 常见错误码与处理
@@ -430,6 +503,10 @@ UT --> CFG["配置<br/>settings.py"]
 - OAuth 常见问题
   - 回调地址不匹配：核对 GOOGLE_REDIRECT_URI/GITHUB_REDIRECT_URI 与平台配置一致
   - state 校验失败：确认数据库中存在对应 state 且未过期
+- 验证码问题
+  - 验证码过期：验证码有效期10分钟，需重新发送
+  - 尝试次数过多：超过5次尝试会被锁定30分钟
+  - 发送频率限制：每分钟最多1个验证码，每小时最多10个
 - 安全配置
   - Turnstile：确保站点域名已添加至 Cloudflare 白名单
   - SECRET_KEY：生产环境务必更换默认值，确保前后端一致
@@ -440,13 +517,12 @@ UT --> CFG["配置<br/>settings.py"]
 **章节来源**
 - [backend_api_python/app/routes/auth.py](file://backend_api_python/app/routes/auth.py)
 - [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
 - [docs/OAUTH_CONFIG_EN.md](file://docs/OAUTH_CONFIG_EN.md)
 - [docs/CLOUD_DEPLOYMENT_EN.md](file://docs/CLOUD_DEPLOYMENT_EN.md)
 
 ## 结论
-QuantDinger 的认证体系以 JWT 为核心，结合 Turnstile、速率限制与 OAuth，构建了安全、可扩展且易维护的多用户认证方案。通过 token_version 实现单客户端登录，配合角色与权限装饰器，满足不同业务场景的安全需求。建议在生产环境中严格配置密钥、域名与回调地址，并启用 HTTPS 与反向代理。
-
-[本节为总结性内容，无需特定文件引用]
+QuantDinger 的认证体系以 JWT 为核心，结合 Turnstile、速率限制与 OAuth，构建了安全、可扩展且易维护的多用户认证方案。通过 token_version 实现单客户端登录，配合角色与权限装饰器，满足不同业务场景的安全需求。新增的验证码系统提供了完整的邮箱验证能力，支持多种验证码类型和严格的安全保护机制。建议在生产环境中严格配置密钥、域名与回调地址，并启用 HTTPS 与反向代理。
 
 ## 附录
 
@@ -481,7 +557,16 @@ QuantDinger 的认证体系以 JWT 为核心，结合 Turnstile、速率限制�
 - 数据库与运行
   - DATABASE_URL：PostgreSQL 连接串
   - PYTHON_API_HOST/PORT/DEBUG/RATE_LIMIT/ENABLE_CACHE/ENABLE_REQUEST_LOG
+- 邮件与验证码
+  - SMTP_HOST/PORT/USER/PASSWORD/FROM：SMTP 配置
+  - VERIFICATION_CODE_EXPIRE_MINUTES：验证码有效期（分钟）
+  - VERIFICATION_CODE_RATE_LIMIT：验证码发送频率限制（秒）
+  - VERIFICATION_CODE_IP_HOURLY_LIMIT：IP 每小时验证码上限
+  - VERIFICATION_CODE_MAX_ATTEMPTS：验证码最大尝试次数
+  - VERIFICATION_CODE_LOCK_MINUTES：验证码锁定时间（分钟）
 
 **章节来源**
 - [backend_api_python/env.example](file://backend_api_python/env.example)
 - [backend_api_python/app/config/settings.py](file://backend_api_python/app/config/settings.py)
+- [backend_api_python/app/services/email_service.py](file://backend_api_python/app/services/email_service.py)
+- [backend_api_python/app/services/security_service.py](file://backend_api_python/app/services/security_service.py)

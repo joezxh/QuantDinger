@@ -707,7 +707,7 @@ export default {
       try {
         // Use market API to get current price
         const res = await request({
-          url: '/api/market/price',
+          url: '/api/indicator/price',
           method: 'get',
           params: {
             market: 'Crypto',

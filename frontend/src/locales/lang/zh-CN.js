@@ -346,7 +346,7 @@ const locale = {
     'menu.aiConfig': 'AI 配置',
     'menu.analysisTools': '分析工具',
     'menu.tradingTools': '交易工具',
-    'menu.dataTools': '数据工具',
+    'menu.dataTools': '数据与指标',
   'menu.dataSource': '数据源管理',
   'menu.dashboard.aiTradingAssistant': 'AI交易助手',
   'menu.dashboard.signalRobot': '信号机器人',

@@ -2,17 +2,26 @@
 
 <cite>
 **本文档引用的文件**
-- [backend_api_python/app/routes/user.py](file://backend_api_python/app/routes/user.py)
-- [backend_api_python/app/services/user_service.py](file://backend_api_python/app/services/user_service.py)
-- [backend_api_python/app/routes/credentials.py](file://backend_api_python/app/routes/credentials.py)
-- [backend_api_python/app/utils/auth.py](file://backend_api_python/app/utils/auth.py)
-- [backend_api_python/app/utils/credential_crypto.py](file://backend_api_python/app/utils/credential_crypto.py)
-- [backend_api_python/app/services/billing_service.py](file://backend_api_python/app/services/billing_service.py)
-- [backend_api_python/app/utils/db.py](file://backend_api_python/app/utils/db.py)
-- [backend_api_python/app/config/settings.py](file://backend_api_python/app/config/settings.py)
+- [backend/app/routes/user.py](file://backend/app/routes/user.py)
+- [backend/app/services/user_service.py](file://backend/app/services/user_service.py)
+- [backend/app/routes/credentials.py](file://backend/app/routes/credentials.py)
+- [backend/app/utils/auth.py](file://backend/app/utils/auth.py)
+- [backend/app/utils/credential_crypto.py](file://backend/app/utils/credential_crypto.py)
+- [backend/app/services/billing_service.py](file://backend/app/services/billing_service.py)
+- [backend/app/utils/db.py](file://backend/app/utils/db.py)
+- [backend/app/config/settings.py](file://backend/app/config/settings.py)
+- [backend/app/services/permission_service.py](file://backend/app/services/permission_service.py)
 - [frontend/src/api/user.js](file://frontend/src/api/user.js)
 - [frontend/src/api/credentials.js](file://frontend/src/api/credentials.js)
 </cite>
+
+## 更新摘要
+**变更内容**
+- 新增管理员用户删除端点 `/api/users/delete`
+- 新增管理员密码重置端点 `/api/users/reset-password`  
+- 新增用户个人资料更新端点 `/api/users/profile/update`
+- 增强用户管理功能的完整性和安全性
+- 完善权限控制和角色管理机制
 
 ## 目录
 1. [简介](#简介)
@@ -40,7 +49,7 @@
 ## 项目结构
 后端采用 Flask Blueprint 分层组织，用户管理相关代码主要位于：
 - 路由层：`app/routes/user.py`、`app/routes/credentials.py`
-- 业务服务层：`app/services/user_service.py`、`app/services/billing_service.py`
+- 业务服务层：`app/services/user_service.py`、`app/services/billing_service.py`、`app/services/permission_service.py`
 - 工具与安全：`app/utils/auth.py`、`app/utils/credential_crypto.py`、`app/utils/db.py`
 - 配置中心：`app/config/settings.py`
 - 前端API封装：`frontend/src/api/user.js`、`frontend/src/api/credentials.js`
@@ -56,6 +65,7 @@ R_User["用户路由<br/>app/routes/user.py"]
 R_Cred["凭证路由<br/>app/routes/credentials.py"]
 S_User["用户服务<br/>app/services/user_service.py"]
 S_Bill["计费服务<br/>app/services/billing_service.py"]
+S_Permission["权限服务<br/>app/services/permission_service.py"]
 U_Auth["认证工具<br/>app/utils/auth.py"]
 U_CredCrypto["凭证加密<br/>app/utils/credential_crypto.py"]
 U_DB["数据库工具<br/>app/utils/db.py"]
@@ -65,33 +75,25 @@ FE_User --> R_User
 FE_Cred --> R_Cred
 R_User --> S_User
 R_User --> S_Bill
+R_User --> S_Permission
 R_Cred --> U_CredCrypto
 R_User --> U_Auth
 R_Cred --> U_Auth
 S_User --> U_DB
 S_Bill --> U_DB
+S_Permission --> U_DB
 CFG --> U_Auth
 ```
 
 **图表来源**
-- [backend_api_python/app/routes/user.py:1-800](file://backend_api_python/app/routes/user.py#L1-L800)
-- [backend_api_python/app/routes/credentials.py:1-460](file://backend_api_python/app/routes/credentials.py#L1-L460)
-- [backend_api_python/app/services/user_service.py:1-701](file://backend_api_python/app/services/user_service.py#L1-L701)
-- [backend_api_python/app/services/billing_service.py:1-747](file://backend_api_python/app/services/billing_service.py#L1-L747)
-- [backend_api_python/app/utils/auth.py:1-239](file://backend_api_python/app/utils/auth.py#L1-L239)
-- [backend_api_python/app/utils/credential_crypto.py:1-50](file://backend_api_python/app/utils/credential_crypto.py#L1-L50)
-- [backend_api_python/app/utils/db.py:1-66](file://backend_api_python/app/utils/db.py#L1-L66)
-- [frontend/src/api/user.js:1-294](file://frontend/src/api/user.js#L1-L294)
-- [frontend/src/api/credentials.js:1-50](file://frontend/src/api/credentials.js#L1-L50)
-
-**章节来源**
-- [backend_api_python/app/routes/user.py:1-800](file://backend_api_python/app/routes/user.py#L1-L800)
-- [backend_api_python/app/routes/credentials.py:1-460](file://backend_api_python/app/routes/credentials.py#L1-L460)
-- [backend_api_python/app/services/user_service.py:1-701](file://backend_api_python/app/services/user_service.py#L1-L701)
-- [backend_api_python/app/services/billing_service.py:1-747](file://backend_api_python/app/services/billing_service.py#L1-L747)
-- [backend_api_python/app/utils/auth.py:1-239](file://backend_api_python/app/utils/auth.py#L1-L239)
-- [backend_api_python/app/utils/credential_crypto.py:1-50](file://backend_api_python/app/utils/credential_crypto.py#L1-L50)
-- [backend_api_python/app/utils/db.py:1-66](file://backend_api_python/app/utils/db.py#L1-L66)
+- [backend/app/routes/user.py:1-809](file://backend/app/routes/user.py#L1-L809)
+- [backend/app/routes/credentials.py:1-354](file://backend/app/routes/credentials.py#L1-L354)
+- [backend/app/services/user_service.py:1-328](file://backend/app/services/user_service.py#L1-L328)
+- [backend/app/services/billing_service.py:1-335](file://backend/app/services/billing_service.py#L1-L335)
+- [backend/app/services/permission_service.py:1-346](file://backend/app/services/permission_service.py#L1-L346)
+- [backend/app/utils/auth.py:1-183](file://backend/app/utils/auth.py#L1-L183)
+- [backend/app/utils/credential_crypto.py:1-50](file://backend/app/utils/credential_crypto.py#L1-L50)
+- [backend/app/utils/db.py:1-66](file://backend/app/utils/db.py#L1-L66)
 - [frontend/src/api/user.js:1-294](file://frontend/src/api/user.js#L1-L294)
 - [frontend/src/api/credentials.js:1-50](file://frontend/src/api/credentials.js#L1-L50)
 
@@ -103,18 +105,20 @@ CFG --> U_Auth
   - 支持列出、创建、删除、获取单条凭证；凭证内容以对称加密存储，解密仅在服务端进行。
 - 计费服务
   - 提供积分余额、VIP状态、消费记录与管理员额度调整能力。
-- 认证与授权
+- 权限控制与角色管理
   - 基于 JWT 的 Bearer Token 认证，支持角色与权限校验，以及单点登录强制失效机制。
+  - 支持 RBAC 权限模型，提供细粒度的权限控制。
 
 **章节来源**
-- [backend_api_python/app/routes/user.py:41-800](file://backend_api_python/app/routes/user.py#L41-L800)
-- [backend_api_python/app/services/user_service.py:56-701](file://backend_api_python/app/services/user_service.py#L56-L701)
-- [backend_api_python/app/routes/credentials.py:32-460](file://backend_api_python/app/routes/credentials.py#L32-L460)
-- [backend_api_python/app/services/billing_service.py:47-747](file://backend_api_python/app/services/billing_service.py#L47-L747)
-- [backend_api_python/app/utils/auth.py:126-218](file://backend_api_python/app/utils/auth.py#L126-L218)
+- [backend/app/routes/user.py:293-479](file://backend/app/routes/user.py#L293-L479)
+- [backend/app/services/user_service.py:28-328](file://backend/app/services/user_service.py#L28-L328)
+- [backend/app/routes/credentials.py:30-354](file://backend/app/routes/credentials.py#L30-L354)
+- [backend/app/services/billing_service.py:30-335](file://backend/app/services/billing_service.py#L30-L335)
+- [backend/app/utils/auth.py:70-183](file://backend/app/utils/auth.py#L70-L183)
+- [backend/app/services/permission_service.py:16-346](file://backend/app/services/permission_service.py#L16-L346)
 
 ## 架构总览
-用户管理API遵循“路由-服务-工具-数据库”的分层架构，关键流程如下：
+用户管理API遵循"路由-服务-工具-数据库"的分层架构，关键流程如下：
 - 前端通过 HTTP 请求访问后端 API
 - 路由层解析请求参数，调用相应服务
 - 服务层执行业务逻辑，必要时访问数据库
@@ -139,10 +143,10 @@ Route-->>FE : "统一响应"
 ```
 
 **图表来源**
-- [backend_api_python/app/routes/user.py:41-108](file://backend_api_python/app/routes/user.py#L41-L108)
-- [backend_api_python/app/services/user_service.py:102-151](file://backend_api_python/app/services/user_service.py#L102-L151)
-- [backend_api_python/app/utils/auth.py:126-171](file://backend_api_python/app/utils/auth.py#L126-L171)
-- [backend_api_python/app/utils/db.py:19-31](file://backend_api_python/app/utils/db.py#L19-L31)
+- [backend/app/routes/user.py:293-335](file://backend/app/routes/user.py#L293-L335)
+- [backend/app/services/user_service.py:205-328](file://backend/app/services/user_service.py#L205-L328)
+- [backend/app/utils/auth.py:70-88](file://backend/app/utils/auth.py#L70-L88)
+- [backend/app/utils/db.py:19-31](file://backend/app/utils/db.py#L19-L31)
 
 ## 详细组件分析
 
@@ -171,9 +175,11 @@ Route-->>FE : "统一响应"
 - 积分：非负整数
 - VIP截止时间：ISO格式或天数（>0）
 
+**更新** 新增用户删除和密码重置端点，完善管理员用户管理功能
+
 **章节来源**
-- [backend_api_python/app/routes/user.py:41-800](file://backend_api_python/app/routes/user.py#L41-L800)
-- [backend_api_python/app/services/user_service.py:314-522](file://backend_api_python/app/services/user_service.py#L314-L522)
+- [backend/app/routes/user.py:293-422](file://backend/app/routes/user.py#L293-L422)
+- [backend/app/services/user_service.py:205-328](file://backend/app/services/user_service.py#L205-L328)
 
 ### 个人资料与账户设置（用户自服务）
 - 个人信息
@@ -183,14 +189,19 @@ Route-->>FE : "统一响应"
   - POST `/api/users/change-password`：需提供旧密码（或允许首次设置）
 - 通知设置
   - GET/PUT `/api/users/notification-settings`：获取与更新通知渠道
+  - POST `/api/users/notification-settings/test`：测试通知设置
 - 图表模板
   - GET/POST/DELETE `/api/users/chart-templates`：获取、保存、删除图表模板
 - 我的积分日志
   - GET `/api/users/my-credits-log`：分页查询积分变动
+- 邀请奖励
+  - GET `/api/users/my-referrals`：获取邀请的下线列表
+
+**更新** 新增个人资料更新端点，支持用户自服务更新个人资料
 
 **章节来源**
-- [frontend/src/api/user.js:105-207](file://frontend/src/api/user.js#L105-L207)
-- [backend_api_python/app/services/user_service.py:456-508](file://backend_api_python/app/services/user_service.py#L456-L508)
+- [backend/app/routes/user.py:424-669](file://backend/app/routes/user.py#L424-L669)
+- [frontend/src/api/user.js:105-294](file://frontend/src/api/user.js#L105-L294)
 
 ### 凭证管理接口（交易所API密钥）
 - 列出凭证
@@ -211,8 +222,8 @@ Route-->>FE : "统一响应"
 - 解密仅在服务端进行，返回时移除密文字段
 
 **章节来源**
-- [backend_api_python/app/routes/credentials.py:32-460](file://backend_api_python/app/routes/credentials.py#L32-L460)
-- [backend_api_python/app/utils/credential_crypto.py:17-50](file://backend_api_python/app/utils/credential_crypto.py#L17-L50)
+- [backend/app/routes/credentials.py:30-354](file://backend/app/routes/credentials.py#L30-L354)
+- [backend/app/utils/credential_crypto.py:17-50](file://backend/app/utils/credential_crypto.py#L17-L50)
 
 ### 权限控制与角色管理
 - 角色层级
@@ -224,14 +235,17 @@ Route-->>FE : "统一响应"
   - @admin_required：管理员
   - @manager_required：管理员或经理
   - @permission_required：基于角色的细粒度权限
+  - @require_permission：基于RBAC的权限装饰器
+- 单点登录与令牌版本
+  - 服务端维护 token_version 字段，每次强制失效旧令牌
+  - 验证流程：解码JWT后比对数据库中的当前版本
 
-单点登录与令牌版本
-- 服务端维护 token_version 字段，每次强制失效旧令牌
-- 验证流程：解码JWT后比对数据库中的当前版本
+**更新** 增强权限控制机制，支持RBAC权限模型和细粒度权限检查
 
 **章节来源**
-- [backend_api_python/app/services/user_service.py:56-68](file://backend_api_python/app/services/user_service.py#L56-L68)
-- [backend_api_python/app/utils/auth.py:126-218](file://backend_api_python/app/utils/auth.py#L126-L218)
+- [backend/app/services/user_service.py:28-35](file://backend/app/services/user_service.py#L28-L35)
+- [backend/app/utils/auth.py:70-183](file://backend/app/utils/auth.py#L70-L183)
+- [backend/app/services/permission_service.py:144-346](file://backend/app/services/permission_service.py#L144-L346)
 
 ### 计费与积分管理
 - 查询用户积分与VIP状态
@@ -240,8 +254,8 @@ Route-->>FE : "统一响应"
 - VIP设置与续期（管理员）
 
 **章节来源**
-- [backend_api_python/app/services/billing_service.py:98-717](file://backend_api_python/app/services/billing_service.py#L98-L717)
-- [backend_api_python/app/routes/user.py:563-800](file://backend_api_python/app/routes/user.py#L563-L800)
+- [backend/app/services/billing_service.py:113-335](file://backend/app/services/billing_service.py#L113-L335)
+- [backend/app/routes/user.py:607-623](file://backend/app/routes/user.py#L607-L623)
 
 ## 依赖关系分析
 - 路由到服务：用户路由依赖用户服务与计费服务；凭证路由依赖凭证加密工具
@@ -254,9 +268,11 @@ FE_User["前端用户API"] --> R_User["用户路由"]
 FE_Cred["前端凭证API"] --> R_Cred["凭证路由"]
 R_User --> S_User["用户服务"]
 R_User --> S_Bill["计费服务"]
+R_User --> S_Permission["权限服务"]
 R_Cred --> U_CredCrypto["凭证加密"]
 S_User --> U_DB["数据库工具"]
 S_Bill --> U_DB
+S_Permission --> U_DB
 R_User --> U_Auth["认证工具"]
 R_Cred --> U_Auth
 ```
@@ -264,25 +280,20 @@ R_Cred --> U_Auth
 **图表来源**
 - [frontend/src/api/user.js:1-294](file://frontend/src/api/user.js#L1-L294)
 - [frontend/src/api/credentials.js:1-50](file://frontend/src/api/credentials.js#L1-L50)
-- [backend_api_python/app/routes/user.py:1-800](file://backend_api_python/app/routes/user.py#L1-L800)
-- [backend_api_python/app/routes/credentials.py:1-460](file://backend_api_python/app/routes/credentials.py#L1-L460)
-- [backend_api_python/app/services/user_service.py:1-701](file://backend_api_python/app/services/user_service.py#L1-L701)
-- [backend_api_python/app/services/billing_service.py:1-747](file://backend_api_python/app/services/billing_service.py#L1-L747)
-- [backend_api_python/app/utils/auth.py:1-239](file://backend_api_python/app/utils/auth.py#L1-L239)
-- [backend_api_python/app/utils/credential_crypto.py:1-50](file://backend_api_python/app/utils/credential_crypto.py#L1-L50)
-- [backend_api_python/app/utils/db.py:1-66](file://backend_api_python/app/utils/db.py#L1-L66)
-
-**章节来源**
-- [backend_api_python/app/utils/db.py:19-31](file://backend_api_python/app/utils/db.py#L19-L31)
-- [backend_api_python/app/utils/auth.py:126-218](file://backend_api_python/app/utils/auth.py#L126-L218)
+- [backend/app/routes/user.py:1-809](file://backend/app/routes/user.py#L1-L809)
+- [backend/app/routes/credentials.py:1-354](file://backend/app/routes/credentials.py#L1-L354)
+- [backend/app/services/user_service.py:1-328](file://backend/app/services/user_service.py#L1-L328)
+- [backend/app/services/billing_service.py:1-335](file://backend/app/services/billing_service.py#L1-L335)
+- [backend/app/services/permission_service.py:1-346](file://backend/app/services/permission_service.py#L1-L346)
+- [backend/app/utils/auth.py:1-183](file://backend/app/utils/auth.py#L1-L183)
+- [backend/app/utils/credential_crypto.py:1-50](file://backend/app/utils/credential_crypto.py#L1-L50)
+- [backend/app/utils/db.py:1-66](file://backend/app/utils/db.py#L1-L66)
 
 ## 性能考虑
 - 分页查询：列表与日志接口均支持分页，避免一次性加载大量数据
 - 缓存策略：计费配置带缓存（TTL=60秒），降低频繁读取开销
 - 数据库连接：统一通过 PostgreSQL 工具获取连接，减少重复初始化
 - 加密成本：凭证加密在服务端进行，建议在高并发场景下评估CPU占用
-
-[本节为通用指导，无需特定文件引用]
 
 ## 故障排除指南
 常见错误与定位
@@ -302,14 +313,12 @@ R_Cred --> U_Auth
 - 查看日志：后端日志记录详细错误堆栈
 
 **章节来源**
-- [backend_api_python/app/utils/auth.py:126-171](file://backend_api_python/app/utils/auth.py#L126-L171)
-- [backend_api_python/app/services/user_service.py:344-350](file://backend_api_python/app/services/user_service.py#L344-L350)
-- [backend_api_python/app/utils/credential_crypto.py:17-50](file://backend_api_python/app/utils/credential_crypto.py#L17-L50)
+- [backend/app/utils/auth.py:70-88](file://backend/app/utils/auth.py#L70-L88)
+- [backend/app/services/user_service.py:205-328](file://backend/app/services/user_service.py#L205-L328)
+- [backend/app/utils/credential_crypto.py:17-50](file://backend/app/utils/credential_crypto.py#L17-L50)
 
 ## 结论
-QuantDinger 的用户管理API以清晰的分层架构实现了完善的用户生命周期管理、凭证安全存储与权限控制。通过统一的响应格式与严格的参数校验，保障了接口的稳定性与安全性。管理员与普通用户职责分离明确，既满足运营需求，又兼顾易用性与扩展性。
-
-[本节为总结性内容，无需特定文件引用]
+QuantDinger 的用户管理API以清晰的分层架构实现了完善的用户生命周期管理、凭证安全存储与权限控制。通过统一的响应格式与严格的参数校验，保障了接口的稳定性与安全性。管理员与普通用户职责分离明确，既满足运营需求，又兼顾易用性与扩展性。新增的用户删除、密码重置和个人资料更新端点进一步完善了用户管理功能，增强了系统的安全性和可用性。
 
 ## 附录
 
@@ -321,7 +330,7 @@ QuantDinger 的用户管理API以清晰的分层架构实现了完善的用户�
   - GET /api/users/detail：id
   - POST /api/users/create：username/password/email/nickname/role/status/email_verified/referred_by
   - PUT /api/users/update：id + {email,nickname,avatar,role,status,timezone}
-  - DELETE /api/users/delete：id
+  - DELETE /api/users/delete：id（禁止自删）
   - POST /api/users/reset-password：{user_id,new_password}
   - GET /api/users/roles：无
   - POST /api/users/set-credits：{user_id,credits,remark}
@@ -333,8 +342,10 @@ QuantDinger 的用户管理API以清晰的分层架构实现了完善的用户�
   - PUT /api/users/profile/update：{nickname,avatar,timezone}
   - POST /api/users/change-password：{old_password,new_password}
   - GET/PUT /api/users/notification-settings：{default_channels,telegram_chat_id,email,discord_webhook,webhook_url,phone}
+  - POST /api/users/notification-settings/test：测试通知设置
   - GET/POST/DELETE /api/users/chart-templates：{template_id/name/content}
   - GET /api/users/my-credits-log：{page,page_size}
+  - GET /api/users/my-referrals：{page,page_size}
 
 - 凭证管理
   - GET /api/credentials/list：无
@@ -352,7 +363,8 @@ QuantDinger 的用户管理API以清晰的分层架构实现了完善的用户�
 - VIP截止时间：ISO格式或正天数
 
 **章节来源**
-- [backend_api_python/app/routes/user.py:41-800](file://backend_api_python/app/routes/user.py#L41-L800)
-- [backend_api_python/app/routes/credentials.py:32-460](file://backend_api_python/app/routes/credentials.py#L32-L460)
-- [backend_api_python/app/services/user_service.py:314-522](file://backend_api_python/app/services/user_service.py#L314-L522)
-- [backend_api_python/app/utils/credential_crypto.py:17-50](file://backend_api_python/app/utils/credential_crypto.py#L17-L50)
+- [backend/app/routes/user.py:293-669](file://backend/app/routes/user.py#L293-L669)
+- [backend/app/routes/credentials.py:30-354](file://backend/app/routes/credentials.py#L30-L354)
+- [backend/app/services/user_service.py:205-328](file://backend/app/services/user_service.py#L205-L328)
+- [backend/app/utils/credential_crypto.py:17-50](file://backend/app/utils/credential_crypto.py#L17-L50)
+- [backend/app/services/permission_service.py:144-346](file://backend/app/services/permission_service.py#L144-L346)

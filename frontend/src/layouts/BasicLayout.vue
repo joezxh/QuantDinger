@@ -163,17 +163,10 @@ export default {
       // Static footer config (local OSS build)
       menuFooterConfig: {
         contact: {
-          support_url: 'https://t.me/quantdinger',
-          feature_request_url: 'https://github.com/brokermr810/QuantumQuant/issues',
-          email: 'brokermr810@gmail.com',
-          live_chat_url: 'https://t.me/quantdinger'
+          support_url: 'https://t.me/x'
         },
         social_accounts: [
-          { name: 'GitHub', icon: 'github', url: 'https://github.com/brokermr810/QuantumQuant' },
-          { name: 'X', icon: 'x', url: 'https://x.com/quantdinger_en' },
-          { name: 'Discord', icon: 'discord', url: 'https://discord.com/invite/tyx5B6TChr' },
-          { name: 'Telegram', icon: 'telegram', url: 'https://t.me/quantdinger' },
-          { name: 'YouTube', icon: 'youtube', url: 'https://youtube.com/@quantdinger' }
+          { name: 'GitHub', icon: 'github', url: 'https://github.com/brokermr810/QuantumQuant' }
         ],
         legal: {
           user_agreement: '',

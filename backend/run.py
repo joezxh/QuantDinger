@@ -95,6 +95,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import create_app
 from app.config.settings import Config
+from app.utils.logger import setup_logger
+
+# 初始化日志配置（必须在 create_app 之前）
+setup_logger()
 
 # Create app instance (for gunicorn use)
 # gunicorn -c gunicorn_config.py "run:app"

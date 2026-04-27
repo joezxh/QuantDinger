@@ -114,6 +114,17 @@ def create_app():
     if Swagger is not None:
         Swagger(app)
 
+    # 全局错误处理：捕获未处理的异常并输出详细 traceback
+    @app.errorhandler(Exception)
+    def handle_unhandled_exception(e):
+        logger.exception(f"Unhandled exception: {e}")
+        return {"code": 0, "msg": "internal_server_error", "data": None}, 500
+
+    @app.errorhandler(500)
+    def handle_500(e):
+        logger.exception(f"Internal Server Error: {e}")
+        return {"code": 0, "msg": "internal_server_error", "data": None}, 500
+
     from app.routes import register_routes
     register_routes(app)
 

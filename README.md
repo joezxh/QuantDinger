@@ -95,11 +95,12 @@ QuantDinger gives you something most trading tools do not:
 
 ## Use Cases
 
-- **AI-assisted market research** for crypto, stocks, forex, and cross-market workflows
-- **Python-native strategy development** for quantitative trading and algorithmic trading teams
-- **Backtesting and iteration** for signal strategies, saved strategies, and execution assumptions
-- **Private trading infrastructure** for teams that want self-hosted deployment and privacy-first operations
-- **Commercial trading products** that need users, billing, credits, and admin controls
+- **AI-assisted market research** for crypto, stocks, forex, prediction markets, and cross-market workflows
+- **Python-native strategy development** for quantitative trading and algorithmic trading teams, with parameterized indicators and cross-sectional portfolios
+- **Automated trading bots** — Grid, Martingale, Trend, and DCA bots with real-time monitoring
+- **Backtesting and iteration** for signal strategies, saved strategies, trading bots, and execution assumptions
+- **Private trading infrastructure** for teams that want self-hosted deployment, local LLMs, and privacy-first operations
+- **Commercial trading products** that need users, billing, USDT payments, credits, and admin controls
 
 ## Visual Tour
 
@@ -171,7 +172,38 @@ QuantDinger gives you something most trading tools do not:
 - PostgreSQL-backed multi-user system with role-based access patterns.
 - OAuth support for Google and GitHub.
 - Notification channels including Telegram, Email, SMS, Discord, and Webhooks.
-- Membership plans, credits, USDT TRC20 payments, and admin-side billing controls.
+- Membership plans (Monthly / Yearly / Lifetime), credits, USDT TRC20 on-chain payments, and admin-side billing controls.
+- VIP free indicators for members.
+
+### Trading Bots & Automation
+
+- **Grid Bot** — configurable price ranges, arithmetic / geometric spacing, dual-side budget tracking for long/short exposure.
+- **Martingale Bot** — layered position building with automatic cost averaging and market-order execution.
+- **Trend Bot** — directional position sizing based on real-time account equity with automatic balance refresh.
+- **DCA Bot** — time-based periodic buying, decoupled from K-line frequency, with external-close detection and auto-reset.
+- Real-time runtime metrics (realized PnL, unrealized PnL, total equity) on bot list and detail pages.
+
+### Quick Trade (Lightning Execution)
+
+- Side-sliding Quick Trade panel for instant order placement without leaving the analysis page.
+- Multi-exchange support (Binance, OKX, Bitget, Bybit, etc.) with real-time balance and position display.
+- Market / Limit orders, 1x–125x leverage slider, TP/SL by absolute price.
+- One-click position close and recent trade history with status tags.
+- Integrated with AI Trading Radar — "Trade Now" pre-fills symbol, direction, and price.
+
+### Cross-Sectional & Portfolio Strategies
+
+- Multi-symbol portfolio management with simultaneous position handling.
+- Configurable portfolio size, long/short ratio, and rebalance frequency (Daily / Weekly / Monthly).
+- Parallel execution across symbols for efficient portfolio operations.
+- Cross-sectional indicator ranking and signal generation.
+
+### Prediction Market Research
+
+- Polymarket integration for prediction market analysis and research workflows.
+- AI-driven divergence analysis comparing AI predictions with market consensus.
+- Related asset trading recommendations linked to prediction market events.
+- Opportunity scoring and confidence calibration for prediction markets.
 
 ## AI Capabilities
 
@@ -182,6 +214,9 @@ QuantDinger is not just "LLM chat added to a trading app". The current AI layer 
 - Structured AI market analysis for quick decision support
 - Lower-latency workflow than older multi-hop orchestration
 - Useful for daily market review, trade planning, and opportunity screening
+- Supports multiple LLM providers: OpenRouter, OpenAI, Gemini, DeepSeek, Anthropic, and more
+- **OpenAI-compatible API support** — connect to any OpenAI-compatible endpoint
+- **Ollama local model support** — run local LLMs for fully private analysis
 
 ### AI Strategy and Indicator Generation
 
@@ -189,11 +224,19 @@ QuantDinger is not just "LLM chat added to a trading app". The current AI layer 
 - Natural language to strategy code and config scaffolding
 - Better fit for traders who know the idea they want, but want to accelerate implementation
 
+### AI Trading Opportunities Radar
+
+- Auto-scans Crypto, US Stocks, and Forex markets every hour
+- Rolling carousel with BUY / SELL signals, percentage change, and reasoning
+- Integrated with Quick Trade — one-click execution from radar cards
+- Fully internationalized content
+
 ### Analysis Memory and Review
 
-- Historical analysis storage
+- Historical analysis storage with per-user isolation
 - Better repeatability and comparison over time
 - A foundation for future calibration and reflection loops
+- User timezone support (IANA) for localized time display
 
 ### Ensemble, Calibration, and Reflection
 
@@ -211,6 +254,7 @@ QuantDinger is not just "LLM chat added to a trading app". The current AI layer 
 - Analyze prediction markets as a research workflow
 - Compare AI view versus market-implied probabilities
 - Surface divergence and opportunity scoring
+- Related asset trading recommendations based on prediction market events
 
 ## Why It Is Different
 
@@ -228,10 +272,10 @@ That combination is the core difference.
 
 ## Why It Converts Better Than a Typical Trading Tool
 
-- **For traders**: it shortens the path from idea to execution.
-- **For quants**: it keeps Python and strategy control front and center.
-- **For operators**: it adds the parts most open-source trading projects skip, including users, billing, roles, and deployability.
-- **For AI-first workflows**: it turns analysis into something actionable, reviewable, and eventually automatable.
+- **For traders**: it shortens the path from idea to execution — from AI analysis to Quick Trade, from indicator to live bot, all in one interface.
+- **For quants**: it keeps Python and strategy control front and center, now with parameter passing, cross-indicator calling, cross-sectional portfolios, and full backtest history.
+- **For operators**: it adds the parts most open-source trading projects skip, including multi-user RBAC, membership billing, USDT on-chain payments, and deployable Docker Compose configuration.
+- **For AI-first workflows**: it turns analysis into something actionable, reviewable, and eventually automatable — with local LLM support via Ollama for fully private AI workflows.
 
 ## How It Works
 
@@ -248,7 +292,7 @@ At a practical level, QuantDinger runs as a self-hosted application stack:
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Prebuilt Vue application served by Nginx |
-| Backend | Flask API, Python services, strategy runtime |
+| Backend | Flask API, Python services, strategy runtime, ORM-refactored data layer |
 | Storage | PostgreSQL 16 |
 | Cache / worker support | Redis 7 |
 | Trading layer | Exchange adapters, IBKR, MT5 |
@@ -259,9 +303,10 @@ At a practical level, QuantDinger runs as a self-hosted application stack:
 ### Execution Model
 
 - Market data is pulled through a pluggable data layer.
-- Backtests run on the server-side strategy engine, including strategy snapshot handling.
-- Live strategies run through runtime services that generate order intent.
+- Backtests run on the server-side strategy engine, including strategy snapshot handling and dedicated strategy backtest persistence.
+- Live strategies and trading bots (Grid, Martingale, Trend, DCA) run through runtime services that generate order intent.
 - Pending orders are then dispatched through exchange-specific execution adapters.
+- Quick Trade provides direct discretionary execution from analysis pages.
 - Crypto live execution is intentionally separated from market-data collection concerns.
 
 ### System Diagram
@@ -434,6 +479,13 @@ See full examples:
 | Forex | MT5, OANDA | Via MT5 |
 | Futures | Exchange and data integrations | Data and workflow support |
 
+### China & Hong Kong Stocks
+
+| Market | Exchange | Coverage |
+|--------|----------|----------|
+| A-Shares (A股) | SSE, SZSE | Data and watchlist support |
+| HK Stocks (港股) | HKEX | Data and watchlist support |
+
 ### Prediction Markets
 
 Polymarket is currently supported as a **research and analysis workflow**, not as direct in-platform live execution. It is useful for market lookup, divergence analysis, opportunity scoring, and AI-assisted review.
@@ -448,12 +500,36 @@ QuantDinger supports two main strategy authoring models:
 - `buy` / `sell` signal generation
 - chart rendering and signal-style backtests
 - best for research, indicator logic, and visual strategy prototyping
+- **External parameter passing** — declare parameters with `# @param` syntax (int, float, bool, str)
+- **Cross-indicator calling** — call other indicators with `call_indicator(id_or_name, df)`
 
 ### ScriptStrategy
 
 - event-driven `on_init(ctx)` / `on_bar(ctx, bar)` scripts
 - explicit runtime control with `ctx.buy()`, `ctx.sell()`, `ctx.close_position()`
 - best for stateful strategies, execution-oriented logic, and live alignment
+
+### Cross-Sectional Strategy
+
+- multi-symbol portfolio management with simultaneous position handling
+- configurable portfolio size, long/short ratio, and rebalance frequency
+- indicators receive a `data` dictionary (symbol → DataFrame) for cross-symbol analysis
+- parallel execution across symbols for efficient portfolio operations
+
+### Trading Bot Strategies
+
+- **Grid Bot** — automated buy-low-sell-high within configured price bands
+- **Martingale Bot** — layered averaging-down with automatic cost basis tracking
+- **Trend Bot** — directional trading with position sizing based on live equity
+- **DCA Bot** — time-based periodic investment, independent of K-line frequency
+
+### Indicator Community & Marketplace
+
+- publish indicators to the community marketplace with review and approval workflow
+- purchase, rate, and comment on community indicators
+- one-click sync code updates when publishers release new versions
+- performance tracking with backtest return, live PnL, and win rate
+- VIP free indicators for members
 
 For the full developer workflow, see:
 
@@ -498,6 +574,7 @@ Use `backend_api_python/env.example` as the primary template. Key areas include:
 | Membership | `MEMBERSHIP_MONTHLY_PRICE_USD`, `MEMBERSHIP_MONTHLY_CREDITS` |
 | USDT Payment | `USDT_PAY_ENABLED`, `USDT_TRC20_XPUB`, `TRONGRID_API_KEY` |
 | Optional data APIs | `TWELVE_DATA_API_KEY`, `FINNHUB_API_KEY`, `TIINGO_API_KEY`, `ADANOS_API_KEY` |
+| Local LLM | `OLLAMA_BASE_URL`, `OLLAMA_MODEL` |
 | Proxy | `PROXY_URL` |
 | Workers | `ENABLE_PENDING_ORDER_WORKER`, `ENABLE_PORTFOLIO_MONITOR`, `ENABLE_REFLECTION_WORKER` |
 | AI tuning | `ENABLE_AI_ENSEMBLE`, `ENABLE_CONFIDENCE_CALIBRATION`, `AI_ENSEMBLE_MODELS` |
