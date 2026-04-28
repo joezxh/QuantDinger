@@ -1114,10 +1114,43 @@ CREATE TABLE IF NOT EXISTS trade_polymarket_opportunities (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS trade_sync_jobs (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL DEFAULT 'Data Sync',
+    source_type VARCHAR(50) NOT NULL DEFAULT 'polymarket',
+    executor_type VARCHAR(50) NOT NULL DEFAULT 'polymarket',
+    interval_minutes INTEGER NOT NULL DEFAULT 30,
+    enabled BOOLEAN DEFAULT true,
+    last_run_at TIMESTAMP WITH TIME ZONE,
+    next_run_at TIMESTAMP WITH TIME ZONE,
+    last_status VARCHAR(32),
+    last_error TEXT,
+    config_json TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS trade_sync_runs (
+    id SERIAL PRIMARY KEY,
+    job_id INTEGER NOT NULL,
+    run_type VARCHAR(32) NOT NULL DEFAULT 'incremental',
+    status VARCHAR(32) NOT NULL DEFAULT 'running',
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    finished_at TIMESTAMP WITH TIME ZONE,
+    items_fetched INTEGER DEFAULT 0,
+    items_saved INTEGER DEFAULT 0,
+    items_failed INTEGER DEFAULT 0,
+    error_message TEXT,
+    detail_json TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_polymarket_markets_market_id ON trade_polymarket_markets(market_id);
 CREATE INDEX IF NOT EXISTS idx_polymarket_markets_active ON trade_polymarket_markets(active);
 CREATE INDEX IF NOT EXISTS idx_polymarket_ai_analysis_market_id ON trade_polymarket_ai_analysis(market_id);
 CREATE INDEX IF NOT EXISTS idx_polymarket_opportunities_market_id ON trade_polymarket_opportunities(market_id);
+CREATE INDEX IF NOT EXISTS idx_sync_runs_job_id ON trade_sync_runs(job_id);
+CREATE INDEX IF NOT EXISTS idx_sync_runs_status ON trade_sync_runs(status);
 
 -- =============================================================================
 -- Completion Notice

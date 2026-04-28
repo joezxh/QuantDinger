@@ -12,6 +12,9 @@
           <a-tab-pane key="datasets" tab="数据集元数据">
             <dataset-list />
           </a-tab-pane>
+          <a-tab-pane key="sync-tasks" tab="调度任务管理">
+            <sync-task-tab />
+          </a-tab-pane>
         </a-tabs>
       </a-card>
     </page-header-wrapper>
@@ -22,13 +25,15 @@
 import ConfigList from './ConfigList'
 import KeyList from './KeyList'
 import DatasetList from './DatasetList'
+import SyncTaskTab from './SyncTaskTab'
 
 export default {
   name: 'DataSourceIndex',
   components: {
     ConfigList,
     KeyList,
-    DatasetList
+    DatasetList,
+    SyncTaskTab
   }
 }
 </script>

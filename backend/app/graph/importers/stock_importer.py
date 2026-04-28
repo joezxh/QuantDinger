@@ -63,10 +63,55 @@ class StockGraphImporter(BaseGraphImporter):
         return companies
 
     def _fetch_institutions(self) -> List[Dict[str, Any]]:
-        """Placeholder: in production this would load from ownership / 13F datasets."""
-        # For now, return an empty list; real data would come from external APIs
-        return []
+        """Seed top-tier asset managers as baseline institution nodes.
+
+        In production this would be replaced by 13F / ownership API feeds.
+        """
+        seeds = [
+            {"name": "BlackRock", "type": "资产管理", "aum_billion": 10500},
+            {"name": "Vanguard", "type": "指数基金", "aum_billion": 8700},
+            {"name": "State Street", "type": "托管银行", "aum_billion": 4200},
+            {"name": "Fidelity", "type": "共同基金", "aum_billion": 4800},
+            {"name": "Berkshire Hathaway", "type": "保险/控股", "aum_billion": 900},
+        ]
+        return seeds
 
     def _fetch_holdings(self) -> List[Dict[str, Any]]:
-        """Placeholder: institution-company holdings."""
-        return []
+        """Seed representative holdings for demo / baseline graph edges.
+
+        In production this would come from quarterly 13F filings or ownership APIs.
+        Maps seed institutions to tickers that exist in the market_symbols table.
+        """
+        # Common large-cap holdings across major institutions
+        holdings_map = {
+            "BlackRock": ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "TSLA", "META", "BRK-B"],
+            "Vanguard": ["AAPL", "MSFT", "AMZN", "TSLA", "GOOGL", "BRK-B", "JNJ", "UNH"],
+            "State Street": ["AAPL", "MSFT", "NVDA", "JPM", "XOM", "JNJ", "V", "PG"],
+            "Fidelity": ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "NFLX", "AMD"],
+            "Berkshire Hathaway": ["AAPL", "BAC", "KO", "AXP", "CVX", "OXY", "KHC", "MCO"],
+        }
+        holdings: List[Dict[str, Any]] = []
+        try:
+            with get_session() as session:
+                from app.database.repositories.market_symbol_repository import MarketSymbolRepository
+                repo = MarketSymbolRepository(session)
+                available_tickers = {
+                    s.symbol for s in repo.list_by_market("USStock", is_active=1)
+                }
+        except Exception:
+            available_tickers = set()
+
+        for inst, tickers in holdings_map.items():
+            for tkr in tickers:
+                if available_tickers and tkr not in available_tickers:
+                    continue
+                holdings.append({
+                    "from_id": inst,
+                    "to_id": tkr,
+                    "props": {"source": "seed", "confidence": 0.85},
+                })
+                if len(holdings) >= self.batch_size:
+                    break
+            if len(holdings) >= self.batch_size:
+                break
+        return holdings

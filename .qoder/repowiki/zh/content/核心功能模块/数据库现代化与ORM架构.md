@@ -7,14 +7,15 @@
 - [database.py](file://backend/app/config/database.py)
 - [env.py](file://backend/migrations/env.py)
 - [base.py](file://backend/app/models/base.py)
-- [__init__.py](file://backend/app/models/__init__.py)
 - [base.py](file://backend/app/database/repositories/base.py)
+- [indicator_repository.py](file://backend/app/database/repositories/indicator_repository.py)
 - [market_symbol_repository.py](file://backend/app/database/repositories/market_symbol_repository.py)
 - [order_repository.py](file://backend/app/database/repositories/order_repository.py)
 - [portfolio_repository.py](file://backend/app/database/repositories/portfolio_repository.py)
 - [trade_repository.py](file://backend/app/database/repositories/trade_repository.py)
 - [strategy_repository.py](file://backend/app/database/repositories/strategy_repository.py)
 - [polymarket_repository.py](file://backend/app/database/repositories/polymarket_repository.py)
+- [indicator_full.py](file://backend/app/models/indicator_full.py)
 - [market_symbol.py](file://backend/app/models/market_symbol.py)
 - [order.py](file://backend/app/models/order.py)
 - [trading.py](file://backend/app/models/trading.py)
@@ -28,11 +29,12 @@
 
 ## 更新摘要
 **所做更改**
-- 新增了六个核心仓库类的详细分析：MarketSymbolRepository、OrderRepository、PortfolioRepository、TradeRepository、StrategyRepository、PolymarketRepository
+- 新增了六个核心仓库类的详细分析：IndicatorRepository、MarketSymbolRepository、OrderRepository、PortfolioRepository、TradeRepository、StrategyRepository
 - 更新了ORM架构图以反映新的仓库模式设计
 - 增强了交易系统和策略管理的数据库访问层说明
 - 添加了多市场符号管理和多币种交易支持的架构说明
 - 更新了Polymarket数据模型和AI分析功能的实现细节
+- 新增了指标社区功能的完整仓库模式实现
 
 ## 目录
 1. [简介](#简介)
@@ -49,7 +51,7 @@
 
 QuantDinger项目正在进行全面的数据库现代化转型，从传统的直接SQL查询转向现代的ORM（对象关系映射）架构。该项目采用SQLAlchemy作为主要的ORM框架，结合Alembic进行数据库迁移管理，实现了从传统连接池模式到现代ORM模式的平滑过渡。
 
-本次更新重点关注基于Applied Changes的数据库现代化架构重构，重点反映了从原始SQL查询到ORM Repository模式的重大转变。新架构引入了专门的仓库类来处理不同业务领域的数据访问需求，包括市场符号管理、订单处理、投资组合监控、交易记录、策略管理和Polymarket数据分析等核心功能。
+本次更新重点关注基于Applied Changes的数据库现代化架构重构，重点反映了从原始SQL查询到ORM Repository模式的重大转变。新架构引入了专门的仓库类来处理不同业务领域的数据访问需求，包括指标社区管理、市场符号管理、订单处理、投资组合监控、交易记录、策略管理和Polymarket数据分析等核心功能。
 
 该架构支持多用户模式、连接池优化、事务管理和错误处理，为金融数据处理和交易系统提供了可靠的数据基础设施。新的仓库模式实现了更好的关注点分离，每个仓库类专注于特定的业务领域，提高了代码的可维护性和可扩展性。
 
@@ -64,6 +66,7 @@ API[API路由层]
 Services[业务服务层]
 end
 subgraph "数据访问层"
+IndicatorRepo[IndicatorRepository]
 MarketRepo[MarketSymbolRepository]
 OrderRepo[OrderRepository]
 PortfolioRepo[PortfolioRepository]
@@ -83,12 +86,14 @@ Config[数据库配置]
 Migrations[迁移管理]
 end
 API --> Services
+Services --> IndicatorRepo
 Services --> MarketRepo
 Services --> OrderRepo
 Services --> PortfolioRepo
 Services --> TradeRepo
 Services --> StrategyRepo
 Services --> PolymarketRepo
+IndicatorRepo --> Models
 MarketRepo --> Models
 OrderRepo --> Models
 PortfolioRepo --> Models
@@ -104,12 +109,12 @@ Migrations --> Models
 ```
 
 **图表来源**
+- [indicator_repository.py:8-169](file://backend/app/database/repositories/indicator_repository.py#L8-L169)
 - [market_symbol_repository.py:8-87](file://backend/app/database/repositories/market_symbol_repository.py#L8-L87)
 - [order_repository.py:10-150](file://backend/app/database/repositories/order_repository.py#L10-L150)
 - [portfolio_repository.py:9-81](file://backend/app/database/repositories/portfolio_repository.py#L9-L81)
 - [trade_repository.py:10-79](file://backend/app/database/repositories/trade_repository.py#L10-L79)
 - [strategy_repository.py:10-128](file://backend/app/database/repositories/strategy_repository.py#L10-L128)
-- [polymarket_repository.py:13-132](file://backend/app/database/repositories/polymarket_repository.py#L13-L132)
 
 **章节来源**
 - [engine.py:1-52](file://backend/app/database/engine.py#L1-L52)
@@ -174,6 +179,7 @@ Business[业务服务]
 Validators[验证器]
 end
 subgraph "数据访问层"
+IndicatorRepo[指标社区仓库]
 MarketRepo[市场符号仓库]
 OrderRepo[订单仓库]
 PortfolioRepo[投资组合仓库]
@@ -189,12 +195,14 @@ Cache[(Redis)]
 end
 Routes --> Handlers
 Handlers --> Business
+Business --> IndicatorRepo
 Business --> MarketRepo
 Business --> OrderRepo
 Business --> PortfolioRepo
 Business --> TradeRepo
 Business --> StrategyRepo
 Business --> PolymarketRepo
+IndicatorRepo --> BaseRepo
 MarketRepo --> BaseRepo
 OrderRepo --> BaseRepo
 PortfolioRepo --> BaseRepo
@@ -208,12 +216,12 @@ Cache --> DB
 ```
 
 **图表来源**
+- [indicator_repository.py:8-169](file://backend/app/database/repositories/indicator_repository.py#L8-L169)
 - [market_symbol_repository.py:8-87](file://backend/app/database/repositories/market_symbol_repository.py#L8-L87)
 - [order_repository.py:10-150](file://backend/app/database/repositories/order_repository.py#L10-L150)
 - [portfolio_repository.py:9-81](file://backend/app/database/repositories/portfolio_repository.py#L9-L81)
 - [trade_repository.py:10-79](file://backend/app/database/repositories/trade_repository.py#L10-L79)
 - [strategy_repository.py:10-128](file://backend/app/database/repositories/strategy_repository.py#L10-L128)
-- [polymarket_repository.py:13-132](file://backend/app/database/repositories/polymarket_repository.py#L13-L132)
 
 ### 数据流序列
 
@@ -239,9 +247,115 @@ API-->>Client : HTTP响应
 
 **图表来源**
 - [session.py:8-22](file://backend/app/database/session.py#L8-L22)
-- [market_symbol_repository.py:8-87](file://backend/app/database/repositories/market_symbol_repository.py#L8-L87)
+- [indicator_repository.py:8-169](file://backend/app/database/repositories/indicator_repository.py#L8-L169)
 
 ## 详细组件分析
+
+### 指标社区管理仓库
+
+IndicatorRepository是新引入的核心仓库类，专门负责指标社区的完整管理：
+
+```mermaid
+classDiagram
+class IndicatorRepository {
++session Session
++get_by_id(int) IndicatorCode
++list_by_user(int, int, int) List[IndicatorCode]
++list_community(int, int) List[IndicatorCode]
++create_indicator(dict) IndicatorCode
++update_indicator(int, dict) IndicatorCode
++increment_purchase_count(int) IndicatorCode
++get_purchase(int, int) IndicatorPurchase
++create_purchase(dict) IndicatorPurchase
++list_comments(int, int) List[IndicatorComment]
++create_comment(dict) IndicatorComment
++get_avg_rating(int) float
++delete_indicator(int, int) bool
++get_indicator_for_edit(int, int) IndicatorCode
++get_indicator_for_call(ref, int) tuple
++get_code_by_id(int) str
+}
+class IndicatorCode {
++int id
++int user_id
++int is_buy
++int end_time
++str name
++str code
++str description
++int publish_to_community
++str pricing_type
++Decimal price
++int is_encrypted
++str preview_image
++bool vip_free
++int createtime
++int updatetime
++datetime created_at
++datetime updated_at
++int purchase_count
++Decimal avg_rating
++int rating_count
++int view_count
++str review_status
++str review_note
++datetime reviewed_at
++int reviewed_by
++int source_indicator_id
+}
+class IndicatorComment {
++int id
++int indicator_id
++int user_id
++int rating
++str content
++int parent_id
++int is_deleted
++datetime created_at
++datetime updated_at
+}
+class IndicatorPurchase {
++int id
++int indicator_id
++int buyer_id
++int seller_id
++Decimal price
++datetime created_at
+}
+IndicatorRepository --|> BaseRepository
+IndicatorRepository --> IndicatorCode : "指标代码操作"
+IndicatorRepository --> IndicatorComment : "评论操作"
+IndicatorRepository --> IndicatorPurchase : "购买记录操作"
+```
+
+**图表来源**
+- [indicator_repository.py:8-169](file://backend/app/database/repositories/indicator_repository.py#L8-L169)
+- [indicator_full.py:19-90](file://backend/app/models/indicator_full.py#L19-L90)
+- [base.py:4-25](file://backend/app/database/repositories/base.py#L4-L25)
+
+#### 指标社区模型特性
+
+**指标代码管理：**
+- 用户所有权：每个指标都关联到创建用户
+- 发布控制：支持社区发布和审核状态管理
+- 付费功能：支持免费和付费指标的差异化管理
+- 统计数据：内置购买次数、评分、浏览量等统计数据
+
+**购买和评论系统：**
+- 购买记录：完整的购买历史追踪
+- 评分系统：1-5星评分和评论管理
+- 删除机制：支持软删除的评论管理
+- 关系映射：指标与用户、购买记录的多对多关系
+
+**高级功能：**
+- 社区浏览：支持按购买量排序的社区指标列表
+- 权限控制：编辑权限检查和购买副本保护
+- 智能查找：支持ID和名称的双模式查找
+- 代码获取：提供无权限检查的原始代码获取
+
+**章节来源**
+- [indicator_repository.py:8-169](file://backend/app/database/repositories/indicator_repository.py#L8-L169)
+- [indicator_full.py:19-90](file://backend/app/models/indicator_full.py#L19-L90)
 
 ### 市场符号管理仓库
 
@@ -729,6 +843,7 @@ subgraph "内部模块"
 Engine[数据库引擎]
 Session[会话管理]
 BaseRepo[基础仓库]
+IndicatorRepo[指标社区仓库]
 MarketRepo[市场符号仓库]
 OrderRepo[订单仓库]
 PortfolioRepo[投资组合仓库]
@@ -745,12 +860,14 @@ PostgreSQL --> Engine
 Redis --> Config
 Engine --> Session
 Session --> BaseRepo
+BaseRepo --> IndicatorRepo
 BaseRepo --> MarketRepo
 BaseRepo --> OrderRepo
 BaseRepo --> PortfolioRepo
 BaseRepo --> TradeRepo
 BaseRepo --> StrategyRepo
 BaseRepo --> PolymarketRepo
+IndicatorRepo --> Models
 MarketRepo --> Models
 OrderRepo --> Models
 PortfolioRepo --> Models
@@ -896,6 +1013,7 @@ QuantDinger项目的数据库现代化架构展现了从传统数据库访问模
 - 专业化的业务领域划分
 
 **新增功能的价值：**
+- **指标社区管理**：完整的指标代码、购买、评论生态系统
 - **市场符号管理**：支持多市场符号的统一管理
 - **订单处理优化**：专业的挂单和快捷交易处理
 - **投资组合监控**：实时的投资组合状态跟踪

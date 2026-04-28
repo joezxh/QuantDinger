@@ -1,0 +1,196 @@
+<template>
+  <div class="provider-list">
+    <div class="table-operator">
+      <a-button type="primary" @click="handleAdd">
+        <template #icon><PlusOutlined /></template>
+        添加供应商
+      </a-button>
+    </div>
+
+    <a-table
+      :columns="columns"
+      :data-source="data"
+      :loading="loading"
+      row-key="id"
+      size="middle"
+    >
+      <template #bodyCell="{ column, text, record }">
+        <template v-if="column.dataIndex === 'status'">
+          <a-badge :status="text === 1 ? 'success' : 'error'" :text="text === 1 ? '启用' : '禁用'" />
+        </template>
+        <template v-if="column.dataIndex === 'api_type'">
+          <a-tag color="blue">{{ getApiTypeLabel(text) }}</a-tag>
+        </template>
+        <template v-if="column.key === 'action'">
+          <a-space>
+            <a @click="handleEdit(record)">编辑</a>
+            <a-divider type="vertical" />
+            <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
+              <a class="text-danger">删除</a>
+            </a-popconfirm>
+          </a-space>
+        </template>
+      </template>
+    </a-table>
+
+    <a-modal
+      v-model:visible="visible"
+      :title="modalTitle"
+      :confirm-loading="confirmLoading"
+      @ok="handleOk"
+    >
+      <a-form :model="formState" :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }">
+        <a-form-item label="供应商名称" name="name" required>
+          <a-input v-model:value="formState.name" placeholder="例如: OpenAI" />
+        </a-form-item>
+        <a-form-item label="代码 (Code)" name="code" required>
+          <a-input v-model:value="formState.code" placeholder="例如: openai" />
+        </a-form-item>
+        <a-form-item label="API 地址" name="base_url" required>
+          <a-input v-model:value="formState.base_url" placeholder="例如: https://api.openai.com/v1" />
+        </a-form-item>
+        <a-form-item label="API 类型" name="api_type">
+          <a-select v-model:value="formState.api_type">
+            <a-select-option value="openai">OpenAI</a-select-option>
+            <a-select-option value="openrouter">OpenRouter</a-select-option>
+            <a-select-option value="openai-compatible">OpenAI Compatible</a-select-option>
+            <a-select-option value="google">Google Gemini</a-select-option>
+            <a-select-option value="deepseek">DeepSeek</a-select-option>
+            <a-select-option value="grok">xAI Grok</a-select-option>
+            <a-select-option value="ollama">Ollama</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="状态" name="status">
+          <a-switch v-model:checked="formState.active" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
+import { getProviders, saveProvider, deleteProvider } from '@/api/llm'
+
+const columns = [
+  { title: 'ID', dataIndex: 'id', width: 80 },
+  { title: '名称', dataIndex: 'name' },
+  { title: '代码', dataIndex: 'code' },
+  { title: 'API 地址', dataIndex: 'base_url' },
+  { title: 'API 类型', dataIndex: 'api_type' },
+  { title: '状态', dataIndex: 'status' },
+  { title: '操作', key: 'action', width: 150 }
+]
+
+const loading = ref(false)
+const data = ref([])
+const visible = ref(false)
+const confirmLoading = ref(false)
+const modalTitle = ref('')
+const editId = ref<number | null>(null)
+
+const formState = reactive({
+  name: '',
+  code: '',
+  base_url: '',
+  api_type: 'openai',
+  active: true
+})
+
+const getApiTypeLabel = (type: string) => {
+  const map: Record<string, string> = {
+    'openai': 'OpenAI',
+    'openrouter': 'OpenRouter',
+    'openai-compatible': 'OpenAI Compatible',
+    'google': 'Google Gemini',
+    'deepseek': 'DeepSeek',
+    'grok': 'xAI Grok',
+    'ollama': 'Ollama'
+  }
+  return map[type] || type
+}
+
+const loadData = async () => {
+  loading.value = true
+  try {
+    const res: any = await getProviders()
+    data.value = res.data || []
+  } catch (e) {
+    message.error('加载失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleAdd = () => {
+  modalTitle.value = '添加供应商'
+  editId.value = null
+  Object.assign(formState, {
+    name: '',
+    code: '',
+    base_url: '',
+    api_type: 'openai',
+    active: true
+  })
+  visible.value = true
+}
+
+const handleEdit = (record: any) => {
+  modalTitle.value = '编辑供应商'
+  editId.value = record.id
+  Object.assign(formState, {
+    name: record.name,
+    code: record.code,
+    base_url: record.base_url,
+    api_type: record.api_type,
+    active: record.status === 1
+  })
+  visible.value = true
+}
+
+const handleOk = async () => {
+  if (!formState.name || !formState.code || !formState.base_url) {
+    message.warning('请填写必填项')
+    return
+  }
+  confirmLoading.value = true
+  try {
+    const params: any = {
+      ...formState,
+      status: formState.active ? 1 : 0
+    }
+    if (editId.value) params.id = editId.value
+    await saveProvider(params)
+    message.success('保存成功')
+    visible.value = false
+    loadData()
+  } catch (e) {
+    message.error('保存失败')
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+const handleDelete = async (id: number) => {
+  try {
+    await deleteProvider(id)
+    message.success('删除成功')
+    loadData()
+  } catch (e) {
+    message.error('删除失败')
+  }
+}
+
+onMounted(loadData)
+</script>
+
+<style scoped>
+.table-operator {
+  margin-bottom: 18px;
+}
+.text-danger {
+  color: #ff4d4f;
+}
+</style>

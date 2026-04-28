@@ -36,6 +36,7 @@ from app.models.polymarket import (
     PolymarketOpportunity,
     PolymarketUser,
 )
+from app.models.sync_task import SyncJob, SyncRun
 from app.models.position import ManualPosition, PositionAlert, PositionMonitor, StrategyPosition
 from app.models.strategy import Strategy, StrategyTrading
 from app.models.trading import StrategyTrade, TradeOrder
@@ -91,6 +92,8 @@ __all__ = [
     "PolymarketMarketFeature",
     "PolymarketOpportunity",
     "PolymarketUser",
+    "SyncJob",
+    "SyncRun",
     "PositionAlert",
     "PositionMonitor",
     "QuickTrade",

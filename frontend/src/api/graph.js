@@ -75,3 +75,39 @@ export function getGraphQuality () {
     method: 'get'
   })
 }
+
+/**
+ * Query contagion path between two assets
+ * @param {Object} params - { from, to, market }
+ */
+export function getContagionPath (params) {
+  return request({
+    url: `${BASE_URL}/contagion-path`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * Get smart-money signals for a symbol
+ * @param {Object} params - { symbol, domain }
+ */
+export function getSmartMoney (symbol, params) {
+  return request({
+    url: `${BASE_URL}/smart-money/${encodeURIComponent(symbol)}`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * Trace event impact chain
+ * @param {Object} params - { event_uid, max_depth }
+ */
+export function getEventImpact (eventUid, params) {
+  return request({
+    url: `${BASE_URL}/event-impact/${encodeURIComponent(eventUid)}`,
+    method: 'get',
+    params
+  })
+}

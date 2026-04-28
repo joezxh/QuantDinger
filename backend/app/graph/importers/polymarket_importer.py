@@ -71,5 +71,41 @@ class PolymarketGraphImporter(BaseGraphImporter):
         return users
 
     def _fetch_trades(self) -> List[Dict[str, Any]]:
-        """Placeholder: user-market trade relationships."""
-        return []
+        """Build user-market trade relationships from Polymarket opportunities.
+
+        Falls back to seed relationships when on-chain trade tables are absent.
+        In production this would read from on-chain event logs or Polymarket
+        Gamma API trade history.
+        """
+        trades: List[Dict[str, Any]] = []
+        try:
+            with get_session() as session:
+                from app.database.repositories.polymarket_repository import PolymarketRepository
+                repo = PolymarketRepository(session)
+                # Use opportunity records as proxy for smart-money interest
+                for opp in repo.search_active_markets("", limit=self.batch_size):
+                    # Attempt to extract related asset / user hint from payload_json
+                    asset = opp.asset if hasattr(opp, "asset") else None
+                    if asset:
+                        trades.append({
+                            "from_id": "smart_money_proxy",
+                            "to_id": str(opp.market_id),
+                            "props": {"source": "opportunity_proxy", "confidence": 0.6, "asset": asset},
+                        })
+                    if len(trades) >= self.batch_size:
+                        break
+        except Exception as e:
+            logger.warning("Fetch polymarket trades from opportunities failed: %s", e)
+
+        # Seed fallback if no opportunity data
+        if not trades:
+            seed_markets = [
+                "0x0000000000000000000000000000000000000000",  # placeholder
+            ]
+            for mkt in seed_markets[:1]:
+                trades.append({
+                    "from_id": "smart_money_proxy",
+                    "to_id": mkt,
+                    "props": {"source": "seed", "confidence": 0.5},
+                })
+        return trades

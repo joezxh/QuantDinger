@@ -33,6 +33,7 @@ def register_routes(app: Flask):
     from app.routes.dify_workflow import dify_bp
     from app.routes.data_source import data_source_bp
     from app.routes.permission import permission_bp
+    from app.routes.sync import sync_bp
     
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -65,3 +66,4 @@ def register_routes(app: Flask):
     app.register_blueprint(dify_bp)
     app.register_blueprint(data_source_bp, url_prefix='/api/data-source')
     app.register_blueprint(permission_bp, url_prefix='/api/permission')
+    app.register_blueprint(sync_bp, url_prefix='/api/sync')

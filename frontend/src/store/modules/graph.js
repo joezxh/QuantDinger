@@ -6,7 +6,10 @@ import {
   getGraphContext,
   getRelatedAssets,
   getRecentEvents,
-  getGraphQuality
+  getGraphQuality,
+  getContagionPath,
+  getSmartMoney,
+  getEventImpact
 } from '@/api/graph'
 import { getWorkflows } from '@/api/dify'
 
@@ -32,7 +35,19 @@ const graph = {
     // Dify 工作流
     difyWorkflows: [],
     difyWorkflowsLoading: false,
-    selectedWorkflowCode: ''
+    selectedWorkflowCode: '',
+
+    // 传染路径
+    contagionPath: null,
+    contagionPathLoading: false,
+
+    // 聪明钱信号
+    smartMoney: null,
+    smartMoneyLoading: false,
+
+    // 事件影响链
+    eventImpact: null,
+    eventImpactLoading: false
   },
 
   mutations: {
@@ -75,6 +90,27 @@ const graph = {
     },
     SET_SELECTED_WORKFLOW_CODE (state, payload) {
       state.selectedWorkflowCode = payload
+    },
+
+    SET_CONTAGION_PATH (state, payload) {
+      state.contagionPath = payload
+    },
+    SET_CONTAGION_PATH_LOADING (state, payload) {
+      state.contagionPathLoading = payload
+    },
+
+    SET_SMART_MONEY (state, payload) {
+      state.smartMoney = payload
+    },
+    SET_SMART_MONEY_LOADING (state, payload) {
+      state.smartMoneyLoading = payload
+    },
+
+    SET_EVENT_IMPACT (state, payload) {
+      state.eventImpact = payload
+    },
+    SET_EVENT_IMPACT_LOADING (state, payload) {
+      state.eventImpactLoading = payload
     }
   },
 
@@ -156,6 +192,48 @@ const graph = {
 
     selectWorkflow ({ commit }, code) {
       commit('SET_SELECTED_WORKFLOW_CODE', code)
+    },
+
+    async fetchContagionPath ({ commit }, { from, to, market }) {
+      commit('SET_CONTAGION_PATH_LOADING', true)
+      try {
+        const res = await getContagionPath({ from, to, market })
+        if (res.code === 1) {
+          commit('SET_CONTAGION_PATH', res.data)
+        }
+      } catch (e) {
+        // 静默失败
+      } finally {
+        commit('SET_CONTAGION_PATH_LOADING', false)
+      }
+    },
+
+    async fetchSmartMoney ({ commit }, { symbol, domain }) {
+      commit('SET_SMART_MONEY_LOADING', true)
+      try {
+        const res = await getSmartMoney(symbol, { domain })
+        if (res.code === 1) {
+          commit('SET_SMART_MONEY', res.data)
+        }
+      } catch (e) {
+        // 静默失败
+      } finally {
+        commit('SET_SMART_MONEY_LOADING', false)
+      }
+    },
+
+    async fetchEventImpact ({ commit }, { eventUid, maxDepth = 3 }) {
+      commit('SET_EVENT_IMPACT_LOADING', true)
+      try {
+        const res = await getEventImpact(eventUid, { max_depth: maxDepth })
+        if (res.code === 1) {
+          commit('SET_EVENT_IMPACT', res.data)
+        }
+      } catch (e) {
+        // 静默失败
+      } finally {
+        commit('SET_EVENT_IMPACT_LOADING', false)
+      }
     }
   }
 }

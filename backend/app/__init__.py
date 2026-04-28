@@ -74,12 +74,15 @@ def get_pending_order_worker():
     return _pending_order_worker
 
 
-def start_polymarket_worker():
+def start_sync_scheduler():
     try:
-        from app.services.polymarket_worker import get_polymarket_worker
-        get_polymarket_worker().start()
+        from app.services.sync_scheduler import get_sync_scheduler
+        from app.services.sync_executors import PolymarketSyncExecutor
+        scheduler = get_sync_scheduler()
+        scheduler.register_executor(PolymarketSyncExecutor())
+        logger.info("SyncScheduler initialized with PolymarketSyncExecutor")
     except Exception as e:
-        logger.error(f"Failed to start Polymarket worker: {e}")
+        logger.error(f"Failed to init SyncScheduler: {e}")
 
 
 def start_portfolio_monitor():
@@ -116,7 +119,14 @@ def create_app():
     app.logger.setLevel(logging.getLogger().level)
 
     app.json = SafeJSONProvider(app)
-    CORS(app)
+    # 添加详细的 CORS 配置，支持凭证传递
+    CORS(app,
+         resources={
+             r"/api/*": {"origins": ["http://localhost:5000", "http://127.0.0.1:5000", "http://localhost:3000", "http://localhost:8000", "http://localhost:8080", "http://localhost:8888"]}},
+         supports_credentials=True,
+         allow_headers=["Content-Type", "Authorization", "cache-control", "pragma"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+         )
     if Swagger is not None:
         Swagger(app)
 
@@ -147,4 +157,56 @@ def create_app():
     from app.routes import register_routes
     register_routes(app)
 
+    # Start generic sync scheduler (if enabled)
+    _maybe_start_sync_scheduler()
+
     return app
+
+
+def _maybe_start_sync_scheduler():
+    """Start generic sync scheduler and ensure default jobs exist."""
+    import os
+    enabled = os.getenv("ENABLE_SYNC_SCHEDULER", "true").lower() == "true"
+    if not enabled:
+        logger.info("Sync scheduler is disabled (ENABLE_SYNC_SCHEDULER=false)")
+        return
+
+    # Avoid starting in Werkzeug reloader child process during dev
+    debug = os.getenv("PYTHON_API_DEBUG", "false").lower() == "true"
+    if debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        return
+
+    try:
+        start_sync_scheduler()
+    except Exception as e:
+        logger.error(f"Failed to init SyncScheduler: {e}")
+
+    try:
+        # Ensure default sync jobs exist
+        from app.database.session import get_session
+        from app.database.repositories.sync_repository import SyncRepository
+        from app.services.sync_scheduler import get_sync_scheduler
+        scheduler = get_sync_scheduler()
+        with get_session() as session:
+            repo = SyncRepository(session)
+            jobs = repo.list_jobs()
+            if not jobs:
+                job = repo.create_job(
+                    name="Polymarket Auto Sync",
+                    source_type="polymarket",
+                    executor_type="polymarket",
+                    interval_minutes=int(
+                        os.getenv("POLYMARKET_UPDATE_INTERVAL_MIN", "30")
+                    ),
+                    enabled=True,
+                )
+                logger.info("Created default Polymarket sync job")
+                jobs = [job]
+
+        # Start workers for all enabled jobs
+        for job in jobs:
+            if job.enabled:
+                scheduler.start_job(job)
+                logger.info(f"Started sync worker for job {job.id} ({job.source_type})")
+    except Exception as e:
+        logger.warning(f"Failed to start sync scheduler jobs: {e}")

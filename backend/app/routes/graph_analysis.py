@@ -4,6 +4,8 @@ from flask import Blueprint, jsonify, request
 from app.graph.context_builder import GraphContextBuilder, format_graph_context_for_llm
 from app.graph.connection import run_cypher
 from app.graph.quality_monitor import GraphQualityMonitor
+from app.services.event_impact_analyzer import EventImpactAnalyzer
+from app.services.smart_money_signal import SmartMoneySignal
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -11,6 +13,8 @@ graph_analysis_bp = Blueprint("graph_analysis", __name__)
 
 _context_builder = GraphContextBuilder()
 _quality_monitor = GraphQualityMonitor()
+_event_analyzer = EventImpactAnalyzer()
+_smart_money = SmartMoneySignal()
 
 
 @graph_analysis_bp.route("/context", methods=["GET"])
@@ -334,4 +338,153 @@ def get_graph_quality():
         return jsonify({"code": 1, "msg": "success", "data": report})
     except Exception as e:
         logger.warning("Quality check failed: %s", e)
+        return jsonify({"code": 0, "msg": str(e)}), 500
+
+
+@graph_analysis_bp.route("/contagion-path", methods=["GET"])
+def get_contagion_path():
+    """
+    ---
+    tags:
+      - Knowledge Graph/Analysis
+    summary: "Asset contagion path"
+    description: "Query multi-hop transmission paths between two assets in the knowledge graph."
+    produces:
+      - application/json
+    parameters:
+      - name: from
+        in: query
+        type: string
+        required: true
+        description: "Source symbol"
+      - name: to
+        in: query
+        type: string
+        required: true
+        description: "Target symbol"
+      - name: market
+        in: query
+        type: string
+        required: false
+        default: "Crypto"
+        description: "Market domain"
+    responses:
+      200:
+        description: Successful response with path list and risk score
+      400:
+        description: Missing parameters
+      500:
+        description: Internal Server Error
+    """
+    from_symbol = request.args.get("from", "").strip()
+    to_symbol = request.args.get("to", "").strip()
+    market = request.args.get("market", "Crypto").strip()
+    if not from_symbol or not to_symbol:
+        return jsonify({"code": 0, "msg": "from and to are required"}), 400
+
+    try:
+        data = _event_analyzer.get_contagion_path(from_symbol, to_symbol, market=market)
+        return jsonify({"code": 1, "msg": "success", "data": data})
+    except Exception as e:
+        logger.warning("Contagion path query failed: %s", e)
+        return jsonify({"code": 0, "msg": str(e)}), 500
+
+
+@graph_analysis_bp.route("/smart-money/<symbol>", methods=["GET"])
+def get_smart_money(symbol):
+    """
+    ---
+    tags:
+      - Knowledge Graph/Analysis
+    summary: "Smart money signals"
+    description: "Aggregate smart-money signals for a symbol across Polymarket, crypto whales, and stock institutions."
+    produces:
+      - application/json
+    parameters:
+      - name: symbol
+        in: path
+        type: string
+        required: true
+        description: "Trading symbol or market_id"
+      - name: domain
+        in: query
+        type: string
+        required: false
+        default: "auto"
+        description: "Domain override: polymarket | crypto | stock | auto"
+    responses:
+      200:
+        description: Successful response with signal aggregation
+      400:
+        description: Missing symbol
+      500:
+        description: Internal Server Error
+    """
+    domain = request.args.get("domain", "auto").strip().lower()
+    symbol = symbol.strip()
+    if not symbol:
+        return jsonify({"code": 0, "msg": "symbol is required"}), 400
+
+    try:
+        # Auto-detect domain by symbol shape
+        if domain == "auto":
+            if "/" in symbol or symbol.upper() in ("BTC", "ETH", "BNB", "SOL"):
+                domain = "crypto"
+            elif symbol.startswith("0x") and len(symbol) >= 42:
+                domain = "polymarket"
+            else:
+                domain = "stock"
+
+        if domain == "polymarket":
+            data = _smart_money.get_polymarket_smart_money(symbol)
+        elif domain == "crypto":
+            data = _smart_money.get_whale_accumulation(symbol)
+        else:
+            data = _smart_money.get_institutional_flow(symbol)
+        return jsonify({"code": 1, "msg": "success", "data": data})
+    except Exception as e:
+        logger.warning("Smart money query failed: %s", e)
+        return jsonify({"code": 0, "msg": str(e)}), 500
+
+
+@graph_analysis_bp.route("/event-impact/<event_uid>", methods=["GET"])
+def get_event_impact(event_uid):
+    """
+    ---
+    tags:
+      - Knowledge Graph/Analysis
+    summary: "Event impact chain"
+    description: "Trace how a single event ripples through the knowledge graph."
+    produces:
+      - application/json
+    parameters:
+      - name: event_uid
+        in: path
+        type: string
+        required: true
+        description: "Event unique identifier"
+      - name: max_depth
+        in: query
+        type: integer
+        required: false
+        default: 3
+        description: "Max traversal depth"
+    responses:
+      200:
+        description: Successful response with affected assets and events
+      400:
+        description: Missing event_uid
+      500:
+        description: Internal Server Error
+    """
+    event_uid = event_uid.strip()
+    max_depth = request.args.get("max_depth", 3, type=int)
+    if not event_uid:
+        return jsonify({"code": 0, "msg": "event_uid is required"}), 400
+
+    try:
+        data = _event_analyzer.trace_event_impact(event_uid, max_depth=max_depth)
+        return jsonify({"code": 1, "msg": "success", "data": data})
+    except Exception as e:
+        logger.warning("Event impact query failed: %s", e)
         return jsonify({"code": 0, "msg": str(e)}), 500
