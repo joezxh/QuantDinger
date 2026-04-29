@@ -21,9 +21,9 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="editDataset(record)">编辑</a-button>
+            <a-button type="link" size="small" @click="editDataset(record)">{{ t('common.edit') }}</a-button>
             <a-popconfirm title="确定删除?" @confirm="handleDelete(record.id)">
-              <a-button type="link" danger size="small">删除</a-button>
+              <a-button type="link" danger size="small">{{ t('common.delete') }}</a-button>
             </a-popconfirm>
           </a-space>
         </template>
@@ -37,7 +37,7 @@
       :confirmLoading="saving"
     >
       <a-form layout="vertical">
-        <a-form-item label="名称" required>
+        <a-form-item :label="t('common.name')" required>
           <a-input v-model:value="form.name" placeholder="数据集名称" />
         </a-form-item>
         <a-form-item label="代码 (Symbol)" required>
@@ -63,10 +63,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { getDatasets, saveDataset, deleteDataset } from '@/api/data-source'
 
+const { t } = useI18n()
 const loading = ref(false)
 const data = ref<any[]>([])
 
@@ -82,12 +84,12 @@ const form = reactive({
 
 const columns = [
   { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-  { title: '名称', dataIndex: 'name', key: 'name' },
-  { title: '标的代码', dataIndex: 'symbol', key: 'symbol' },
+  { title: t('common.name'), dataIndex: 'name', key: 'name' },
+  { title: t('aiAnalysis.symbolCode'), dataIndex: 'symbol', key: 'symbol' },
   { title: '时间周期', dataIndex: 'timeframe', key: 'timeframe' },
   { title: '配置ID', dataIndex: 'config_id', key: 'config_id' },
-  { title: '创建时间', dataIndex: 'created_at', key: 'created_at' },
-  { title: '操作', key: 'action', width: 150 }
+  { title: t('common.createdAt'), dataIndex: 'created_at', key: 'created_at' },
+  { title: t('common.action'), key: 'action', width: 150 }
 ]
 
 const loadData = async () => {
@@ -98,7 +100,7 @@ const loadData = async () => {
       data.value = res.data || []
     }
   } catch (error) {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -131,7 +133,7 @@ const handleSave = async () => {
     const payload = editingId.value ? { ...form, id: editingId.value } : form
     const res: any = await saveDataset(payload)
     if (res.code === 1) {
-      message.success('保存成功')
+      message.success(t('common.saveSuccess'))
       modalVisible.value = false
       loadData()
     } else {

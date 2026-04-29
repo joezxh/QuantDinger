@@ -51,9 +51,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { getLLMStats, getLLMLogs } from '@/api/llm'
 import dayjs from 'dayjs'
 
+const { t } = useI18n()
 const stats = reactive({
   total_calls: 0,
   success_rate: 0,
@@ -71,11 +73,11 @@ const pagination = reactive({
 })
 
 const logColumns = [
-  { title: '时间', dataIndex: 'created_at', width: 180, customRender: ({ text }: any) => dayjs(text).format('YYYY-MM-DD HH:mm:ss') },
+  { title: t('common.time'), dataIndex: 'created_at', width: 180, customRender: ({ text }: any) => dayjs(text).format('YYYY-MM-DD HH:mm:ss') },
   { title: '模型', dataIndex: 'model' },
   { title: '供应商', dataIndex: 'provider_name' },
   { title: '延迟', dataIndex: 'latency', width: 100, customRender: ({ text }: any) => `${text}ms` },
-  { title: '状态', dataIndex: 'status', width: 100 },
+  { title: t('common.status'), dataIndex: 'status', width: 100 },
   { title: '错误详情', dataIndex: 'error_msg', ellipsis: true }
 ]
 

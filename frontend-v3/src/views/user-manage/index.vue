@@ -4,44 +4,44 @@
       <div class="header-left">
         <h2 class="page-title">
           <TeamOutlined />
-          <span>系统管理 & 用户运营</span>
+          <span>{{ t('userManage.title') }}</span>
         </h2>
-        <p class="page-desc">全平台用户生命周期管理、策略运行监控及业务运营看板</p>
+        <p class="page-desc">{{ t('userManage.subtitle') }}</p>
       </div>
     </div>
 
     <!-- Tabs Container -->
     <a-tabs v-model:activeKey="activeTab" @change="handleTabChange" class="manage-tabs">
       <!-- Tab 1: User Management -->
-      <a-tab-pane key="users" tab="用户管理">
+      <a-tab-pane key="users" :tab="t('menu.userManage')">
         <!-- User Summary Cards -->
         <div class="summary-cards" v-if="userSummary">
           <div class="summary-card glass-effect">
             <div class="card-icon blue"><TeamOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ userSummary.total_users || 0 }}</div>
-              <div class="card-label">总用户数</div>
+              <div class="card-label">{{ t('userManage.totalUsers') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
             <div class="card-icon green"><UserAddOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ userSummary.today_new || 0 }}</div>
-              <div class="card-label">今日新增</div>
+              <div class="card-label">{{ t('userManage.todayNew') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
             <div class="card-icon yellow"><CrownOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ userSummary.active_vips || 0 }}</div>
-              <div class="card-label">活跃VIP</div>
+              <div class="card-label">{{ t('userManage.activeVips') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
             <div class="card-icon purple"><WalletOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ formatLargeNumber(userSummary.total_credits) }}</div>
-              <div class="card-label">全平台积分</div>
+              <div class="card-label">{{ t('userManage.totalCredits') }}</div>
             </div>
           </div>
         </div>
@@ -51,22 +51,22 @@
           <div class="toolbar-left">
             <a-button type="primary" @click="showCreateModal">
               <UserAddOutlined />
-              创建用户
+              {{ t('common.create') }}
             </a-button>
             <a-button :loading="exporting" @click="handleExport">
               <DownloadOutlined />
-              导出用户
+              {{ t('common.export') }}
             </a-button>
             <a-button @click="loadUsers">
               <ReloadOutlined />
-              刷新
+              {{ t('common.refresh') }}
             </a-button>
           </div>
           <div class="toolbar-right">
             <a-input-search
               v-model:value="searchKeyword"
               class="toolbar-search"
-              placeholder="搜索用户名/邮箱/昵称"
+              :placeholder="t('userManage.searchPlaceholder')"
               allowClear
               @search="handleSearch"
             />
@@ -86,7 +86,7 @@
           >
             <template #status="{ record }">
               <a-tag :color="record.status === 'active' ? 'green' : 'red'">
-                {{ record.status === 'active' ? '启用' : '禁用' }}
+                {{ record.status === 'active' ? t('common.enable') : t('common.disable') }}
               </a-tag>
             </template>
 
@@ -98,7 +98,7 @@
 
             <template #last_login_at="{ record }">
               <span v-if="record.last_login_at">{{ formatTime(record.last_login_at) }}</span>
-              <span v-else class="text-muted">从未登录</span>
+              <span v-else class="text-muted">{{ t('userManage.neverLogin') }}</span>
             </template>
 
             <template #credits="{ record }">
@@ -122,32 +122,32 @@
 
             <template #action="{ record }">
               <a-space>
-                <a-tooltip title="编辑">
+                <a-tooltip :title="t('common.edit')">
                   <a-button type="link" size="small" @click="showEditModal(record)">
                     <EditOutlined />
                   </a-button>
                 </a-tooltip>
-                <a-tooltip title="积分">
+                <a-tooltip :title="t('userManage.credits')">
                   <a-button type="link" size="small" @click="showCreditsModal(record)">
                     <WalletOutlined style="color: #722ed1" />
                   </a-button>
                 </a-tooltip>
-                <a-tooltip title="角色">
+                <a-tooltip :title="t('common.role')">
                   <a-button type="link" size="small" @click="showAssignRoleModal(record)">
                     <SafetyOutlined style="color: #52c41a" />
                   </a-button>
                 </a-tooltip>
-                <a-tooltip title="VIP">
+                <a-tooltip :title="t('common.vip')">
                   <a-button type="link" size="small" @click="showVipModal(record)">
                     <CrownOutlined style="color: #faad14" />
                   </a-button>
                 </a-tooltip>
-                <a-tooltip title="密码">
+                <a-tooltip :title="t('common.password')">
                   <a-button type="link" size="small" @click="showResetPasswordModal(record)">
                     <KeyOutlined />
                   </a-button>
                 </a-tooltip>
-                <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
+                <a-popconfirm :title="t('common.confirmDelete')" @confirm="handleDelete(record.id)">
                   <a-button type="link" size="small" :disabled="record.id === currentUserId">
                     <DeleteOutlined style="color: #ff4d4f" />
                   </a-button>
@@ -159,14 +159,14 @@
       </a-tab-pane>
 
       <!-- Tab 2: System Strategy Overview -->
-      <a-tab-pane key="strategies" tab="系统实盘概览">
+      <a-tab-pane key="strategies" :tab="t('userManage.tab.strategies')">
         <!-- Strategy Summary Cards -->
         <div class="summary-cards" v-if="strategySummary">
           <div class="summary-card glass-effect">
             <div class="card-icon blue"><FundOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ strategySummary.total_strategies || 0 }}</div>
-              <div class="card-label">总策略数</div>
+              <div class="card-label">{{ t('userManage.totalStrategies') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
@@ -182,7 +182,7 @@
             <div class="card-content">
               <div class="card-value">{{ formatLargeNumber(strategySummary.total_capital) }}</div>
               <div class="card-sub">实盘: {{ formatLargeNumber(strategySummary.live_capital) }} / 仅信号: {{ formatLargeNumber(strategySummary.signal_capital) }}</div>
-              <div class="card-label">总保证金 (USDT)</div>
+              <div class="card-label">{{ t('userManage.totalCapital') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
@@ -201,23 +201,23 @@
         <!-- Strategy Toolbar -->
         <div class="toolbar">
           <div class="toolbar-left">
-            <a-button @click="loadSystemStrategies"><ReloadOutlined /> 刷新</a-button>
+            <a-button @click="loadSystemStrategies"><ReloadOutlined /> {{ t('common.refresh') }}</a-button>
             <a-select v-model:value="strategyStatusFilter" class="toolbar-select" @change="handleStrategyFilterChange">
-              <a-select-option value="all">所有状态</a-select-option>
-              <a-select-option value="running">运行中</a-select-option>
-              <a-select-option value="stopped">已停止</a-select-option>
+              <a-select-option value="all">{{ t('common.allStatus') }}</a-select-option>
+              <a-select-option value="running">{{ t('status.running') }}</a-select-option>
+              <a-select-option value="stopped">{{ t('status.stopped') }}</a-select-option>
             </a-select>
             <a-select v-model:value="strategyExecutionFilter" class="toolbar-select" @change="handleStrategyExecutionFilterChange">
               <a-select-option value="all">所有执行模式</a-select-option>
-              <a-select-option value="live">实盘托管</a-select-option>
-              <a-select-option value="signal">仅信号通知</a-select-option>
+              <a-select-option value="live">{{ t('userManage.executionLive') }}</a-select-option>
+              <a-select-option value="signal">{{ t('userManage.executionSignal') }}</a-select-option>
             </a-select>
           </div>
           <div class="toolbar-right">
             <a-input-search
               v-model:value="strategySearchKeyword"
               class="toolbar-search"
-              placeholder="搜索策略/品种/用户"
+              :placeholder="t('userManage.strategySearchPlaceholder')"
               allowClear
               @search="handleStrategySearch"
             />
@@ -237,7 +237,7 @@
             @change="handleStrategyTableChange"
           >
             <template #strategyStatus="{ text }">
-              <a-badge :status="text === 'running' ? 'processing' : 'default'" :text="text === 'running' ? '运行中' : '已停止'" />
+              <a-badge :status="text === 'running' ? 'processing' : 'default'" :text="text === 'running' ? t('status.running') : t('status.stopped')" />
             </template>
             <template #userInfo="{ record }">
               <div class="user-cell">
@@ -254,7 +254,7 @@
               </div>
             </template>
             <template #executionModeInfo="{ text }">
-              <a-tag :color="text === 'live' ? 'green' : 'blue'">{{ text === 'live' ? '实盘' : '信号' }}</a-tag>
+              <a-tag :color="text === 'live' ? 'green' : 'blue'">{{ text === 'live' ? t('userManage.liveColon') : t('userManage.signalColon') }}</a-tag>
             </template>
             <template #equityInfo="{ record }">
               <span v-if="record.execution_mode === 'live'">{{ formatLargeNumber(record.position_equity || 0) }}</span>
@@ -282,14 +282,14 @@
       </a-tab-pane>
 
       <!-- Tab 3: Order List -->
-      <a-tab-pane key="orders" tab="充值订单管理">
+      <a-tab-pane key="orders" :tab="t('userManage.tab.orders')">
         <!-- Order Summary Cards -->
         <div class="summary-cards" v-if="orderSummary">
           <div class="summary-card glass-effect">
             <div class="card-icon purple"><FileTextOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ orderSummary.total_orders || 0 }}</div>
-              <div class="card-label">总订单数</div>
+              <div class="card-label">{{ t('userManage.totalOrders') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
@@ -310,27 +310,27 @@
             <div class="card-icon orange"><DollarOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ formatLargeNumber(orderSummary.total_revenue) }} <span class="unit">USDT</span></div>
-              <div class="card-label">总收入</div>
+              <div class="card-label">{{ t('userManage.totalRevenue') }}</div>
             </div>
           </div>
         </div>
 
         <div class="toolbar">
           <div class="toolbar-left">
-            <a-button @click="loadOrders"><ReloadOutlined /> 刷新</a-button>
+            <a-button @click="loadOrders"><ReloadOutlined /> {{ t('common.refresh') }}</a-button>
             <a-select v-model:value="orderStatusFilter" class="toolbar-select" @change="handleOrderFilterChange">
-              <a-select-option value="all">所有状态</a-select-option>
-              <a-select-option value="pending">待支付</a-select-option>
-              <a-select-option value="paid">已支付</a-select-option>
-              <a-select-option value="confirmed">已完成</a-select-option>
-              <a-select-option value="expired">已过期</a-select-option>
+              <a-select-option value="all">{{ t('common.allStatus') }}</a-select-option>
+              <a-select-option value="pending">{{ t('status.pending') }}</a-select-option>
+              <a-select-option value="paid">{{ t('status.paid') }}</a-select-option>
+              <a-select-option value="confirmed">{{ t('status.completed') }}</a-select-option>
+              <a-select-option value="expired">{{ t('billing.orderExpired') }}</a-select-option>
             </a-select>
           </div>
           <div class="toolbar-right">
             <a-input-search
               v-model:value="orderSearchKeyword"
               class="toolbar-search"
-              placeholder="搜索用户名/邮箱"
+              :placeholder="t('userManage.searchPlaceholder')"
               allowClear
               @search="handleOrderSearch"
             />
@@ -379,48 +379,48 @@
       </a-tab-pane>
 
       <!-- Tab 4: AI Analysis Records -->
-      <a-tab-pane key="aiStats" tab="AI分析运营">
+      <a-tab-pane key="aiStats" :tab="t('userManage.tab.aiStats')">
         <!-- AI Stats Summary Cards -->
         <div class="summary-cards" v-if="aiStatsSummary">
           <div class="summary-card glass-effect">
             <div class="card-icon cyan"><ThunderboltOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ aiStatsSummary.total_analyses || 0 }}</div>
-              <div class="card-label">总分析次数</div>
+              <div class="card-label">{{ t('userManage.totalAnalyses') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
             <div class="card-icon blue"><TeamOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ aiStatsSummary.unique_users || 0 }}</div>
-              <div class="card-label">活跃分析用户</div>
+              <div class="card-label">{{ t('userManage.activeAnalysisUsers') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
             <div class="card-icon orange"><BarChartOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ aiStatsSummary.unique_symbols || 0 }}</div>
-              <div class="card-label">覆盖代币数</div>
+              <div class="card-label">{{ t('userManage.coveredSymbols') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
             <div class="card-icon green"><LikeOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ aiStatsSummary.correct_count || 0 }} <span class="divider">/</span> {{ aiStatsSummary.total_memory || 0 }}</div>
-              <div class="card-label">AI准确率 (验证通过/总记忆)</div>
+              <div class="card-label">{{ t('userManage.aiAccuracy') }}</div>
             </div>
           </div>
         </div>
 
         <div class="toolbar">
           <div class="toolbar-left">
-            <a-button @click="loadAiStats"><ReloadOutlined /> 刷新</a-button>
+            <a-button @click="loadAiStats"><ReloadOutlined /> {{ t('common.refresh') }}</a-button>
           </div>
           <div class="toolbar-right">
             <a-input-search
               v-model:value="aiStatsSearchKeyword"
               class="toolbar-search"
-              placeholder="搜索用户名"
+              :placeholder="t('common.search')"
               allowClear
               @search="handleAiStatsSearch"
             />
@@ -428,7 +428,7 @@
         </div>
 
         <div class="ai-stats-grid">
-          <a-card title="用户分析排行" :bordered="false" class="table-card glass-effect">
+          <a-card :title="t('userManage.userAnalysisRanking')" :bordered="false" class="table-card glass-effect">
             <a-table
               :columns="aiUserColumns"
               :data-source="aiUserStats"
@@ -460,7 +460,7 @@
             </a-table>
           </a-card>
 
-          <a-card title="最近分析记录" :bordered="false" class="table-card glass-effect">
+          <a-card :title="t('userManage.recentAnalysisRecords')" :bordered="false" class="table-card glass-effect">
             <a-table
               :columns="aiRecentColumns"
               :data-source="aiRecentRecords"
@@ -484,39 +484,39 @@
     <!-- Modal sections (Keep existing) -->
     <a-modal v-model:open="modalVisible" :title="isEdit ? '编辑用户' : '创建用户'" :confirmLoading="modalLoading" @ok="handleModalOk" @cancel="handleModalCancel">
       <a-form :model="form" layout="vertical">
-        <a-form-item label="用户名"><a-input v-model:value="form.username" :disabled="isEdit" placeholder="请输入用户名"><template #prefix><UserOutlined /></template></a-input></a-form-item>
-        <a-form-item v-if="!isEdit" label="密码"><a-input-password v-model:value="form.password" placeholder="请输入密码（至少6位）"><template #prefix><LockOutlined /></template></a-input-password></a-form-item>
-        <a-form-item label="昵称"><a-input v-model:value="form.nickname" placeholder="请输入昵称"><template #prefix><SmileOutlined /></template></a-input></a-form-item>
-        <a-form-item label="邮箱"><a-input v-model:value="form.email" type="email" placeholder="请输入邮箱"><template #prefix><MailOutlined /></template></a-input></a-form-item>
-        <a-form-item label="角色"><a-select v-model:value="form.role" placeholder="选择角色"><a-select-option v-for="role in roles" :key="role.id" :value="role.id">{{ getRoleLabel(role.id) }}</a-select-option></a-select></a-form-item>
-        <a-form-item v-if="isEdit" label="状态"><a-select v-model:value="form.status"><a-select-option value="active">启用</a-select-option><a-select-option value="disabled">禁用</a-select-option></a-select></a-form-item>
+        <a-form-item :label="t('user.login.username')"><a-input v-model:value="form.username" :disabled="isEdit" :placeholder="t('user.login.usernameRequired')"><template #prefix><UserOutlined /></template></a-input></a-form-item>
+        <a-form-item v-if="!isEdit" :label="t('common.password')"><a-input-password v-model:value="form.password" :placeholder="t('validation.passwordHint')"><template #prefix><LockOutlined /></template></a-input-password></a-form-item>
+        <a-form-item :label="t('common.nickname')"><a-input v-model:value="form.nickname" :placeholder="t('validation.nicknameRequired')"><template #prefix><SmileOutlined /></template></a-input></a-form-item>
+        <a-form-item :label="t('user.login.email')"><a-input v-model:value="form.email" type="email" :placeholder="t('user.login.emailRequired')"><template #prefix><MailOutlined /></template></a-input></a-form-item>
+        <a-form-item :label="t('common.role')"><a-select v-model:value="form.role" placeholder="选择角色"><a-select-option v-for="role in roles" :key="role.id" :value="role.id">{{ getRoleLabel(role.id) }}</a-select-option></a-select></a-form-item>
+        <a-form-item v-if="isEdit" :label="t('common.status')"><a-select v-model:value="form.status"><a-select-option value="active">启用</a-select-option><a-select-option value="disabled">禁用</a-select-option></a-select></a-form-item>
       </a-form>
     </a-modal>
 
-    <a-modal v-model:open="resetPasswordVisible" title="重置密码" :confirmLoading="resetPasswordLoading" @ok="handleResetPassword">
-      <a-alert message="此操作将重置用户密码" type="warning" showIcon />
-      <a-form :model="resetPasswordForm" layout="vertical" style="margin-top: 16px"><a-form-item label="新密码"><a-input-password v-model:value="resetPasswordForm.new_password" placeholder="请输入新密码（至少6位）"><template #prefix><LockOutlined /></template></a-input-password></a-form-item></a-form>
+    <a-modal v-model:open="resetPasswordVisible" :title="t('userManage.resetPassword')" :confirmLoading="resetPasswordLoading" @ok="handleResetPassword">
+      <a-alert :message="t('userManage.resetPasswordWarning')" type="warning" showIcon />
+      <a-form :model="resetPasswordForm" layout="vertical" style="margin-top: 16px"><a-form-item :label="t('common.newPassword')"><a-input-password v-model:value="resetPasswordForm.new_password" :placeholder="t('validation.newPasswordHint')"><template #prefix><LockOutlined /></template></a-input-password></a-form-item></a-form>
     </a-modal>
 
     <a-modal v-model:open="creditsModalVisible" :title="'调整积分' + (creditsEditingUser ? ` - ${creditsEditingUser.username}` : '')" :confirmLoading="creditsLoading" @ok="handleSetCredits">
-      <div class="current-credits-info" v-if="creditsEditingUser"><span class="label">当前积分:</span><span class="value">{{ formatCredits(creditsEditingUser.credits) }}</span></div>
-      <a-form layout="vertical" style="margin-top: 16px"><a-form-item label="新积分"><a-input-number v-model:value="newCredits" :min="0" :precision="2" style="width: 100%" placeholder="请输入新积分" /></a-form-item><a-form-item label="备注"><a-input v-model:value="creditsRemark" placeholder="可选备注信息" /></a-form-item></a-form>
+      <div class="current-credits-info" v-if="creditsEditingUser"><span class="label">{{ t('userManage.currentCredits') }}</span><span class="value">{{ formatCredits(creditsEditingUser.credits) }}</span></div>
+      <a-form layout="vertical" style="margin-top: 16px"><a-form-item :label="t('userManage.newCredits')"><a-input-number v-model:value="newCredits" :min="0" :precision="2" style="width: 100%" :placeholder="t('validation.newCreditsRequired')" /></a-form-item><a-form-item :label="t('common.remark')"><a-input v-model:value="creditsRemark" placeholder="可选备注信息" /></a-form-item></a-form>
     </a-modal>
 
     <a-modal v-model:open="vipModalVisible" :title="'设置VIP' + (vipEditingUser ? ` - ${vipEditingUser.username}` : '')" :confirmLoading="vipLoading" @ok="handleSetVip">
       <a-form layout="vertical" style="margin-top: 16px">
-        <a-form-item label="VIP天数">
-          <a-select v-model:value="vipDays" style="width: 100%"><a-select-option :value="0">取消VIP</a-select-option><a-select-option :value="7">7天</a-select-option><a-select-option :value="30">30天</a-select-option><a-select-option :value="90">90天</a-select-option><a-select-option :value="180">180天</a-select-option><a-select-option :value="365">365天</a-select-option><a-select-option :value="-1">自定义日期</a-select-option></a-select>
+        <a-form-item :label="t('userManage.vipDays')">
+          <a-select v-model:value="vipDays" style="width: 100%"><a-select-option :value="0">{{ t('userManage.cancelVip') }}</a-select-option><a-select-option :value="7">7天</a-select-option><a-select-option :value="30">30天</a-select-option><a-select-option :value="90">90天</a-select-option><a-select-option :value="180">180天</a-select-option><a-select-option :value="365">365天</a-select-option><a-select-option :value="-1">自定义日期</a-select-option></a-select>
         </a-form-item>
-        <a-form-item v-if="vipDays === -1" label="到期时间"><a-date-picker v-model:value="vipCustomDate" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%" /></a-form-item>
-        <a-form-item label="备注"><a-input v-model:value="vipRemark" placeholder="可选备注信息" /></a-form-item>
+        <a-form-item v-if="vipDays === -1" :label="t('userManage.expiryTime')"><a-date-picker v-model:value="vipCustomDate" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%" /></a-form-item>
+        <a-form-item :label="t('common.remark')"><a-input v-model:value="vipRemark" placeholder="可选备注信息" /></a-form-item>
       </a-form>
     </a-modal>
 
     <!-- 角色分配弹窗 -->
     <a-modal
       v-model:visible="roleModalVisible"
-      title="分配角色"
+      :title="t('userManage.assignRole')"
       :confirm-loading="roleSaving"
       @ok="handleAssignRoles"
     >
@@ -539,6 +539,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import dayjs, { Dayjs } from 'dayjs'
 import {
@@ -558,6 +559,7 @@ import { useUserStore } from '@/stores/user'
 interface User { id: number; username: string; nickname: string; email: string; role: string; status: string; credits: number; vip_expires_at: string; last_login_at: string; register_ip: string; }
 interface Role { id: string; name: string; }
 
+const { t } = useI18n()
 const userStore = useUserStore()
 const activeTab = ref('users')
 
@@ -628,60 +630,60 @@ const aiStatsPagination = reactive({ current: 1, pageSize: 20, total: 0 })
 // --- Columns ---
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 60 },
-  { title: '用户名', dataIndex: 'username', width: 120 },
-  { title: '昵称', dataIndex: 'nickname', width: 100 },
-  { title: '角色', dataIndex: 'role', width: 90, slots: { customRender: 'role' } },
-  { title: '积分', dataIndex: 'credits', width: 100, slots: { customRender: 'credits' } },
-  { title: 'VIP', dataIndex: 'vip_expires_at', width: 120, slots: { customRender: 'vip_expires_at' } },
-  { title: '状态', dataIndex: 'status', width: 90, slots: { customRender: 'status' } },
+  { title: t('user.login.username'), dataIndex: 'username', width: 120 },
+  { title: t('common.nickname'), dataIndex: 'nickname', width: 100 },
+  { title: t('common.role'), dataIndex: 'role', width: 90, slots: { customRender: 'role' } },
+  { title: t('userManage.credits'), dataIndex: 'credits', width: 100, slots: { customRender: 'credits' } },
+  { title: t('common.vip'), dataIndex: 'vip_expires_at', width: 120, slots: { customRender: 'vip_expires_at' } },
+  { title: t('common.status'), dataIndex: 'status', width: 90, slots: { customRender: 'status' } },
   { title: '注册IP', dataIndex: 'register_ip', width: 120, slots: { customRender: 'register_ip' } },
   { title: '最后登录', dataIndex: 'last_login_at', width: 150, slots: { customRender: 'last_login_at' } },
-  { title: '操作', key: 'action', width: 220, fixed: 'right', slots: { customRender: 'action' } },
+  { title: t('common.action'), key: 'action', width: 220, fixed: 'right', slots: { customRender: 'action' } },
 ]
 
 const strategyColumns = [
   { title: 'ID', dataIndex: 'id', width: 70, fixed: 'left' },
-  { title: '用户', key: 'userInfo', width: 120, fixed: 'left', slots: { customRender: 'userInfo' } },
-  { title: '策略名称', dataIndex: 'strategy_name', width: 150 },
-  { title: '状态', dataIndex: 'status', width: 100, slots: { customRender: 'strategyStatus' } },
-  { title: '模式', dataIndex: 'execution_mode', width: 80, slots: { customRender: 'executionModeInfo' } },
-  { title: '交易对', dataIndex: 'symbol', width: 120 },
-  { title: '保证金', dataIndex: 'capital', width: 100, customRender: ({ text }) => formatLargeNumber(text) },
-  { title: '当前权益', key: 'equityInfo', width: 100, slots: { customRender: 'equityInfo' } },
-  { title: '盈亏 (USDT)', key: 'pnlInfo', width: 220, slots: { customRender: 'pnlInfo' } },
-  { title: '指标', dataIndex: 'indicator_name', width: 140, slots: { customRender: 'indicatorInfo' } },
-  { title: '交易所', dataIndex: 'exchange', width: 100 },
-  { title: '周期', dataIndex: 'timeframe', width: 80, slots: { customRender: 'timeframeInfo' } },
-  { title: '杠杆', dataIndex: 'leverage', width: 70, slots: { customRender: 'leverageInfo' } },
-  { title: '运行时间', dataIndex: 'uptime', width: 120 },
-  { title: '创建时间', dataIndex: 'created_at', width: 160, slots: { customRender: 'createdAtInfo' } },
+  { title: t('role.user'), key: 'userInfo', width: 120, fixed: 'left', slots: { customRender: 'userInfo' } },
+  { title: t('trading-assistant.form.strategyName'), dataIndex: 'strategy_name', width: 150 },
+  { title: t('common.status'), dataIndex: 'status', width: 100, slots: { customRender: 'strategyStatus' } },
+  { title: t('common.mode'), dataIndex: 'execution_mode', width: 80, slots: { customRender: 'executionModeInfo' } },
+  { title: t('common.tradingPair'), dataIndex: 'symbol', width: 120 },
+  { title: t('common.margin'), dataIndex: 'capital', width: 100, customRender: ({ text }) => formatLargeNumber(text) },
+  { title: t('trading-assistant.detail.currentEquity'), key: 'equityInfo', width: 100, slots: { customRender: 'equityInfo' } },
+  { title: t('userManage.pnlUsdt'), key: 'pnlInfo', width: 220, slots: { customRender: 'pnlInfo' } },
+  { title: t('indicatorIde.toolbar.indicator'), dataIndex: 'indicator_name', width: 140, slots: { customRender: 'indicatorInfo' } },
+  { title: t('common.exchange'), dataIndex: 'exchange', width: 100 },
+  { title: t('indicatorIde.toolbar.timeframe'), dataIndex: 'timeframe', width: 80, slots: { customRender: 'timeframeInfo' } },
+  { title: t('indicatorIde.leverage'), dataIndex: 'leverage', width: 70, slots: { customRender: 'leverageInfo' } },
+  { title: t('common.uptime'), dataIndex: 'uptime', width: 120 },
+  { title: t('common.createdAt'), dataIndex: 'created_at', width: 160, slots: { customRender: 'createdAtInfo' } },
 ]
 
 const orderColumns = [
-  { title: '用户', key: 'orderUserInfo', width: 140, slots: { customRender: 'orderUserInfo' } },
-  { title: '类型', dataIndex: 'order_type', width: 90 },
-  { title: '套餐', dataIndex: 'plan', width: 100, customRender: ({ text }) => text || '-' },
-  { title: '金额', key: 'amountInfo', width: 120, slots: { customRender: 'amountInfo' } },
-  { title: '网络', dataIndex: 'chain', width: 90 },
-  { title: '充值地址', dataIndex: 'address', width: 140, slots: { customRender: 'addressInfo' } },
-  { title: '交易哈希', dataIndex: 'tx_hash', width: 160, slots: { customRender: 'txHashInfo' } },
-  { title: '状态', dataIndex: 'status', width: 100, slots: { customRender: 'orderStatusInfo' } },
-  { title: '时间', dataIndex: 'created_at', width: 160, customRender: ({ text }) => formatTime(text) },
+  { title: t('role.user'), key: 'orderUserInfo', width: 140, slots: { customRender: 'orderUserInfo' } },
+  { title: t('common.type'), dataIndex: 'order_type', width: 90 },
+  { title: t('common.plan'), dataIndex: 'plan', width: 100, customRender: ({ text }) => text || '-' },
+  { title: t('common.amount'), key: 'amountInfo', width: 120, slots: { customRender: 'amountInfo' } },
+  { title: t('common.network'), dataIndex: 'chain', width: 90 },
+  { title: t('userManage.rechargeAddress'), dataIndex: 'address', width: 140, slots: { customRender: 'addressInfo' } },
+  { title: t('userManage.txHash'), dataIndex: 'tx_hash', width: 160, slots: { customRender: 'txHashInfo' } },
+  { title: t('common.status'), dataIndex: 'status', width: 100, slots: { customRender: 'orderStatusInfo' } },
+  { title: t('common.time'), dataIndex: 'created_at', width: 160, customRender: ({ text }) => formatTime(text) },
 ]
 
 const aiUserColumns = [
-  { title: '用户', key: 'aiUserInfo', width: 140, slots: { customRender: 'aiUserInfo' } },
-  { title: '分析次数', dataIndex: 'analysis_count', width: 100, align: 'center' },
-  { title: '准确率 (对/错)', key: 'accuracyInfo', width: 140, align: 'center', slots: { customRender: 'accuracyInfo' } },
-  { title: '反馈 (赞/踩)', key: 'feedbackInfo', width: 120, align: 'center', slots: { customRender: 'feedbackInfo' } },
-  { title: '最后分析时间', dataIndex: 'last_analysis_at', width: 160, slots: { customRender: 'lastAnalysisAt' } },
+  { title: t('role.user'), key: 'aiUserInfo', width: 140, slots: { customRender: 'aiUserInfo' } },
+  { title: t('userManage.analysisCount'), dataIndex: 'analysis_count', width: 100, align: 'center' },
+  { title: t('userManage.accuracy'), key: 'accuracyInfo', width: 140, align: 'center', slots: { customRender: 'accuracyInfo' } },
+  { title: t('userManage.feedback'), key: 'feedbackInfo', width: 120, align: 'center', slots: { customRender: 'feedbackInfo' } },
+  { title: t('userManage.lastAnalysisTime'), dataIndex: 'last_analysis_at', width: 160, slots: { customRender: 'lastAnalysisAt' } },
 ]
 
 const aiRecentColumns = [
-  { title: '用户', key: 'aiUserInfo', width: 120, slots: { customRender: 'aiUserInfo' } },
-  { title: '品种', dataIndex: 'symbol', width: 100 },
-  { title: '状态', dataIndex: 'status', width: 100, slots: { customRender: 'recentStatusInfo' } },
-  { title: '时间', dataIndex: 'created_at', width: 160, slots: { customRender: 'recentCreatedAt' } },
+  { title: t('role.user'), key: 'aiUserInfo', width: 120, slots: { customRender: 'aiUserInfo' } },
+  { title: t('common.symbol'), dataIndex: 'symbol', width: 100 },
+  { title: t('common.status'), dataIndex: 'status', width: 100, slots: { customRender: 'recentStatusInfo' } },
+  { title: t('common.time'), dataIndex: 'created_at', width: 160, slots: { customRender: 'recentCreatedAt' } },
 ]
 
 // --- Logic ---
@@ -724,7 +726,7 @@ const loadSystemStrategies = async () => {
       strategyPagination.total = res.data.total || 0
       strategySummary.value = res.data.summary
     }
-  } catch (e) { message.error('策略概览加载失败') }
+  } catch (e) { message.error(t('userManage.strategyLoadFailed')) }
   strategyLoading.value = false
 }
 
@@ -741,7 +743,7 @@ const loadOrders = async () => {
       orderPagination.total = res.data.total || 0
       orderSummary.value = res.data.summary
     }
-  } catch (e) { message.error('订单加载失败') }
+  } catch (e) { message.error(t('userManage.orderLoadFailed')) }
   orderLoading.value = false
 }
 
@@ -758,7 +760,7 @@ const loadAiStats = async () => {
       aiStatsSummary.value = res.data.summary
       aiStatsPagination.total = res.data.total || 0
     }
-  } catch (e) { message.error('AI统计加载失败') }
+  } catch (e) { message.error(t('userManage.aiStatsLoadFailed')) }
   aiStatsLoading.value = false
 }
 
@@ -791,13 +793,13 @@ const handleAiStatsTableChange = (pag) => { aiStatsPagination.current = pag.curr
 // CRUD Modals
 const showCreateModal = () => { isEdit.value = false; Object.assign(form, { username: '', password: '', nickname: '', email: '', role: 'user', status: 'active' }); modalVisible.value = true }
 const showEditModal = (u) => { isEdit.value = true; editingUser.value = u; Object.assign(form, { username: u.username, nickname: u.nickname, email: u.email, role: u.role, status: u.status }); modalVisible.value = true }
-const handleModalOk = async () => { modalLoading.value = true; try { if (isEdit.value && editingUser.value) { await updateUser(editingUser.value.id, form); message.success('更新成功') } else { await createUser(form); message.success('创建成功') }; modalVisible.value = false; loadUsers() } catch (e) { message.error('操作失败') }; modalLoading.value = false }
+const handleModalOk = async () => { modalLoading.value = true; try { if (isEdit.value && editingUser.value) { await updateUser(editingUser.value.id, form); message.success(t('common.updateSuccess')) } else { await createUser(form); message.success(t('common.createSuccess')) }; modalVisible.value = false; loadUsers() } catch (e) { message.error(t('common.failed')) }; modalLoading.value = false }
 const handleModalCancel = () => { modalVisible.value = false }
-const handleDelete = async (id) => { try { await deleteUser(id); message.success('已删除'); loadUsers() } catch (e) { message.error('删除失败') } }
+const handleDelete = async (id) => { try { await deleteUser(id); message.success(t('common.deleted')); loadUsers() } catch (e) { message.error(t('common.deleteFailed')) } }
 const showResetPasswordModal = (u) => { resetPasswordUserId.value = u.id; resetPasswordForm.new_password = ''; resetPasswordVisible.value = true }
-const handleResetPassword = async () => { try { await resetUserPassword({ user_id: resetPasswordUserId.value!, new_password: resetPasswordForm.new_password }); message.success('密码已重置'); resetPasswordVisible.value = false } catch (e) { message.error('重置失败') } }
+const handleResetPassword = async () => { try { await resetUserPassword({ user_id: resetPasswordUserId.value!, new_password: resetPasswordForm.new_password }); message.success(t('userManage.passwordResetSuccess')); resetPasswordVisible.value = false } catch (e) { message.error(t('userManage.resetFailed')) } }
 const showCreditsModal = (u) => { creditsEditingUser.value = u; newCredits.value = u.credits; creditsRemark.value = ''; creditsModalVisible.value = true }
-const handleSetCredits = async () => { try { await setUserCredits({ user_id: creditsEditingUser.value!.id, credits: newCredits.value, remark: creditsRemark.value }); message.success('积分已更新'); creditsModalVisible.value = false; loadUsers() } catch (e) { message.error('更新失败') } }
+const handleSetCredits = async () => { try { await setUserCredits({ user_id: creditsEditingUser.value!.id, credits: newCredits.value, remark: creditsRemark.value }); message.success(t('userManage.creditsUpdated')); creditsModalVisible.value = false; loadUsers() } catch (e) { message.error(t('common.updateFailed')) } }
 const showVipModal = (u) => { vipEditingUser.value = u; vipDays.value = 30; vipCustomDate.value = null; vipRemark.value = ''; vipModalVisible.value = true }
 
 const handleSetVip = async () => {
@@ -808,7 +810,7 @@ const handleSetVip = async () => {
 
   if (vipDays.value === -1) {
     if (!vipCustomDate.value) {
-      message.error('请选择日期')
+      message.error(t('common.pleaseSelectDate'))
       return
     }
     data.vip_expires_at = vipCustomDate.value.toISOString()
@@ -820,7 +822,7 @@ const handleSetVip = async () => {
   try {
     const res = await setUserVip(data)
     if (res.code === 1) {
-      message.success('VIP设置成功')
+      message.success(t('userManage.vipSetSuccess'))
       vipModalVisible.value = false
       loadUsers()
     }
@@ -841,7 +843,7 @@ const showAssignRoleModal = async (record: any) => {
     availableRoles.value = rolesRes.data || []
     selectedRoleIds.value = (userRolesRes.data || []).map((r: any) => r.id)
   } catch (error) {
-    message.error('加载角色数据失败')
+    message.error(t('userManage.roleLoadFailed'))
   }
 }
 
@@ -852,7 +854,7 @@ const handleAssignRoles = async () => {
   try {
     const res = await assignRolesToUser(roleEditingUser.value.id, selectedRoleIds.value)
     if (res.code === 1) {
-      message.success('角色分配成功')
+      message.success(t('userManage.roleAssigned'))
       roleModalVisible.value = false
       loadUsers()
     }
@@ -862,7 +864,7 @@ const handleAssignRoles = async () => {
 }
 
 const loadRoles = async () => { try { const res = await getRoles(); if (res.code === 1) roles.value = res.data.roles || [] } catch (e) {} }
-const handleExport = async () => { exporting.value = true; try { const blob = await exportUsers({ search: searchKeyword.value }); const url = window.URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `users_${dayjs().format('YYYYMMDD')}.csv`; link.click(); message.success('导出成功') } catch (e) { message.error('导出失败') }; exporting.value = false }
+const handleExport = async () => { exporting.value = true; try { const blob = await exportUsers({ search: searchKeyword.value }); const url = window.URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `users_${dayjs().format('YYYYMMDD')}.csv`; link.click(); message.success(t('common.exportSuccess')) } catch (e) { message.error(t('common.exportFailed')) }; exporting.value = false }
 
 onMounted(() => {
   loadUsers()

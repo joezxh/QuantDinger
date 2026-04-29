@@ -161,6 +161,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined, SyncOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
@@ -169,6 +170,7 @@ import {
   runSyncJob, getSyncRuns, getSyncStatus
 } from '@/api/sync'
 
+const { t } = useI18n()
 const loading = ref(false)
 const modalLoading = ref(false)
 const modalVisible = ref(false)
@@ -185,22 +187,22 @@ const statusTextMap = { success: '成功', failed: '失败', running: '运行中
 
 const jobColumns = [
   { title: 'ID', dataIndex: 'id', width: 60 },
-  { title: '名称', dataIndex: 'name' },
+  { title: t('common.name'), dataIndex: 'name' },
   { title: '数据源', dataIndex: 'source_type', key: 'source_type', width: 120 },
   { title: '间隔(min)', dataIndex: 'interval_minutes', width: 100 },
-  { title: '状态', dataIndex: 'enabled', key: 'enabled', width: 80 },
+  { title: t('common.status'), dataIndex: 'enabled', key: 'enabled', width: 80 },
   { title: '上次执行', dataIndex: 'last_run_at', key: 'last_run_at', width: 160 },
   { title: '结果', dataIndex: 'last_status', key: 'last_status', width: 100 },
-  { title: '操作', key: 'action', width: 240 }
+  { title: t('common.action'), key: 'action', width: 240 }
 ]
 
 const runColumns = [
   { title: 'ID', dataIndex: 'id', width: 50 },
-  { title: '类型', dataIndex: 'run_type', key: 'run_type', width: 80 },
-  { title: '状态', dataIndex: 'status', key: 'status', width: 80 },
+  { title: t('common.type'), dataIndex: 'run_type', key: 'run_type', width: 80 },
+  { title: t('common.status'), dataIndex: 'status', key: 'status', width: 80 },
   { title: '数据量', key: 'items', width: 130 },
-  { title: '时间', key: 'time', width: 220 },
-  { title: '错误', dataIndex: 'error_message', ellipsis: true }
+  { title: t('common.time'), key: 'time', width: 220 },
+  { title: t('common.error'), dataIndex: 'error_message', ellipsis: true }
 ]
 
 const formState = reactive({
@@ -254,7 +256,7 @@ const handleModalOk = async () => {
       ? await updateSyncJob(editId.value, formState)
       : await createSyncJob(formState)
     if (res.code === 1) {
-      message.success('操作成功')
+      message.success(t('common.success'))
       modalVisible.value = false
       loadStatus()
     }
@@ -266,7 +268,7 @@ const handleModalOk = async () => {
 const handleDelete = async (id: number) => {
   const res = await deleteSyncJob(id)
   if (res.code === 1) {
-    message.success('已删除')
+    message.success(t('common.deleted'))
     loadStatus()
   }
 }

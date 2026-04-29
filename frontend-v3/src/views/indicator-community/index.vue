@@ -24,7 +24,7 @@
       <!-- Admin Controls -->
       <div v-if="isAdmin" class="admin-controls">
         <a-tabs v-model:activeKey="activeTab" @change="handleTabChange">
-          <a-tab-pane key="market" tab="指标市场" />
+          <a-tab-pane key="market" :tab="t('menu.indicatorMarket')" />
           <a-tab-pane key="review">
             <template #tab>
               <a-badge :count="reviewStats.pending" :offset="[12, 0]">审核管理</a-badge>
@@ -126,13 +126,13 @@
               </template>
               <template v-if="column.key === 'actions'">
                 <div class="table-actions">
-                  <a-button type="link" size="small" @click="openDetail(record)">查看</a-button>
+                  <a-button type="link" size="small" @click="openDetail(record)">{{ t('common.view') }}</a-button>
                   <template v-if="record.review_status === 'pending'">
                     <a-button type="link" size="small" @click="handleReview(record, 'approve')">通过</a-button>
                     <a-button type="link" size="small" danger @click="handleReview(record, 'reject')">驳回</a-button>
                   </template>
                   <a-popconfirm title="确定删除吗？" @confirm="handleDelete(record)">
-                    <a-button type="link" size="small" danger>删除</a-button>
+                    <a-button type="link" size="small" danger>{{ t('common.delete') }}</a-button>
                   </a-popconfirm>
                 </div>
               </template>
@@ -173,7 +173,7 @@
                 </template>
               </a-list-item-meta>
               <template #actions>
-                <a-button type="link" @click="openDetail(item.indicator)">详情</a-button>
+                <a-button type="link" @click="openDetail(item.indicator)">{{ t('common.detail') }}</a-button>
                 <a-button type="primary" size="small" @click="goToUse">使用</a-button>
               </template>
             </a-list-item>
@@ -199,13 +199,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { 
   ShopOutlined, PlusOutlined, ShoppingOutlined, 
   SearchOutlined, RobotOutlined 
 } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/store/user'
+import { useUserStore } from '@/stores/user'
 import IndicatorCard from './components/IndicatorCard.vue'
 import IndicatorDetail from './components/IndicatorDetail.vue'
 import { 
@@ -217,6 +218,7 @@ import {
   adminDeleteIndicator
 } from '@/api/indicator'
 
+const { t } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
 
@@ -265,10 +267,10 @@ const reviewPagination = reactive({
 const reviewColumns = [
   { title: '指标名称', dataIndex: 'name', key: 'name' },
   { title: '作者', key: 'author' },
-  { title: '价格', key: 'price' },
-  { title: '状态', key: 'status' },
-  { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 180 },
-  { title: '操作', key: 'actions', width: 220 }
+  { title: t('quickTrade.price'), key: 'price' },
+  { title: t('common.status'), key: 'status' },
+  { title: t('common.createdAt'), dataIndex: 'created_at', key: 'created_at', width: 180 },
+  { title: t('common.action'), key: 'actions', width: 220 }
 ]
 
 onMounted(() => {
@@ -433,7 +435,7 @@ const handleDelete = async (indicator: any) => {
       loadReviewStats()
     }
   } catch (e) {
-    message.error('删除失败')
+    message.error(t('common.deleteFailed'))
   }
 }
 

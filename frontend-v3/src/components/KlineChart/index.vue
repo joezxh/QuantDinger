@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, shallowRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { createChart, IChartApi, ISeriesApi, CandlestickData, LineData } from 'lightweight-charts'
 
 export interface KlineData extends CandlestickData {
@@ -15,6 +16,7 @@ export interface KlineData extends CandlestickData {
   volume?: number
 }
 
+const { t } = useI18n()
 const props = withDefaults(defineProps<{
   data?: KlineData[]
   theme?: 'dark' | 'light'

@@ -26,9 +26,9 @@
         </template>
         <template v-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="editKey(record)">编辑</a-button>
+            <a-button type="link" size="small" @click="editKey(record)">{{ t('common.edit') }}</a-button>
             <a-popconfirm title="确定删除?" @confirm="handleDelete(record.id)">
-              <a-button type="link" danger size="small">删除</a-button>
+              <a-button type="link" danger size="small">{{ t('common.delete') }}</a-button>
             </a-popconfirm>
           </a-space>
         </template>
@@ -42,10 +42,10 @@
       :confirmLoading="saving"
     >
       <a-form layout="vertical">
-        <a-form-item label="名称" required>
+        <a-form-item :label="t('common.name')" required>
           <a-input v-model:value="form.name" placeholder="如: Binance Main Account" />
         </a-form-item>
-        <a-form-item label="交易所" required>
+        <a-form-item :label="t('common.exchange')" required>
           <a-select v-model:value="form.exchange">
             <a-select-option value="binance">Binance</a-select-option>
             <a-select-option value="okx">OKX</a-select-option>
@@ -57,7 +57,7 @@
         <a-form-item label="API Secret">
           <a-input-password v-model:value="form.api_secret" placeholder="输入API Secret" />
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.status')">
           <a-switch v-model:checked="form.is_active" />
         </a-form-item>
       </a-form>
@@ -67,10 +67,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { getDataSourceKeys, saveDataSourceKey, deleteDataSourceKey } from '@/api/data-source'
 
+const { t } = useI18n()
 const loading = ref(false)
 const data = ref<any[]>([])
 
@@ -87,12 +89,12 @@ const form = reactive({
 
 const columns = [
   { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-  { title: '名称', dataIndex: 'name', key: 'name' },
-  { title: '交易所', dataIndex: 'exchange', key: 'exchange' },
+  { title: t('common.name'), dataIndex: 'name', key: 'name' },
+  { title: t('common.exchange'), dataIndex: 'exchange', key: 'exchange' },
   { title: 'API Key', dataIndex: 'api_key', key: 'api_key' },
-  { title: '状态', dataIndex: 'is_active', key: 'is_active' },
-  { title: '创建时间', dataIndex: 'created_at', key: 'created_at' },
-  { title: '操作', key: 'action', width: 150 }
+  { title: t('common.status'), dataIndex: 'is_active', key: 'is_active' },
+  { title: t('common.createdAt'), dataIndex: 'created_at', key: 'created_at' },
+  { title: t('common.action'), key: 'action', width: 150 }
 ]
 
 const loadData = async () => {
@@ -103,7 +105,7 @@ const loadData = async () => {
       data.value = res.data || []
     }
   } catch (error) {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -137,7 +139,7 @@ const handleSave = async () => {
     const payload = editingId.value ? { ...form, id: editingId.value } : form
     const res: any = await saveDataSourceKey(payload)
     if (res.code === 1) {
-      message.success('保存成功')
+      message.success(t('common.saveSuccess'))
       modalVisible.value = false
       loadData()
     } else {

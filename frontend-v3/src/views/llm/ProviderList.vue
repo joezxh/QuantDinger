@@ -25,7 +25,7 @@
           <a-space>
             <a @click="handleEdit(record)">编辑</a>
             <a-divider type="vertical" />
-            <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
+            <a-popconfirm :title="t('common.confirmDelete')" @confirm="handleDelete(record.id)">
               <a class="text-danger">删除</a>
             </a-popconfirm>
           </a-space>
@@ -60,7 +60,7 @@
             <a-select-option value="ollama">Ollama</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="状态" name="status">
+        <a-form-item :label="t('common.status')" name="status">
           <a-switch v-model:checked="formState.active" />
         </a-form-item>
       </a-form>
@@ -70,18 +70,20 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { getProviders, saveProvider, deleteProvider } from '@/api/llm'
 
+const { t } = useI18n()
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 80 },
-  { title: '名称', dataIndex: 'name' },
+  { title: t('common.name'), dataIndex: 'name' },
   { title: '代码', dataIndex: 'code' },
   { title: 'API 地址', dataIndex: 'base_url' },
   { title: 'API 类型', dataIndex: 'api_type' },
-  { title: '状态', dataIndex: 'status' },
-  { title: '操作', key: 'action', width: 150 }
+  { title: t('common.status'), dataIndex: 'status' },
+  { title: t('common.action'), key: 'action', width: 150 }
 ]
 
 const loading = ref(false)
@@ -118,7 +120,7 @@ const loadData = async () => {
     const res: any = await getProviders()
     data.value = res.data || []
   } catch (e) {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -163,11 +165,11 @@ const handleOk = async () => {
     }
     if (editId.value) params.id = editId.value
     await saveProvider(params)
-    message.success('保存成功')
+    message.success(t('common.saveSuccess'))
     visible.value = false
     loadData()
   } catch (e) {
-    message.error('保存失败')
+    message.error(t('common.saveFailed'))
   } finally {
     confirmLoading.value = false
   }
@@ -179,7 +181,7 @@ const handleDelete = async (id: number) => {
     message.success('删除成功')
     loadData()
   } catch (e) {
-    message.error('删除失败')
+    message.error(t('common.deleteFailed'))
   }
 }
 

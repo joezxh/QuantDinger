@@ -24,7 +24,7 @@
         </div>
       </template>
       <template v-else-if="groupedStrategies.length === 0">
-        <a-empty description="暂无策略" />
+        <a-empty :description="t('trading-assistant.empty.title')" />
       </template>
       <template v-else>
         <div v-for="group in groupedStrategies" :key="group.name" class="group-section">
@@ -64,7 +64,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const props = defineProps<{
   strategies: any[]
   selectedId: number | null

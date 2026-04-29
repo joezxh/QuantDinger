@@ -16,7 +16,7 @@
         <a-form-item name="username">
           <a-input
             v-model:value="loginForm.username"
-            placeholder="Username"
+            :placeholder="t('user.login.username')"
           >
             <template #prefix>
               <UserOutlined style="color: rgba(0,0,0,.25)" />
@@ -27,7 +27,7 @@
         <a-form-item name="password">
           <a-input-password
             v-model:value="loginForm.password"
-            placeholder="Password"
+            :placeholder="t('user.login.password')"
           >
             <template #prefix>
               <LockOutlined style="color: rgba(0,0,0,.25)" />
@@ -43,13 +43,13 @@
             block
             size="large"
           >
-            Login
+            {{ t('user.login.submit') }}
           </a-button>
         </a-form-item>
       </a-form>
 
       <div class="login-footer">
-        <a @click="$router.push('/register')">Don't have an account? Register</a>
+        <a @click="$router.push('/register')">{{ t('user.login.registerHint') }}</a>
       </div>
     </div>
   </div>
@@ -58,12 +58,14 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 const loading = ref(false)
 const loginForm = reactive({
@@ -72,18 +74,18 @@ const loginForm = reactive({
 })
 
 const rules = {
-  username: [{ required: true, message: 'Please enter username', trigger: 'blur' }],
-  password: [{ required: true, message: 'Please enter password', trigger: 'blur' }],
+  username: [{ required: true, message: t('user.login.usernameRequired'), trigger: 'blur' }],
+  password: [{ required: true, message: t('user.login.passwordRequired'), trigger: 'blur' }],
 }
 
 async function handleLogin() {
   loading.value = true
   try {
     await userStore.login(loginForm)
-    message.success('Login successful')
+    message.success(t('user.login.success'))
     router.push('/')
   } catch (e: any) {
-    message.error(e.message || 'Login failed')
+    message.error(e.message || t('user.login.failed'))
   } finally {
     loading.value = false
   }

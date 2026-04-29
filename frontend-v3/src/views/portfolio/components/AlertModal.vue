@@ -57,8 +57,10 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 
+const { t } = useI18n()
 const props = defineProps<{
   visible: boolean
   editingAlert: any

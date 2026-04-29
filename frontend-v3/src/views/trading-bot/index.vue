@@ -103,7 +103,7 @@
     <!-- Bot List -->
     <div class="section-title" style="margin-top: 24px;">
       <h3>我的机器人</h3>
-      <a-button type="primary" size="small" @click="loadBots" :loading="loading">刷新</a-button>
+      <a-button type="primary" size="small" @click="loadBots" :loading="loading">{{ t('common.refresh') }}</a-button>
     </div>
     <a-table
       :columns="columns"
@@ -131,7 +131,7 @@
         </template>
         <template v-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="viewDetail(record)">详情</a-button>
+            <a-button type="link" size="small" @click="viewDetail(record)">{{ t('common.detail') }}</a-button>
             <a-button 
               type="link" 
               size="small" 
@@ -149,6 +149,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { 
   RobotOutlined, WalletOutlined, StockOutlined, PlayCircleOutlined, PauseCircleOutlined,
   AppstoreOutlined, LineChartOutlined, BulbOutlined 
@@ -156,6 +157,7 @@ import {
 import { message } from 'ant-design-vue'
 import { getStrategyList, startStrategy, stopStrategy } from '@/api/strategy'
 
+const { t } = useI18n()
 const loading = ref(false)
 const bots = ref<any[]>([])
 const showAiDialog = ref(false)
@@ -174,11 +176,11 @@ const stoppedCount = computed(() => totalCount.value - runningCount.value)
 
 const columns = [
   { title: '机器人名称', dataIndex: 'name', key: 'name' },
-  { title: '交易对', dataIndex: 'symbol', key: 'symbol' },
-  { title: '状态', dataIndex: 'status', key: 'status' },
+  { title: t('common.tradingPair'), dataIndex: 'symbol', key: 'symbol' },
+  { title: t('common.status'), dataIndex: 'status', key: 'status' },
   { title: '当前盈亏', dataIndex: 'unrealized_pnl', key: 'pnl' },
   { title: '最后运行', dataIndex: 'last_run_at', key: 'last_run_at' },
-  { title: '操作', key: 'action' }
+  { title: t('common.action'), key: 'action' }
 ]
 
 const formatNumber = (num: number) => {

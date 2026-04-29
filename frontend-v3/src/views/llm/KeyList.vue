@@ -16,15 +16,15 @@
     >
       <template #bodyCell="{ column, text, record }">
         <template v-if="column.dataIndex === 'status'">
-          <a-tag v-if="text === 1" color="green">正常</a-tag>
+          <a-tag v-if="text === 1" color="green">{{ t('dataSource.status.active') }}</a-tag>
           <a-tag v-else-if="text === 2" color="orange">已损坏</a-tag>
-          <a-tag v-else color="red">禁用</a-tag>
+          <a-tag v-else color="red">{{ t('dataSource.status.inactive') }}</a-tag>
         </template>
         <template v-if="column.key === 'action'">
           <a-space>
             <a @click="handleEdit(record)">编辑</a>
             <a-divider type="vertical" />
-            <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
+            <a-popconfirm :title="t('common.confirmDelete')" @confirm="handleDelete(record.id)">
               <a class="text-danger">删除</a>
             </a-popconfirm>
           </a-space>
@@ -59,7 +59,7 @@
         <a-form-item label="公开" name="is_public">
           <a-switch v-model:checked="formState.is_public" />
         </a-form-item>
-        <a-form-item label="状态" name="status">
+        <a-form-item :label="t('common.status')" name="status">
           <a-select v-model:value="formState.status">
             <a-select-option :value="1">正常</a-select-option>
             <a-select-option :value="0">禁用</a-select-option>
@@ -73,17 +73,19 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { getKeys, saveKey, deleteKey, getProviders } from '@/api/llm'
 
+const { t } = useI18n()
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 80 },
   { title: '供应商', dataIndex: 'provider_name' },
-  { title: '名称', dataIndex: 'name' },
+  { title: t('common.name'), dataIndex: 'name' },
   { title: '权重', dataIndex: 'weight', width: 100 },
-  { title: '状态', dataIndex: 'status', width: 120 },
-  { title: '操作', key: 'action', width: 150 }
+  { title: t('common.status'), dataIndex: 'status', width: 120 },
+  { title: t('common.action'), key: 'action', width: 150 }
 ]
 
 const loading = ref(false)
@@ -109,7 +111,7 @@ const loadData = async () => {
     const res: any = await getKeys()
     data.value = res.data || []
   } catch (e) {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -165,11 +167,11 @@ const handleOk = async () => {
     }
     if (editId.value) params.id = editId.value
     await saveKey(params)
-    message.success('保存成功')
+    message.success(t('common.saveSuccess'))
     visible.value = false
     loadData()
   } catch (e) {
-    message.error('保存失败')
+    message.error(t('common.saveFailed'))
   } finally {
     confirmLoading.value = false
   }
@@ -181,7 +183,7 @@ const handleDelete = async (id: number) => {
     message.success('删除成功')
     loadData()
   } catch (e) {
-    message.error('删除失败')
+    message.error(t('common.deleteFailed'))
   }
 }
 

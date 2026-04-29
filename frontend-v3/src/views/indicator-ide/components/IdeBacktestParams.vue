@@ -83,9 +83,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ControlOutlined, ThunderboltFilled, HistoryOutlined } from '@ant-design/icons-vue'
 import dayjs, { Dayjs } from 'dayjs'
 
+const { t } = useI18n()
 const props = defineProps<{
   loading: boolean
 }>()

@@ -153,6 +153,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import { SyncOutlined, CodeOutlined, ShoppingCartOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
@@ -168,6 +169,7 @@ import {
   updateIndicatorComment
 } from '@/api/indicator'
 
+const { t } = useI18n()
 const props = defineProps<{
   visible: boolean
   indicatorId: number | string | null

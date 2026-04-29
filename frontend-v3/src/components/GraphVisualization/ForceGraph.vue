@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import * as echarts from 'echarts'
 
 interface Node {
@@ -23,6 +24,7 @@ interface Edge {
   [key: string]: any
 }
 
+const { t } = useI18n()
 const props = defineProps({
   nodes: {
     type: Array as () => Node[],

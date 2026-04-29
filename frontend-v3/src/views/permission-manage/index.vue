@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2 class="page-title">
         <LockOutlined />
-        <span>权限管理</span>
+        <span>{{ t('menu.permissionManage') }}</span>
       </h2>
       <p class="page-desc">管理系统菜单和权限节点</p>
     </div>
@@ -83,7 +83,7 @@
       width="560"
     >
       <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }">
-        <a-form-item label="类型">
+        <a-form-item :label="t('common.type')">
           <a-radio-group v-model:value="form.type" :disabled="!!editingPerm">
             <a-radio value="dir">目录</a-radio>
             <a-radio value="menu">菜单</a-radio>
@@ -110,7 +110,7 @@
             allow-clear
           />
         </a-form-item>
-        <a-form-item v-if="form.type === 'menu'" label="路由路径">
+        <a-form-item v-if="form.type === 'menu'" :label="t('menuManage.column.path')">
           <a-input v-model:value="form.path" placeholder="/user-manage" />
         </a-form-item>
         <a-form-item v-if="form.type === 'menu'" label="组件路径">
@@ -125,7 +125,7 @@
         <a-form-item v-if="form.type !== 'button'" label="可见">
           <a-switch v-model:checked="form.visible" />
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.status')">
           <a-select v-model:value="form.status">
             <a-select-option value="active">启用</a-select-option>
             <a-select-option value="disabled">禁用</a-select-option>
@@ -138,6 +138,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   LockOutlined,
@@ -200,6 +201,7 @@ const TYPE_MAP: Record<string, { label: string; color: string }> = {
   button: { label: '按钮', color: 'orange' },
 }
 
+const { t } = useI18n()
 const loading = ref(false)
 const treeData = ref<Permission[]>([])
 const flatList = ref<FlatPermission[]>([])
@@ -222,11 +224,11 @@ const form = reactive<PermissionForm>({
 
 const columns = [
   { title: '权限名称', dataIndex: 'name', key: 'name', slots: { customRender: 'name' } },
-  { title: '类型', dataIndex: 'type', key: 'type', slots: { customRender: 'type' }, width: 80 },
+  { title: t('common.type'), dataIndex: 'type', key: 'type', slots: { customRender: 'type' }, width: 80 },
   { title: '权限编码', dataIndex: 'permission_code', key: 'permission_code', width: 200 },
-  { title: '路由路径', dataIndex: 'path', key: 'path', ellipsis: true, width: 160 },
-  { title: '状态', dataIndex: 'status', key: 'status', slots: { customRender: 'status' }, width: 80 },
-  { title: '操作', key: 'action', slots: { customRender: 'action' }, width: 120 },
+  { title: t('menuManage.column.path'), dataIndex: 'path', key: 'path', ellipsis: true, width: 160 },
+  { title: t('common.status'), dataIndex: 'status', key: 'status', slots: { customRender: 'status' }, width: 80 },
+  { title: t('common.action'), key: 'action', slots: { customRender: 'action' }, width: 120 },
 ]
 
 const modalTitle = computed(() =>

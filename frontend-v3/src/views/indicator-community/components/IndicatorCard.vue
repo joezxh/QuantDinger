@@ -63,8 +63,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { CheckCircleOutlined, DownloadOutlined, StarFilled } from '@ant-design/icons-vue'
 
+const { t } = useI18n()
 const props = defineProps<{
   indicator: any
 }>()

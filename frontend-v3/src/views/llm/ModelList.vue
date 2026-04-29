@@ -22,7 +22,7 @@
           <a-space>
             <a @click="handleEdit(record)">编辑</a>
             <a-divider type="vertical" />
-            <a-popconfirm title="确定删除？" @confirm="handleDelete(record.id)">
+            <a-popconfirm :title="t('common.confirmDelete')" @confirm="handleDelete(record.id)">
               <a class="text-danger">删除</a>
             </a-popconfirm>
           </a-space>
@@ -70,17 +70,19 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { getModels, saveModel, deleteModel, getProviders } from '@/api/llm'
 
+const { t } = useI18n()
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 80 },
   { title: '供应商', dataIndex: 'provider_name' },
   { title: '模型名称', dataIndex: 'model_name' },
   { title: '显示名称', dataIndex: 'display_name' },
   { title: '均衡策略', dataIndex: 'lb_strategy' },
-  { title: '操作', key: 'action', width: 150 }
+  { title: t('common.action'), key: 'action', width: 150 }
 ]
 
 const loading = ref(false)
@@ -117,7 +119,7 @@ const loadData = async () => {
     const res: any = await getModels()
     data.value = res.data || []
   } catch (e) {
-    message.error('加载失败')
+    message.error(t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -170,11 +172,11 @@ const handleOk = async () => {
     const params: any = { ...formState }
     if (editId.value) params.id = editId.value
     await saveModel(params)
-    message.success('保存成功')
+    message.success(t('common.saveSuccess'))
     visible.value = false
     loadData()
   } catch (e) {
-    message.error('保存失败')
+    message.error(t('common.saveFailed'))
   } finally {
     confirmLoading.value = false
   }
@@ -186,7 +188,7 @@ const handleDelete = async (id: number) => {
     message.success('删除成功')
     loadData()
   } catch (e) {
-    message.error('删除失败')
+    message.error(t('common.deleteFailed'))
   }
 }
 

@@ -147,9 +147,9 @@
           </template>
           <template v-if="column.key === 'actions'">
             <div class="table-ops">
-              <a-button type="link" size="small" @click="$emit('edit-position', record)">编辑</a-button>
+              <a-button type="link" size="small" @click="$emit('edit-position', record)">{{ t('common.edit') }}</a-button>
               <a-popconfirm title="确定删除吗？" @confirm="$emit('delete-position', record.id)">
-                <a-button type="link" size="small" danger>删除</a-button>
+                <a-button type="link" size="small" danger>{{ t('common.delete') }}</a-button>
               </a-popconfirm>
             </div>
           </template>
@@ -161,12 +161,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { 
   StockOutlined, PlusOutlined, AppstoreOutlined, BarsOutlined, 
   BellOutlined, BellFilled, EditOutlined, DeleteOutlined, 
   FolderOutlined 
 } from '@ant-design/icons-vue'
 
+const { t } = useI18n()
 const props = defineProps<{
   positions: any[]
   groups: any[]
@@ -180,13 +182,13 @@ const selectedGroup = ref('')
 
 const columns = [
   { title: '标的', key: 'symbol', fixed: 'left' },
-  { title: '市场', key: 'market' },
-  { title: '数量', dataIndex: 'quantity', align: 'right' },
-  { title: '成本价', dataIndex: 'entry_price', align: 'right' },
-  { title: '当前价', key: 'price', align: 'right' },
-  { title: '盈亏', key: 'pnl', align: 'right' },
+  { title: t('common.market'), key: 'market' },
+  { title: t('portfolio.quantity'), dataIndex: 'quantity', align: 'right' },
+  { title: t('portfolio.avgCost'), dataIndex: 'entry_price', align: 'right' },
+  { title: t('portfolio.currentPrice'), key: 'price', align: 'right' },
+  { title: t('portfolio.pnl'), key: 'pnl', align: 'right' },
   { title: '市值', dataIndex: 'market_value', align: 'right' },
-  { title: '操作', key: 'actions', width: 120, fixed: 'right' }
+  { title: t('common.action'), key: 'actions', width: 120, fixed: 'right' }
 ]
 
 const getMarketColor = (market: string) => {

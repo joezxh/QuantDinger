@@ -66,8 +66,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { createChart, IChartApi, ILineSeriesApi } from 'lightweight-charts'
 
+const { t } = useI18n()
 const props = defineProps<{
   result: any
   loading: boolean
@@ -78,10 +80,10 @@ let chart: IChartApi | null = null
 let lineSeries: ILineSeriesApi<'Line'> | null = null
 
 const columns = [
-  { title: '时间', dataIndex: 'time', key: 'time', width: 140 },
-  { title: '类型', key: 'side', width: 60 },
-  { title: '价格', dataIndex: 'price', key: 'price', align: 'right' },
-  { title: '盈亏', key: 'pnl', align: 'right' }
+  { title: t('common.time'), dataIndex: 'time', key: 'time', width: 140 },
+  { title: t('common.type'), key: 'side', width: 60 },
+  { title: t('quickTrade.price'), dataIndex: 'price', key: 'price', align: 'right' },
+  { title: t('portfolio.pnl'), key: 'pnl', align: 'right' }
 ]
 
 const initChart = () => {

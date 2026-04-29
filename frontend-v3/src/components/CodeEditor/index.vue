@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { EditorState } from '@codemirror/state'
 import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightSpecialChars, drawSelection, dropCursor, rectangularSelection, crosshairCursor, highlightActiveLine } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
@@ -13,6 +14,7 @@ import { foldGutter, indentOnInput, syntaxHighlighting, defaultHighlightStyle, b
 import { python } from '@codemirror/lang-python'
 import { oneDark } from '@codemirror/theme-one-dark'
 
+const { t } = useI18n()
 const props = defineProps<{
   modelValue: string
   readonly?: boolean

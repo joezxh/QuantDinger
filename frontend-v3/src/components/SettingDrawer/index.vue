@@ -101,11 +101,13 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { SettingOutlined, CloseOutlined, CheckOutlined } from '@ant-design/icons-vue'
 import { useAppStore } from '@/stores/app'
 import { message } from 'ant-design-vue'
 import type { ThemeType } from '@/utils/themeManager'
 
+const { t } = useI18n()
 const appStore = useAppStore()
 const visible = ref(false)
 

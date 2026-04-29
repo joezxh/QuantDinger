@@ -23,7 +23,7 @@
           <div class="workflow-integration">
             <a-row :gutter="24">
               <a-col :span="12">
-                <a-card title="Dify 工作流" hoverable @click="$router.push('/dify-workflow')">
+                <a-card :title="t('menu.difyWorkflow')" hoverable @click="$router.push('/dify-workflow')">
                   <template #extra><ArrowRightOutlined /></template>
                   <div class="card-content">
                     <p>配置和管理 AI 分析工作流，对接 Dify 平台实现自定义分析 Pipeline。</p>
@@ -32,7 +32,7 @@
                 </a-card>
               </a-col>
               <a-col :span="12">
-                <a-card title="知识图谱分析" hoverable @click="$router.push('/graph-analysis')">
+                <a-card :title="t('menu.graphAnalysis')" hoverable @click="$router.push('/graph-analysis')">
                   <template #extra><ArrowRightOutlined /></template>
                   <div class="card-content">
                     <p>基于图谱的跨域关联推理与事件影响分析，支持多市场资产关联查询。</p>
@@ -50,12 +50,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ArrowRightOutlined } from '@ant-design/icons-vue'
 import ProviderList from './ProviderList.vue'
 import KeyList from './KeyList.vue'
 import ModelList from './ModelList.vue'
 import LlmStats from './LLMStats.vue'
 
+const { t } = useI18n()
 const activeTab = ref('providers')
 </script>
 

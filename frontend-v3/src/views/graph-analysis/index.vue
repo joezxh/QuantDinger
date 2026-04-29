@@ -3,46 +3,46 @@
     <div class="page-header">
       <h2 class="page-title">
         <NodeIndexOutlined />
-        <span>知识图谱分析</span>
+        <span>{{ t('graphAnalysis.title') }}</span>
       </h2>
-      <p class="page-desc">基于图谱的跨域关联推理与事件影响分析</p>
+      <p class="page-desc">{{ t('graphAnalysis.subtitle') }}</p>
     </div>
 
     <a-card class="search-card" :bordered="false">
       <a-form layout="inline">
-        <a-form-item label="市场">
+        <a-form-item :label="t('common.market')">
           <a-select v-model:value="market" style="width: 140px">
-            <a-select-option value="crypto">加密货币</a-select-option>
-            <a-select-option value="usstock">美股</a-select-option>
-            <a-select-option value="hkstock">港股</a-select-option>
-            <a-select-option value="cnstock">A股</a-select-option>
-            <a-select-option value="polymarket">预测市场</a-select-option>
+            <a-select-option value="crypto">{{ t('market.crypto') }}</a-select-option>
+            <a-select-option value="usstock">{{ t('graphAnalysis.usStock') }}</a-select-option>
+            <a-select-option value="hkstock">{{ t('graphAnalysis.hkStock') }}</a-select-option>
+            <a-select-option value="cnstock">{{ t('graphAnalysis.cnStock') }}</a-select-option>
+            <a-select-option value="polymarket">{{ t('graphAnalysis.predictMarket') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="品种">
-          <a-input v-model:value="symbol" placeholder="如 BTC/USDT 或 AAPL" style="width: 180px" />
+        <a-form-item :label="t('common.symbol')">
+          <a-input v-model:value="symbol" :placeholder="t('graphAnalysis.symbolPlaceholder')" style="width: 180px" />
         </a-form-item>
-        <a-form-item label="分析类型">
+        <a-form-item :label="t('graphAnalysis.analysisType')">
           <a-select v-model:value="analysisType" style="width: 140px">
-            <a-select-option value="context">图谱上下文</a-select-option>
-            <a-select-option value="contagion">传染路径</a-select-option>
-            <a-select-option value="smartMoney">聪明钱信号</a-select-option>
-            <a-select-option value="eventImpact">事件影响链</a-select-option>
+            <a-select-option value="context">{{ t('graphAnalysis.contextOption') }}</a-select-option>
+            <a-select-option value="contagion">{{ t('graphAnalysis.contagionOption') }}</a-select-option>
+            <a-select-option value="smartMoney">{{ t('graphAnalysis.smartMoneyOption') }}</a-select-option>
+            <a-select-option value="eventImpact">{{ t('graphAnalysis.eventImpactOption') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item v-if="analysisType === 'contagion'" label="目标品种">
-          <a-input v-model:value="toSymbol" placeholder="如 ETH/USDT" style="width: 140px" />
+        <a-form-item v-if="analysisType === 'contagion'" :label="t('graphAnalysis.targetSymbol')">
+          <a-input v-model:value="toSymbol" :placeholder="t('graphAnalysis.symbolPlaceholder')" style="width: 140px" />
         </a-form-item>
-        <a-form-item v-if="analysisType === 'eventImpact'" label="事件UID">
-          <a-input v-model:value="eventUid" placeholder="事件唯一标识" style="width: 180px" />
+        <a-form-item v-if="analysisType === 'eventImpact'" :label="t('graphAnalysis.eventUid')">
+          <a-input v-model:value="eventUid" :placeholder="t('graphAnalysis.eventUidPlaceholder')" style="width: 180px" />
         </a-form-item>
         <a-form-item>
           <a-space>
             <a-button type="primary" @click="onQuery" :loading="loading">
-              <SearchOutlined /> 查询图谱
+              <SearchOutlined /> {{ t('graphAnalysis.queryGraphBtn') }}
             </a-button>
             <a-button @click="loadQuality" :loading="qualityLoading">
-              <BarChartOutlined /> 质量监控
+              <BarChartOutlined /> {{ t('graphAnalysis.qualityMonitorBtn') }}
             </a-button>
           </a-space>
         </a-form-item>
@@ -51,9 +51,9 @@
 
     <a-row :gutter="16" class="mt-16">
       <a-col :span="24">
-        <a-card title="关系图谱" :bordered="false" class="graph-card">
+        <a-card :title="t('graphAnalysis.relationGraph')" :bordered="false" class="graph-card">
           <template #extra>
-            <a-tag color="blue">当前品种: {{ symbol }}</a-tag>
+            <a-tag color="blue">{{ t('graphAnalysis.currentSymbol') }}: {{ symbol }}</a-tag>
           </template>
           <ForceGraph
             :nodes="graphNodes"
@@ -68,55 +68,55 @@
     <a-row :gutter="16" class="mt-16">
       <a-col :span="16">
         <GraphContextPanel
-          title="图谱上下文分析"
+          :title="t('graphAnalysis.contextAnalysis')"
           :context="context"
           :loading="loading"
-          :empty-text="'请输入市场与品种后查询'"
+          :empty-text="t('graphAnalysis.emptyContextHint')"
           :bordered="false"
         />
       </a-col>
       <a-col :span="8">
-        <a-card title="图谱质量监控" :loading="qualityLoading" :bordered="false">
+        <a-card :title="t('graphAnalysis.qualityMonitorTitle')" :loading="qualityLoading" :bordered="false">
           <div v-if="quality">
             <a-row :gutter="16">
               <a-col :span="12">
-                <a-statistic title="Episode 数量" :value="quality.episode_count" />
+                <a-statistic :title="t('graphAnalysis.episodeCount')" :value="quality.episode_count" />
               </a-col>
               <a-col :span="12">
-                <a-statistic title="实体数量" :value="quality.entity_count" />
+                <a-statistic :title="t('graphAnalysis.entityCount')" :value="quality.entity_count" />
               </a-col>
             </a-row>
-            <a-statistic title="关系数量" :value="quality.relation_count" class="mt-16" />
+            <a-statistic :title="t('graphAnalysis.relationCount')" :value="quality.relation_count" class="mt-16" />
             <a-divider />
             <a-alert
-              :message="quality.is_ready ? '数据质量达标' : '数据积累中'"
+              :message="quality.is_ready ? t('graphAnalysis.dataQualityReady') : t('graphAnalysis.dataBuilding')"
               :type="quality.is_ready ? 'success' : 'info'"
               show-icon
             >
               <template #description>
                 <div style="font-size: 12px">
-                  阈值要求: episodes ≥ {{ quality.thresholds?.min_episodes }}, 
+                  {{ t('graphAnalysis.thresholdRequirement') }}: episodes ≥ {{ quality.thresholds?.min_episodes }}, 
                   entities ≥ {{ quality.thresholds?.min_entities }}, 
                   relations ≥ {{ quality.thresholds?.min_relations }}
                 </div>
               </template>
             </a-alert>
           </div>
-          <a-empty v-else description="点击质量监控按钮查看" />
+          <a-empty v-else :description="t('graphAnalysis.qualityEmpty')" />
         </a-card>
       </a-col>
     </a-row>
 
     <a-row :gutter="16" class="mt-16">
       <a-col :span="12">
-        <a-card title="关联资产" :loading="relatedLoading" :bordered="false">
+        <a-card :title="t('graphAnalysis.relatedAssets')" :loading="relatedLoading" :bordered="false">
           <a-list :data-source="relatedAssets" size="small">
             <template #renderItem="{ item }">
               <a-list-item>
-                <a-list-item-meta :title="item.symbol" :description="item.name || '关联资产'" />
+                <a-list-item-meta :title="item.symbol" :description="item.name || t('graphAnalysis.affectedAssetDefault')" />
                 <template #extra>
                   <a-tag :color="item.correlation_score > 70 ? 'red' : 'blue'">
-                    相关度: {{ item.correlation_score || 0 }}
+                    {{ t('graphAnalysis.correlationLabel') }}: {{ item.correlation_score || 0 }}
                   </a-tag>
                 </template>
               </a-list-item>
@@ -126,7 +126,7 @@
         </a-card>
       </a-col>
       <a-col :span="12">
-        <a-card title="近期重大事件" :loading="eventsLoading" :bordered="false">
+        <a-card :title="t('graphAnalysis.recentEvents')" :loading="eventsLoading" :bordered="false">
           <a-timeline v-if="recentEvents.length">
             <a-timeline-item v-for="(evt, idx) in recentEvents" :key="idx" :color="idx === 0 ? 'blue' : 'gray'">
               <p><strong>{{ evt.title }}</strong> <small style="color:#999; margin-left:8px">{{ evt.timestamp }}</small></p>
@@ -141,32 +141,32 @@
     <!-- 传染路径分析 -->
     <a-row v-if="analysisType === 'contagion'" :gutter="16" class="mt-16">
       <a-col :span="24">
-        <a-card title="传染路径分析" :loading="contagionLoading" :bordered="false">
+        <a-card :title="t('graphAnalysis.contagionAnalysis')" :loading="contagionLoading" :bordered="false">
           <div v-if="contagionPath">
             <div class="contagion-header">
               <a-space size="large">
                 <span><strong>{{ contagionPath.from }}</strong> <ArrowRightOutlined /> <strong>{{ contagionPath.to }}</strong></span>
                 <a-tag :color="contagionPath.risk_score > 60 ? 'error' : contagionPath.risk_score > 30 ? 'warning' : 'success'">
-                  风险评估得分: {{ contagionPath.risk_score }}
+                  {{ t('graphAnalysis.riskAssessmentScore') }}: {{ contagionPath.risk_score }}
                 </a-tag>
-                <span class="text-muted">发现路径数: {{ contagionPath.path_count }}</span>
+                <span class="text-muted">{{ t('graphAnalysis.foundPaths') }}: {{ contagionPath.path_count }}</span>
               </a-space>
             </div>
             <div v-if="contagionPath.paths && contagionPath.paths.length" class="mt-16">
               <a-collapse v-model:activeKey="activePathKeys">
-                <a-collapse-panel v-for="(path, idx) in contagionPath.paths" :key="String(idx)" :header="`路径 ${idx + 1} (深度 ${path.length})`">
+                <a-collapse-panel v-for="(path, idx) in contagionPath.paths" :key="String(idx)" :header="t('graphAnalysis.pathTemplate', { n: Number(idx) + 1, m: path.length })">
                   <a-steps size="small" :current="path.length - 1" direction="horizontal" class="path-steps">
                     <a-step v-for="(step, sidx) in path" :key="sidx">
-                      <template #title>{{ step.node?.symbol || step.node?.name || '节点' }}</template>
+                      <template #title>{{ step.node?.symbol || step.node?.name || t('graphAnalysis.nodeLabel') }}</template>
                       <template #description>{{ step.relation?.type || '' }}</template>
                     </a-step>
                   </a-steps>
                 </a-collapse-panel>
               </a-collapse>
             </div>
-            <a-empty v-else description="未找到传播路径" />
+            <a-empty v-else :description="t('graphAnalysis.noContagionPath')" />
           </div>
-          <a-empty v-else description="请选择两个品种后查询传染路径" />
+          <a-empty v-else :description="t('graphAnalysis.contagionHint')" />
         </a-card>
       </a-col>
     </a-row>
@@ -174,17 +174,17 @@
     <!-- 聪明钱信号 -->
     <a-row v-if="analysisType === 'smartMoney'" :gutter="16" class="mt-16">
       <a-col :span="24">
-        <a-card title="聪明钱 (Smart Money) 信号" :loading="smartMoneyLoading" :bordered="false">
+        <a-card :title="t('graphAnalysis.smartMoneyTitle')" :loading="smartMoneyLoading" :bordered="false">
           <div v-if="smartMoney">
             <a-row :gutter="16">
               <a-col :span="8">
-                <a-statistic title="共识方向" :value="smartMoney.consensus || 'Neutral'" />
+                <a-statistic :title="t('graphAnalysis.consensus')" :value="smartMoney.consensus || 'Neutral'" />
               </a-col>
               <a-col :span="8">
-                <a-statistic title="置信度分数" :value="smartMoney.confidence || 0" :precision="2" suffix="%" />
+                <a-statistic :title="t('graphAnalysis.confidenceScore')" :value="smartMoney.confidence || 0" :precision="2" suffix="%" />
               </a-col>
               <a-col :span="8">
-                <a-statistic title="大户参与数" :value="smartMoney.whale_count || 0" />
+                <a-statistic :title="t('graphAnalysis.whaleCount')" :value="smartMoney.whale_count || 0" />
               </a-col>
             </a-row>
             <a-divider />
@@ -203,7 +203,7 @@
               :pagination="{ pageSize: 5 }"
             />
           </div>
-          <a-empty v-else description="请选择品种后查询聪明钱信号" />
+          <a-empty v-else :description="t('graphAnalysis.smartMoneyHint')" />
         </a-card>
       </a-col>
     </a-row>
@@ -211,17 +211,17 @@
     <!-- 事件影响链 -->
     <a-row v-if="analysisType === 'eventImpact'" :gutter="16" class="mt-16">
       <a-col :span="24">
-        <a-card title="事件影响链分析" :loading="eventImpactLoading" :bordered="false">
+        <a-card :title="t('graphAnalysis.eventImpactAnalysis')" :loading="eventImpactLoading" :bordered="false">
           <div v-if="eventImpact">
             <a-descriptions size="small" bordered :column="3">
-              <a-descriptions-item label="事件 UID">{{ eventImpact.event_uid }}</a-descriptions-item>
-              <a-descriptions-item label="影响半径">{{ eventImpact.impact_radius }}</a-descriptions-item>
-              <a-descriptions-item label="最大分析深度">{{ eventImpact.max_depth }}</a-descriptions-item>
+              <a-descriptions-item :label="t('graphAnalysis.eventUidLabel')">{{ eventImpact.event_uid }}</a-descriptions-item>
+              <a-descriptions-item :label="t('graphAnalysis.impactRadius')">{{ eventImpact.impact_radius }}</a-descriptions-item>
+              <a-descriptions-item :label="t('graphAnalysis.maxDepth')">{{ eventImpact.max_depth }}</a-descriptions-item>
             </a-descriptions>
             <a-divider />
             <a-row :gutter="24">
               <a-col :span="12">
-                <div class="sub-title">受影响资产 ({{ eventImpact.affected_assets.length }})</div>
+                <div class="sub-title">{{ t('graphAnalysis.affectedAssetsLabel') }} ({{ eventImpact.affected_assets.length }})</div>
                 <div class="asset-tags mt-8">
                   <a-tag v-for="asset in eventImpact.affected_assets" :key="asset.uid" color="blue" class="mb-8">
                     {{ asset.symbol || asset.uid }}
@@ -230,17 +230,17 @@
                 <a-empty v-if="!eventImpact.affected_assets.length" />
               </a-col>
               <a-col :span="12">
-                <div class="sub-title">受影响/关联事件 ({{ eventImpact.affected_events.length }})</div>
+                <div class="sub-title">{{ t('graphAnalysis.affectedEventsLabel') }} ({{ eventImpact.affected_events.length }})</div>
                 <a-timeline class="mt-8">
                   <a-timeline-item v-for="(evt, idx) in eventImpact.affected_events" :key="idx">
-                    {{ evt.title || '关联事件' }}
+                    {{ evt.title || t('graphAnalysis.relatedEventLabel') }}
                   </a-timeline-item>
                 </a-timeline>
                 <a-empty v-if="!eventImpact.affected_events.length" />
               </a-col>
             </a-row>
           </div>
-          <a-empty v-else description="请输入事件 UID 后查询影响链" />
+          <a-empty v-else :description="t('graphAnalysis.eventImpactHint')" />
         </a-card>
       </a-col>
     </a-row>
@@ -249,6 +249,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { 
   NodeIndexOutlined, SearchOutlined, BarChartOutlined, 
   ArrowRightOutlined 
@@ -259,6 +260,8 @@ import {
   getGraphQuality, getContagionPath, getSmartMoney, getEventImpact 
 } from '@/api/graph'
 import { ForceGraph, GraphContextPanel } from '@/components/GraphVisualization'
+
+const { t } = useI18n()
 
 // State
 const market = ref('crypto')
@@ -284,17 +287,17 @@ const activePathKeys = ref<string[]>(['0'])
 
 // Table Columns
 const smartMoneyColumns = [
-  { title: '地址', dataIndex: 'address', key: 'address' },
-  { title: '名称', dataIndex: 'name', key: 'name' },
-  { title: '胜率', dataIndex: 'win_rate', key: 'win_rate', customRender: ({ text }: any) => `${text}%` },
-  { title: '交易量', dataIndex: 'volume', key: 'volume' }
+  { title: t('common.address'), dataIndex: 'address', key: 'address' },
+  { title: t('common.name'), dataIndex: 'name', key: 'name' },
+  { title: t('common.winRate'), dataIndex: 'win_rate', key: 'win_rate', customRender: ({ text }: any) => `${text}%` },
+  { title: t('common.volume'), dataIndex: 'volume', key: 'volume' }
 ]
 
 const whaleColumns = [
-  { title: '地址/账号', dataIndex: 'address', key: 'address' },
+  { title: t('common.addressAccount'), dataIndex: 'address', key: 'address' },
   { title: 'Handle', dataIndex: 'handle', key: 'handle' },
-  { title: '余额', dataIndex: 'balance', key: 'balance' },
-  { title: '7日变动', dataIndex: 'change_7d', key: 'change_7d' }
+  { title: t('common.balance'), dataIndex: 'balance', key: 'balance' },
+  { title: t('common.change7d'), dataIndex: 'change_7d', key: 'change_7d' }
 ]
 
 // Computed for Graph
@@ -328,7 +331,7 @@ const graphNodes = computed(() => {
   eventsList.forEach((e: any, i: number) => {
     nodes.push({
       id: `evt_${i}`,
-      name: e.title || '事件',
+      name: e.title || t('common.event'),
       category: 'event',
       value: 40,
       symbolSize: 30
@@ -340,7 +343,7 @@ const graphNodes = computed(() => {
   holders.forEach((h: any, i: number) => {
     nodes.push({
       id: `inst_${i}`,
-      name: h.institution || '机构',
+      name: h.institution || t('common.institution'),
       category: 'institution',
       value: 35,
       symbolSize: 28
@@ -362,7 +365,7 @@ const graphEdges = computed(() => {
     edges.push({
       source: center,
       target: a.symbol,
-      relation: '关联',
+      relation: t('common.relation'),
       value: a.correlation_score || 50
     })
   })
@@ -373,7 +376,7 @@ const graphEdges = computed(() => {
     edges.push({
       source: center,
       target: `evt_${i}`,
-      relation: '影响',
+      relation: t('common.influence'),
       value: 30
     })
   })
@@ -384,7 +387,7 @@ const graphEdges = computed(() => {
     edges.push({
       source: center,
       target: `inst_${i}`,
-      relation: '持仓',
+      relation: t('common.holdings'),
       value: 25
     })
   })
@@ -395,7 +398,7 @@ const graphEdges = computed(() => {
 // Methods
 const onQuery = async () => {
   if (!symbol.value) {
-    message.warning('请输入品种代码')
+    message.warning(t('validation.symbolRequired'))
     return
   }
   
@@ -428,13 +431,13 @@ const loadGraphData = async () => {
     ])
     
     if (ctxRes.code === 1) context.value = ctxRes.data
-    else message.error(ctxRes.msg || '查询上下文失败')
+    else message.error(ctxRes.msg || t('graphAnalysis.queryContextFailed'))
     
     if (relRes.code === 1) relatedAssets.value = relRes.data || []
     if (evtRes.code === 1) recentEvents.value = evtRes.data || []
     
   } catch (e: any) {
-    message.error('图谱查询失败: ' + e.message)
+    message.error(t('graphAnalysis.queryGraphFailed') + ': ' + e.message)
   } finally {
     loading.value = false
     relatedLoading.value = false
@@ -448,7 +451,7 @@ const loadQuality = async () => {
     const res = await getGraphQuality()
     if (res.code === 1) quality.value = res.data
   } catch (e) {
-    message.error('质量监控加载失败')
+    message.error(t('graphAnalysis.qualityLoadFailed'))
   } finally {
     qualityLoading.value = false
   }
@@ -456,7 +459,7 @@ const loadQuality = async () => {
 
 const loadContagionPath = async () => {
   if (!toSymbol.value) {
-    message.warning('请输入目标品种')
+    message.warning(t('validation.targetSymbolRequired'))
     return
   }
   contagionLoading.value = true
@@ -467,9 +470,9 @@ const loadContagionPath = async () => {
       market: market.value
     })
     if (res.code === 1) contagionPath.value = res.data
-    else message.warning(res.msg || '传染路径查询失败')
+    else message.warning(res.msg || t('graphAnalysis.contagionQueryFailed'))
   } catch (e: any) {
-    message.error('传染路径查询失败: ' + e.message)
+    message.error(t('graphAnalysis.contagionQueryFailed') + ': ' + e.message)
   } finally {
     contagionLoading.value = false
   }
@@ -480,9 +483,9 @@ const loadSmartMoney = async () => {
   try {
     const res = await getSmartMoney(symbol.value, { domain: 'auto' })
     if (res.code === 1) smartMoney.value = res.data
-    else message.warning(res.msg || '聪明钱信号查询失败')
+    else message.warning(res.msg || t('graphAnalysis.smartMoneyQueryFailed'))
   } catch (e: any) {
-    message.error('聪明钱信号查询失败: ' + e.message)
+    message.error(t('graphAnalysis.smartMoneyQueryFailed') + ': ' + e.message)
   } finally {
     smartMoneyLoading.value = false
   }
@@ -490,16 +493,16 @@ const loadSmartMoney = async () => {
 
 const loadEventImpact = async () => {
   if (!eventUid.value) {
-    message.warning('请输入事件 UID')
+    message.warning(t('validation.eventUidRequired'))
     return
   }
   eventImpactLoading.value = true
   try {
     const res = await getEventImpact(eventUid.value, { max_depth: 3 })
     if (res.code === 1) eventImpact.value = res.data
-    else message.warning(res.msg || '事件影响链查询失败')
+    else message.warning(res.msg || t('graphAnalysis.eventImpactQueryFailed'))
   } catch (e: any) {
-    message.error('事件影响链查询失败: ' + e.message)
+    message.error(t('graphAnalysis.eventImpactQueryFailed') + ': ' + e.message)
   } finally {
     eventImpactLoading.value = false
   }

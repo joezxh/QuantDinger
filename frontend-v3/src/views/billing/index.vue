@@ -3,26 +3,26 @@
     <div class="page-header">
       <h2 class="page-title">
         <WalletOutlined />
-        <span>账单管理</span>
+        <span>{{ t('billing.title') }}</span>
       </h2>
-      <p class="page-desc">管理您的积分、VIP会员和套餐</p>
+      <p class="page-desc">{{ t('billing.subtitle') }}</p>
     </div>
 
     <a-card :bordered="false" class="snapshot-card">
       <div class="snapshot-row">
         <div class="snap-item">
-          <div class="snap-label">当前积分</div>
+          <div class="snap-label">{{ t('billing.currentCredits') }}</div>
           <div class="snap-value">{{ formatCredits(billing.credits) }}</div>
         </div>
         <div class="snap-item">
-          <div class="snap-label">VIP状态</div>
+          <div class="snap-label">{{ t('billing.vipStatus') }}</div>
           <div class="snap-value">
             <a-tag v-if="billing.is_vip" color="gold">
               <CrownOutlined /> VIP
             </a-tag>
-            <a-tag v-else>非VIP</a-tag>
+            <a-tag v-else>{{ t('billing.notVip') }}</a-tag>
             <span v-if="billing.vip_expires_at" class="vip-exp">
-              到期: {{ formatDate(billing.vip_expires_at) }}
+              {{ t('billing.expiresAt') }}: {{ formatDate(billing.vip_expires_at) }}
             </span>
           </div>
         </div>
@@ -31,56 +31,56 @@
         style="margin-top: 12px;"
         type="info"
         show-icon
-        message="VIP会员规则"
-        description="VIP会员每月获得额外积分奖励，可在有效期内享受高级功能。"
+        :message="t('billing.vipRules')"
+        :description="t('billing.vipRulesDesc')"
       />
     </a-card>
 
     <a-row :gutter="16" style="margin-top: 16px;">
       <a-col :xs="24" :md="8">
         <a-card :bordered="false" class="plan-card">
-          <div class="plan-title">月度套餐</div>
+          <div class="plan-title">{{ t('billing.planMonthly') }}</div>
           <div class="plan-price">
             ${{ plans.monthly.price_usd }}
-            <span class="plan-unit">/ 月</span>
+            <span class="plan-unit">{{ t('billing.perMonth') }}</span>
           </div>
           <div class="plan-benefit">
-            +{{ plans.monthly.credits_once }} 积分
+            {{ t('billing.creditsOnce', {n: plans.monthly.credits_once}) }}
           </div>
           <a-button type="primary" block :loading="purchasing === 'monthly'" @click="buy('monthly')">
-            立即购买
+            {{ t('billing.buyNow') }}
           </a-button>
         </a-card>
       </a-col>
 
       <a-col :xs="24" :md="8">
         <a-card :bordered="false" class="plan-card highlight">
-          <div class="plan-title">年度套餐</div>
+          <div class="plan-title">{{ t('billing.planYearly') }}</div>
           <div class="plan-price">
             ${{ plans.yearly.price_usd }}
-            <span class="plan-unit">/ 年</span>
+            <span class="plan-unit">{{ t('billing.perYear') }}</span>
           </div>
           <div class="plan-benefit">
-            +{{ plans.yearly.credits_once }} 积分
+            {{ t('billing.creditsOnce', {n: plans.yearly.credits_once}) }}
           </div>
           <a-button type="primary" block :loading="purchasing === 'yearly'" @click="buy('yearly')">
-            立即购买
+            {{ t('billing.buyNow') }}
           </a-button>
         </a-card>
       </a-col>
 
       <a-col :xs="24" :md="8">
         <a-card :bordered="false" class="plan-card">
-          <div class="plan-title">永久会员</div>
+          <div class="plan-title">{{ t('billing.planLifetime') }}</div>
           <div class="plan-price">
             ${{ plans.lifetime.price_usd }}
-            <span class="plan-unit">（一次性）</span>
+            <span class="plan-unit">{{ t('billing.oneTime') }}</span>
           </div>
           <div class="plan-benefit">
-            每月 +{{ plans.lifetime.credits_monthly }} 积分
+            {{ t('billing.creditsMonthly', {n: plans.lifetime.credits_monthly}) }}
           </div>
           <a-button type="primary" block :loading="purchasing === 'lifetime'" @click="buy('lifetime')">
-            立即购买
+            {{ t('billing.buyNow') }}
           </a-button>
         </a-card>
       </a-col>
@@ -104,10 +104,10 @@
             <div class="usdt-logo">
               <svg viewBox="0 0 32 32" width="28" height="28"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path d="M17.9 17.9v-.003c-.1.008-.6.04-1.8.04-1 0-1.5-.028-1.7-.04v.004c-3.4-.15-5.9-.74-5.9-1.44 0-.7 2.5-1.29 5.9-1.44v2.3c.2.013.7.05 1.7.05 1.2 0 1.6-.04 1.8-.05v-2.3c3.4.15 5.9.74 5.9 1.44 0 .7-2.5 1.29-5.9 1.44zm0-3.12V12.7h5v-2.4H9.2v2.4h5v2.08c-3.8.18-6.7.93-6.7 1.83s2.9 1.65 6.7 1.83v6.56h3.6v-6.56c3.8-.18 6.7-.93 6.7-1.83s-2.8-1.65-6.6-1.83z" fill="#fff"/></svg>
             </div>
-            <div class="header-text">
-              <div class="header-title">USDT 支付</div>
-              <div class="header-desc">请扫描下方二维码完成支付</div>
-            </div>
+              <div class="header-text">
+                <div class="header-title">{{ t('billing.usdtPayTitle') }}</div>
+                <div class="header-desc">{{ t('billing.usdtPayDesc') }}</div>
+              </div>
           </div>
           <a-button type="link" class="close-btn" @click="closeUsdtModal">
             <CloseOutlined />
@@ -153,11 +153,11 @@
             <div class="info-block">
               <div class="info-label">
                 <EnvironmentOutlined />
-                <span>收款地址</span>
+                <span>{{ t('billing.receiverAddress') }}</span>
               </div>
               <div class="addr-box">
                 <code class="addr-text">{{ usdtOrder.address }}</code>
-                <a-tooltip title="复制地址">
+                <a-tooltip :title="t('billing.copyAddress')">
                   <a-button size="small" class="copy-btn" @click="copyText(usdtOrder.address)">
                     <CopyOutlined />
                   </a-button>
@@ -169,11 +169,11 @@
             <div class="info-block">
               <div class="info-label">
                 <DollarOutlined />
-                <span>支付金额</span>
+                <span>{{ t('billing.payAmount') }}</span>
               </div>
               <div class="amt-box">
                 <code class="amt-text">{{ usdtOrder.amount_usdt }} USDT</code>
-                <a-tooltip title="复制金额">
+                <a-tooltip :title="t('billing.copyAmount')">
                   <a-button size="small" class="copy-btn" @click="copyText(usdtOrder.amount_usdt)">
                     <CopyOutlined />
                   </a-button>
@@ -184,7 +184,7 @@
             <!-- Warning -->
             <div class="warn-strip">
               <ExclamationCircleOutlined />
-              <span>请使用TRC20网络转账，确认后将自动到账</span>
+              <span>{{ t('billing.trc20Warning') }}</span>
             </div>
 
             <!-- Expiry & Status -->
@@ -202,7 +202,7 @@
             <div v-if="usdtOrder.status === 'expired'" class="expired-hint">
               <a-alert
                 type="warning"
-                message="订单已过期"
+                :message="t('billing.orderExpired')"
                 show-icon
                 banner
               />
@@ -212,7 +212,7 @@
             <div v-if="usdtOrder.status === 'confirmed'" class="confirmed-hint">
               <a-alert
                 type="success"
-                message="支付成功"
+                :message="t('billing.paySuccess')"
                 show-icon
                 banner
               />
@@ -224,13 +224,13 @@
         <div class="checkout-footer">
           <a-button v-if="usdtOrder.status !== 'confirmed'" size="small" :loading="usdtRefreshing" @click="refreshUsdtOrder">
             <ReloadOutlined />
-            刷新状态
+            {{ t('billing.refreshStatus') }}
           </a-button>
           <a-button v-if="usdtOrder.status === 'confirmed'" type="primary" @click="closeUsdtModal">
             <CheckCircleOutlined />
-            完成
+            {{ t('billing.done') }}
           </a-button>
-          <a-button v-else @click="closeUsdtModal">关闭</a-button>
+          <a-button v-else @click="closeUsdtModal">{{ t('common.close') }}</a-button>
         </div>
       </div>
     </a-modal>
@@ -239,6 +239,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   WalletOutlined,
@@ -275,6 +276,8 @@ interface UsdtOrder {
   expires_at?: string
 }
 
+const { t } = useI18n()
+
 const loading = ref(false)
 const purchasing = ref('')
 const usdtModalVisible = ref(false)
@@ -303,12 +306,12 @@ const usdtQrUrl = computed(() => {
 const statusText = computed(() => {
   const s = usdtOrder.value?.status || ''
   const map: Record<string, string> = {
-    pending: '待支付',
-    paid: '已支付',
-    confirmed: '已确认',
-    expired: '已过期',
-    cancelled: '已取消',
-    failed: '支付失败',
+    pending: t('billing.status.pending'),
+    paid: t('billing.status.paid'),
+    confirmed: t('billing.status.confirmed'),
+    expired: t('billing.status.expired'),
+    cancelled: t('billing.status.cancelled'),
+    failed: t('billing.status.failed'),
   }
   return map[s] || s || '--'
 })
@@ -328,7 +331,7 @@ const usdtStepCurrent = computed(() => {
   return 0
 })
 
-const stepItems = ['待支付', '已支付', '已确认']
+const stepItems = [t('billing.status.pending'), t('billing.status.paid'), t('billing.status.confirmed')]
 
 function getUsdtQrText(): string {
   if (!usdtOrder.value) return ''
@@ -358,10 +361,10 @@ async function load() {
       Object.assign(plans, res.data.plans || plans)
       Object.assign(billing, res.data.billing || billing)
     } else {
-      message.error(res?.msg || '加载失败')
+      message.error(res?.msg || t('common.loadFailed'))
     }
   } catch (e: any) {
-    message.error(e?.response?.data?.msg || '加载失败')
+    message.error(e?.response?.data?.msg || t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -376,10 +379,10 @@ async function buy(plan: string) {
       usdtModalVisible.value = true
       startUsdtPolling()
     } else {
-      message.error(res?.msg || '购买失败')
+      message.error(res?.msg || t('common.purchaseFailed'))
     }
   } catch (e: any) {
-    message.error(e?.response?.data?.msg || '购买失败')
+    message.error(e?.response?.data?.msg || t('common.purchaseFailed'))
   } finally {
     purchasing.value = ''
   }
@@ -387,12 +390,12 @@ async function buy(plan: string) {
 
 function copyText(txt: string) {
   try {
-    const t = String(txt || '')
-    if (!t) return
-    navigator.clipboard.writeText(t)
-    message.success('复制成功')
+    const text = String(txt || '')
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    message.success(t('common.copySuccess'))
   } catch (e) {
-    message.error('复制失败')
+    message.error(t('common.copyFailed'))
   }
 }
 
@@ -405,7 +408,7 @@ async function refreshUsdtOrder() {
       usdtOrder.value = res.data
       const status = usdtOrder.value.status
       if (status === 'confirmed') {
-        message.success('支付成功')
+        message.success(t('billing.paySuccess'))
         stopUsdtPolling()
         await load()
       } else if (status === 'expired' || status === 'failed' || status === 'cancelled') {

@@ -104,7 +104,7 @@
         <a-form-item label="配置参数 (JSON)">
           <a-textarea v-model:value="formState.config_json_str" :rows="6" placeholder='{"base_url": "https://api.example.com"}' />
         </a-form-item>
-        <a-form-item label="备注">
+        <a-form-item :label="t('common.remark')">
           <a-textarea v-model:value="formState.notes" :rows="2" />
         </a-form-item>
       </a-form>
@@ -114,10 +114,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { getConfigs, saveConfig, deleteConfig, testConfig } from '@/api/dataSource'
+import { getConfigs, saveConfig, deleteConfig, testConfig } from '@/api/data-source'
 
+const { t } = useI18n()
 const loading = ref(false)
 const data = ref([])
 const searchText = ref('')
@@ -136,11 +138,11 @@ const pagination = reactive({
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 60 },
   { title: '源代码', dataIndex: 'source_code' },
-  { title: '名称', dataIndex: 'source_name' },
+  { title: t('common.name'), dataIndex: 'source_name' },
   { title: '层级', dataIndex: 'layer' },
   { title: '市场类别', dataIndex: 'market_categories', key: 'market_categories' },
-  { title: '状态', dataIndex: 'enabled', key: 'enabled', width: 80 },
-  { title: '操作', key: 'action', width: 180 }
+  { title: t('common.status'), dataIndex: 'enabled', key: 'enabled', width: 80 },
+  { title: t('common.action'), key: 'action', width: 180 }
 ]
 
 const formState = reactive({
@@ -218,7 +220,7 @@ const handleOk = async () => {
     const payload = { ...formState, id: editId.value, config_json: configJson }
     const res = await saveConfig(payload)
     if (res.code === 1) {
-      message.success('操作成功')
+      message.success(t('common.success'))
       visible.value = false
       loadData()
     }
@@ -230,7 +232,7 @@ const handleOk = async () => {
 const handleDelete = async (id: number) => {
   const res = await deleteConfig(id)
   if (res.code === 1) {
-    message.success('已删除')
+    message.success(t('common.deleted'))
     loadData()
   }
 }

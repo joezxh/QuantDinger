@@ -13,7 +13,7 @@
     <div class="main-content">
       <a-card :bordered="false" class="tabs-card">
         <a-tabs v-model:activeKey="activeTab" type="line" size="large">
-          <a-tab-pane key="configs" tab="数据源配置">
+          <a-tab-pane key="configs" :tab="t('dataSource.tabs.config')">
             <div class="tab-content">
               <ConfigList />
             </div>
@@ -41,9 +41,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import ConfigList from './components/ConfigList.vue'
 import SyncTaskTab from './components/SyncTaskTab.vue'
 
+const { t } = useI18n()
 const activeTab = ref('configs')
 </script>
 

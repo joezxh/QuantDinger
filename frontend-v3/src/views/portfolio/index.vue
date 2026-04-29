@@ -2,15 +2,15 @@
   <div class="portfolio-page">
     <div class="page-header">
       <div class="title-area">
-        <h1>我的投资组合</h1>
-        <p>实时追踪资产变动，AI 驱动的风险评估与多维度监控</p>
+        <h1>{{ t('portfolio.myPortfolio') }}</h1>
+        <p>{{ t('portfolio.subtitle') }}</p>
       </div>
       <div class="header-actions">
         <a-button @click="refreshAll" :loading="isSyncing">
-          <SyncOutlined :spin="isSyncing" /> 刷新价格
+          <SyncOutlined :spin="isSyncing" /> {{ t('portfolio.refreshPricesBtn') }}
         </a-button>
         <a-button type="primary" @click="openAddPosition">
-          <PlusOutlined /> 新增资产
+          <PlusOutlined /> {{ t('portfolio.addAssetBtn') }}
         </a-button>
       </div>
     </div>
@@ -47,7 +47,7 @@
             @run-monitor="handleRunMonitor"
           />
           
-          <a-card class="market-dist-card" title="资产分布">
+          <a-card class="market-dist-card" :title="t('portfolio.assetDistribution')">
             <div v-if="summary.market_distribution?.length > 0" class="dist-list">
               <div v-for="item in summary.market_distribution" :key="item.market" class="dist-item">
                 <div class="info">
@@ -93,6 +93,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message, Modal, Empty, notification } from 'ant-design-vue'
 import { SyncOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import SummaryCards from './components/SummaryCards.vue'
@@ -110,6 +111,7 @@ import {
   getGroups, getMarketTypes
 } from '@/api/portfolio'
 
+const { t } = useI18n()
 const simpleImage = Empty.PRESENTED_IMAGE_SIMPLE
 
 // State
@@ -205,7 +207,7 @@ const refreshPrices = async () => {
   isSyncing.value = true
   try {
     await Promise.all([loadPositions(true), loadSummary(true)])
-    message.success('持仓价格已更新')
+    message.success(t('portfolio.priceUpdated'))
   } finally {
     isSyncing.value = false
   }
@@ -235,14 +237,14 @@ const handleSavePosition = async (data: any) => {
       res = await createPosition(data)
     }
     if (res.code === 1) {
-      message.success('保存成功')
+      message.success(t('common.saveSuccess'))
       posModalVisible.value = false
       loadAllData()
     } else {
-      message.error(res.msg || '保存失败')
+      message.error(res.msg || t('common.saveFailed'))
     }
   } catch (e) {
-    message.error('请求失败')
+    message.error(t('portfolio.requestFailed'))
   }
 }
 
@@ -250,11 +252,11 @@ const handleDeletePosition = async (id: number) => {
   try {
     const res = await deletePosition(id)
     if (res.code === 1) {
-      message.success('已删除')
+      message.success(t('common.deleted'))
       loadAllData()
     }
   } catch (e) {
-    message.error('删除失败')
+    message.error(t('common.deleteFailed'))
   }
 }
 
@@ -274,12 +276,12 @@ const handleSaveAlert = async (data: any) => {
       res = await addAlert(data)
     }
     if (res.code === 1) {
-      message.success('预警保存成功')
+      message.success(t('common.saveSuccess'))
       alertModalVisible.value = false
       loadAlerts()
     }
   } catch (e) {
-    message.error('保存失败')
+    message.error(t('common.saveFailed'))
   }
 }
 
@@ -302,12 +304,12 @@ const handleSaveMonitor = async (data: any) => {
       res = await createMonitor(data)
     }
     if (res.code === 1) {
-      message.success('监控任务已更新')
+      message.success(t('common.updateSuccess'))
       monitorModalVisible.value = false
       loadMonitors()
     }
   } catch (e) {
-    message.error('更新失败')
+    message.error(t('common.updateFailed'))
   }
 }
 
@@ -315,7 +317,7 @@ const handleDeleteMonitor = async (id: number) => {
   try {
     const res = await deleteMonitor(id)
     if (res.code === 1) {
-      message.success('监控已移除')
+      message.success(t('common.deleted'))
       loadMonitors()
     }
   } catch (e) {}
@@ -325,7 +327,7 @@ const handleToggleMonitor = async (id: number, active: boolean) => {
   try {
     const res = await toggleMonitor(id, active)
     if (res.code === 1) {
-      message.success(active ? '监控已启用' : '监控已禁用')
+      message.success(active ? t('portfolio.monitorEnabled') : t('portfolio.monitorDisabled'))
       loadMonitors()
     }
   } catch (e) {}
@@ -337,8 +339,8 @@ const handleRunMonitor = async (id: number) => {
     const res = await runMonitor(id, { async: true })
     if (res.code === 1) {
       notification.info({
-        message: '监控任务运行中',
-        description: '任务已在后台启动，AI 分析结果将在完成后通过通知渠道推送。'
+        message: t('portfolio.monitorTaskRunning'),
+        description: t('portfolio.monitorTaskDesc')
       })
       loadMonitors()
     }

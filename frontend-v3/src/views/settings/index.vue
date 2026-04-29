@@ -3,9 +3,9 @@
     <div class="settings-header">
       <h2 class="page-title">
         <SettingOutlined />
-        <span>系统设置</span>
+        <span>{{ t('settings.title') }}</span>
       </h2>
-      <p class="page-desc">配置系统参数、API密钥和偏好设置</p>
+      <p class="page-desc">{{ t('settings.subtitle') }}</p>
     </div>
 
     <!-- 重启提示 -->
@@ -18,10 +18,8 @@
       @close="showRestartTip = false"
     >
       <template #message>
-        <span>需要重启服务才能生效</span>
-        <a-button type="link" size="small" @click="copyRestartCommand">
-          复制重启命令
-        </a-button>
+        <span>{{ t('settings.restartRequired') }}</span>
+        <a-button type="link" size="small" @click="copyRestartCommand">{{ t('settings.copyRestartCmd') }}</a-button>
       </template>
     </a-alert>
 
@@ -65,7 +63,7 @@
                         class="api-link"
                       >
                         <LinkOutlined />
-                        {{ item.link_text || '获取API' }}
+                        {{ item.link_text || t('settings.getApiLink') }}
                       </a>
                     </div>
 
@@ -73,7 +71,7 @@
                     <a-input
                       v-if="item.type === 'text'"
                       v-model:value="formValues[getItemKey(groupKey, item)]"
-                      :placeholder="item.default || '请输入'"
+                      :placeholder="item.default || t('settings.pleaseInput')"
                       allow-clear
                     />
 
@@ -81,7 +79,7 @@
                     <a-input-password
                       v-else-if="item.type === 'password'"
                       v-model:value="formValues[getItemKey(groupKey, item)]"
-                      placeholder="请输入密钥"
+                      :placeholder="t('common.pleaseInputKey')"
                       allow-clear
                     />
 
@@ -89,7 +87,7 @@
                     <a-input-number
                       v-else-if="item.type === 'number'"
                       v-model:value="formValues[getItemKey(groupKey, item)]"
-                      :placeholder="item.default || '请输入'"
+                      :placeholder="item.default || t('settings.pleaseInput')"
                       style="width: 100%"
                     />
 
@@ -103,7 +101,7 @@
                     <a-select
                       v-else-if="item.type === 'select'"
                       v-model:value="formValues[getItemKey(groupKey, item)]"
-                      :placeholder="item.default || '请选择'"
+                      :placeholder="item.default || t('settings.pleaseSelect')"
                     >
                       <a-select-option
                         v-for="opt in getSelectOptions(item)"
@@ -119,11 +117,11 @@
                       v-else-if="item.type === 'textarea'"
                       v-model:value="formValues[getItemKey(groupKey, item)]"
                       :rows="3"
-                      :placeholder="item.default || '请输入'"
+                      :placeholder="item.default || t('settings.pleaseInput')"
                     />
 
                     <div class="field-default" v-if="item.default && item.type !== 'boolean' && item.type !== 'password'">
-                      默认: {{ item.default }}
+                      {{ t('settings.defaultLabel') }}: {{ item.default }}
                     </div>
                   </div>
                 </a-col>
@@ -137,11 +135,11 @@
     <div class="settings-footer">
       <a-button @click="handleReset" :disabled="saving">
         <UndoOutlined />
-        重置
+        {{ t('common.reset') }}
       </a-button>
       <a-button type="primary" @click="handleSave" :loading="saving">
         <SaveOutlined />
-        保存
+        {{ t('common.save') }}
       </a-button>
     </div>
   </div>
@@ -149,6 +147,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   SettingOutlined,
@@ -190,6 +189,7 @@ interface SettingGroup {
   items: SettingItem[]
 }
 
+const { t } = useI18n()
 const loading = ref(false)
 const saving = ref(false)
 const schema = reactive<Record<string, SettingGroup>>({})
@@ -307,7 +307,7 @@ async function loadSettings() {
       currentAiProvider.value = (aiValues as any).LLM_PROVIDER || 'openai-compatible'
     }
   } catch (error) {
-    message.error('加载设置失败')
+    message.error(t('settings.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -340,16 +340,16 @@ async function handleSave() {
 
     const res = await saveSettings(data)
     if (res.code === 1) {
-      message.success(res.msg || '保存成功')
+      message.success(res.msg || t('common.saveSuccess'))
       if (res.data && res.data.requires_restart) {
         showRestartTip.value = true
       }
       loadSettings()
     } else {
-      message.error(res.msg || '保存失败')
+      message.error(res.msg || t('common.saveFailed'))
     }
   } catch (error: any) {
-    message.error('保存失败: ' + error.message)
+    message.error(t('common.saveFailed') + ': ' + error.message)
   } finally {
     saving.value = false
   }
@@ -358,9 +358,9 @@ async function handleSave() {
 function copyRestartCommand() {
   const cmd = 'cd backend_api_python && py run.py'
   navigator.clipboard.writeText(cmd).then(() => {
-    message.success('已复制到剪贴板')
+    message.success(t('common.copied'))
   }).catch(() => {
-    message.error('复制失败')
+    message.error(t('common.copyFailed'))
   })
 }
 

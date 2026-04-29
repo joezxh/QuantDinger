@@ -33,7 +33,7 @@
             
             <div class="card-metrics">
               <div class="metric">
-                <span class="label">价格</span>
+                <span>{{ t('quickTrade.price') }}</span>
                 <span class="value">${{ formatPrice(opp.price) }}</span>
               </div>
               <div class="metric">
@@ -83,6 +83,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { 
   ThunderboltOutlined, SyncOutlined, ExperimentOutlined, 
   NodeIndexOutlined 
@@ -93,6 +94,7 @@ import AIAnalysisView from '../ai-analysis/index.vue'
 import GraphAnalysisView from '../graph-analysis/index.vue'
 
 // State
+const { t } = useI18n()
 const activeTab = ref('analysis')
 const opportunities = ref<any[]>([])
 const oppLoading = ref(false)

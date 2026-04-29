@@ -76,11 +76,13 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { 
   EyeOutlined, PlusOutlined, RobotOutlined, 
   PlayCircleOutlined, EditOutlined, DeleteOutlined 
 } from '@ant-design/icons-vue'
 
+const { t } = useI18n()
 const props = defineProps<{
   monitors: any[]
   positions: any[]

@@ -3,7 +3,7 @@
     <a-empty v-if="!context && !loading" :description="emptyText" />
     <div v-else-if="context">
       <a-descriptions :column="1" size="small" bordered v-if="showDescriptions">
-        <a-descriptions-item label="关联资产" v-if="hasRelatedAssets">
+        <a-descriptions-item :label="t('graphAnalysis.relatedAssets')" v-if="hasRelatedAssets">
           <a-space wrap>
             <a-tag v-for="asset in relatedAssets" :key="asset.symbol" color="blue">
               {{ asset.symbol }}
@@ -30,7 +30,7 @@
         <a-descriptions-item label="聪明钱" v-if="context.smart_money">
           <pre class="json-pre">{{ JSON.stringify(context.smart_money, null, 2) }}</pre>
         </a-descriptions-item>
-        <a-descriptions-item label="预测市场" v-if="hasPredictionSignals">
+        <a-descriptions-item :label="t('market.crypto')" v-if="hasPredictionSignals">
           <div v-for="(pm, idx) in predictionSignals.slice(0, 2)" :key="idx" class="mb-4">
             <strong>{{ pm.question }}</strong> ({{ pm.probability }}%)
           </div>
@@ -43,7 +43,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const props = defineProps({
   title: {
     type: String,

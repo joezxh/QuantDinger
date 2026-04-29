@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2 class="page-title">
         <UserOutlined />
-        <span>个人中心</span>
+        <span>{{ t('menu.profile') }}</span>
       </h2>
       <p class="page-desc">管理您的账户设置和偏好</p>
     </div>
@@ -61,7 +61,7 @@
               <div class="credits-body">
                 <div class="credits-amount">
                   <span class="amount-value">{{ formatCredits(billing.credits) }}</span>
-                  <span class="amount-label">积分</span>
+                  <span>{{ t('userManage.credits') }}</span>
                 </div>
                 <div class="vip-status" v-if="billing.vip_expires_at">
                   <CrownOutlined :style="{ color: isVip ? '#faad14' : '#999' }" />
@@ -146,16 +146,16 @@
             <!-- Basic Info Tab -->
             <a-tab-pane key="basic" tab="基本信息">
               <a-form :model="profileForm" layout="vertical" class="profile-form">
-                <a-form-item label="昵称">
+                <a-form-item :label="t('common.nickname')">
                   <a-input
                     v-model:value="profileForm.nickname"
-                    placeholder="请输入昵称"
+                    :placeholder="t('validation.nicknameRequired')"
                   >
                     <template #prefix><SmileOutlined /></template>
                   </a-input>
                 </a-form-item>
 
-                <a-form-item label="邮箱">
+                <a-form-item :label="t('user.login.email')">
                   <a-input
                     :value="profile.email || '-'"
                     disabled
@@ -213,7 +213,7 @@
                   </a-input-password>
                 </a-form-item>
 
-                <a-form-item label="新密码">
+                <a-form-item :label="t('common.newPassword')">
                   <a-input-password
                     v-model:value="passwordForm.new_password"
                     placeholder="请输入新密码"
@@ -241,7 +241,7 @@
             </a-tab-pane>
 
             <!-- Notification Settings Tab -->
-            <a-tab-pane key="notifications" tab="通知设置">
+            <a-tab-pane key="notifications" :tab="t('settings.tabs.notification')">
               <a-form :model="notificationForm" layout="vertical">
                 <a-form-item label="邮件通知">
                   <a-switch v-model:checked="notificationForm.email_enabled" />
@@ -278,6 +278,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import {
@@ -298,6 +299,7 @@ import {
 import { getProfile, updateProfile, changePassword, getReferralData, getBillingInfo } from '@/api/profile'
 import { useUserStore } from '@/stores/user'
 
+const { t } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
 
@@ -437,7 +439,7 @@ async function copyReferralLink() {
     await navigator.clipboard.writeText(referralLink.value)
     message.success('链接已复制')
   } catch (e) {
-    message.error('复制失败')
+    message.error(t('common.copyFailed'))
   }
 }
 
@@ -452,7 +454,7 @@ async function handleSaveProfile() {
       nickname: profileForm.nickname,
       timezone: profileForm.timezone,
     })
-    message.success('保存成功')
+    message.success(t('common.saveSuccess'))
     loadProfile()
   } catch (e: any) {
     message.error(e.response?.data?.msg || '保存失败')
@@ -493,7 +495,7 @@ async function handleSaveNotifications() {
   try {
     message.success('通知设置已保存')
   } catch (e: any) {
-    message.error('保存失败')
+    message.error(t('common.saveFailed'))
   }
   saving.value = false
 }

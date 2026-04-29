@@ -169,7 +169,7 @@
         </div>
         <div class="gq-stat">
           <span class="gq-value">{{ (graphQuality.min_confidence_avg || 0).toFixed(2) }}</span>
-          <span class="gq-label">置信度</span>
+          <span>{{ t('notice.confidence') }}</span>
         </div>
       </div>
       <div class="graph-quality-actions">

@@ -3,14 +3,14 @@
     <div class="page-header">
       <h2 class="page-title">
         <ThunderboltOutlined />
-        <span>交易助手</span>
+        <span>{{ t('menu.tradingAssistant') }}</span>
       </h2>
       <p class="page-desc">管理策略、监控交易记录和分析性能</p>
     </div>
 
     <!-- 策略管理Tab -->
     <a-tabs v-model:activeKey="activeTab">
-      <a-tab-pane key="strategies" tab="策略管理">
+      <a-tab-pane key="strategies" :tab="t('trading-assistant.tabs.strategyManage')">
         <div class="strategies-section">
           <div class="section-header">
             <div class="header-left">
@@ -29,7 +29,7 @@
 
           <a-spin :spinning="loadingStrategies">
             <div v-if="strategies.length === 0" class="empty-state">
-              <a-empty description="暂无策略">
+              <a-empty :description="t('trading-assistant.empty.title')">
                 <a-button type="primary" @click="showCreateStrategy">
                   <PlusOutlined />
                   创建第一个策略
@@ -74,7 +74,7 @@
         </div>
       </a-tab-pane>
 
-      <a-tab-pane key="trades" tab="交易记录">
+      <a-tab-pane key="trades" :tab="t('trading-assistant.tabs.tradingRecords')">
         <div class="trades-section">
           <div class="section-header">
             <div class="header-left">
@@ -152,11 +152,11 @@
       @cancel="closeStrategyModal"
     >
       <a-form :model="strategyForm" layout="vertical">
-        <a-form-item label="策略名称">
-          <a-input v-model:value="strategyForm.name" placeholder="请输入策略名称" />
+        <a-form-item :label="t('trading-assistant.form.strategyName')">
+          <a-input v-model:value="strategyForm.name" :placeholder="t('validation.strategyNameRequired')" />
         </a-form-item>
 
-        <a-form-item label="标的代码">
+        <a-form-item :label="t('aiAnalysis.symbolCode')">
           <a-input v-model:value="strategyForm.symbol" placeholder="例如: AAPL, BTC/USD" />
         </a-form-item>
 
@@ -179,7 +179,7 @@
           />
         </a-form-item>
 
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.status')">
           <a-select v-model:value="strategyForm.status">
             <a-select-option value="active">启用</a-select-option>
             <a-select-option value="paused">暂停</a-select-option>
@@ -201,6 +201,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   ThunderboltOutlined,
@@ -232,6 +233,7 @@ interface Trade {
   created_at: string
 }
 
+const { t } = useI18n()
 const activeTab = ref('strategies')
 const groupByMode = ref('strategy')
 const tradeDateRange = ref<any[]>([])
@@ -265,11 +267,11 @@ const tradeColumns = [
   { title: 'ID', dataIndex: 'id', width: 60 },
   { title: '策略', dataIndex: 'strategy_name', width: 120 },
   { title: '标的', dataIndex: 'symbol', width: 100 },
-  { title: '方向', dataIndex: 'side', width: 80, slots: { customRender: 'side' } },
-  { title: '数量', dataIndex: 'quantity', width: 100 },
-  { title: '价格', dataIndex: 'price', width: 100 },
-  { title: '盈亏', dataIndex: 'pnl', width: 120, slots: { customRender: 'pnl' } },
-  { title: '时间', dataIndex: 'created_at', width: 180 },
+  { title: t('indicatorIde.direction'), dataIndex: 'side', width: 80, slots: { customRender: 'side' } },
+  { title: t('portfolio.quantity'), dataIndex: 'quantity', width: 100 },
+  { title: t('quickTrade.price'), dataIndex: 'price', width: 100 },
+  { title: t('portfolio.pnl'), dataIndex: 'pnl', width: 120, slots: { customRender: 'pnl' } },
+  { title: t('common.time'), dataIndex: 'created_at', width: 180 },
 ]
 
 function formatNumber(v: number): string {
@@ -361,10 +363,10 @@ async function handleSaveStrategy() {
   try {
     if (editingStrategy.value) {
       await updateStrategy(editingStrategy.value.id, strategyForm)
-      message.success('更新成功')
+      message.success(t('common.updateSuccess'))
     } else {
       await createStrategy(strategyForm)
-      message.success('创建成功')
+      message.success(t('common.createSuccess'))
     }
     closeStrategyModal()
     loadStrategies()
@@ -377,10 +379,10 @@ async function handleSaveStrategy() {
 async function deleteStrategy(id: number) {
   try {
     await deleteStrategy(id)
-    message.success('已删除')
+    message.success(t('common.deleted'))
     loadStrategies()
   } catch (e: any) {
-    message.error('删除失败')
+    message.error(t('common.deleteFailed'))
   }
 }
 

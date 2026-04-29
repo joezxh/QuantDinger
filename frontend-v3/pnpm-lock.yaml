@@ -11,12 +11,24 @@ importers:
       '@ant-design/icons-vue':
         specifier: ^7.0.1
         version: 7.0.1(vue@3.5.33(typescript@6.0.3))
+      '@codemirror/autocomplete':
+        specifier: ^6.20.1
+        version: 6.20.1
       '@codemirror/basic-setup':
         specifier: ^0.20.0
         version: 0.20.0
+      '@codemirror/commands':
+        specifier: ^6.10.3
+        version: 6.10.3
       '@codemirror/lang-python':
         specifier: ^6.2.1
         version: 6.2.1
+      '@codemirror/language':
+        specifier: ^6.12.3
+        version: 6.12.3
+      '@codemirror/search':
+        specifier: ^6.7.0
+        version: 6.7.0
       '@codemirror/state':
         specifier: ^6.6.0
         version: 6.6.0

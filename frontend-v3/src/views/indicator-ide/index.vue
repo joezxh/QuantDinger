@@ -86,7 +86,7 @@
                 <KlineChart :data="klineData" theme="dark" />
               </div>
             </a-tab-pane>
-            <a-tab-pane key="backtest" tab="回测结果">
+            <a-tab-pane key="backtest" :tab="t('indicatorIde.backtestResults')">
               <div class="pane-content results-pane">
                 <div class="results-layout">
                   <div class="params-side">
@@ -115,6 +115,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { 
   PlusOutlined, SaveOutlined, CheckCircleOutlined, ThunderboltOutlined,
   FileTextOutlined, DeleteOutlined, LeftOutlined, RightOutlined,
@@ -132,6 +133,7 @@ import {
 } from '@/api/indicator'
 
 // IDE State
+const { t } = useI18n()
 const code = ref('')
 const isDirty = ref(false)
 const indicators = ref<any[]>([])
@@ -246,7 +248,7 @@ const handleDeleteIndicator = (ind: any) => {
     onOk: async () => {
       const res = await deleteIndicator({ id: ind.id })
       if (res.code === 1) {
-        message.success('已删除')
+        message.success(t('common.deleted'))
         if (selectedIndicator.value?.id === ind.id) {
           selectedIndicator.value = null
           code.value = ''

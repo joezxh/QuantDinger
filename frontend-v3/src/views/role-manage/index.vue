@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2 class="page-title">
         <SafetyOutlined />
-        <span>角色管理</span>
+        <span>{{ t('menu.roleManage') }}</span>
       </h2>
       <p class="page-desc">管理系统角色和权限分配</p>
     </div>
@@ -84,7 +84,7 @@
             placeholder="角色描述说明"
           />
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item :label="t('common.status')">
           <a-select v-model:value="form.status">
             <a-select-option value="active">启用</a-select-option>
             <a-select-option value="disabled">禁用</a-select-option>
@@ -109,10 +109,8 @@
           default-expand-all
         />
         <div class="drawer-footer">
-          <a-button @click="permDrawerVisible = false">取消</a-button>
-          <a-button type="primary" :loading="permSaving" @click="savePermissions">
-            保存
-          </a-button>
+          <a-button @click="permDrawerVisible = false">{{ t('common.cancel') }}</a-button>
+          <a-button type="primary" :loading="permSaving" @click="savePermissions">{{ t('indicatorIde.save') }}</a-button>
         </div>
       </a-spin>
     </a-drawer>
@@ -121,6 +119,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   SafetyOutlined,
@@ -161,6 +160,7 @@ interface PermTreeNode {
   children?: PermTreeNode[]
 }
 
+const { t } = useI18n()
 const loading = ref(false)
 const keyword = ref('')
 const roles = ref<Role[]>([])
@@ -196,8 +196,8 @@ const columns = [
   { title: '角色名称', dataIndex: 'name', key: 'name' },
   { title: '角色编码', dataIndex: 'role_code', key: 'role_code' },
   { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true },
-  { title: '状态', key: 'status', slots: { customRender: 'status' }, width: 80 },
-  { title: '操作', key: 'action', slots: { customRender: 'action' }, width: 280 },
+  { title: t('common.status'), key: 'status', slots: { customRender: 'status' }, width: 80 },
+  { title: t('common.action'), key: 'action', slots: { customRender: 'action' }, width: 280 },
 ]
 
 async function fetchRoles() {

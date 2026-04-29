@@ -126,6 +126,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, nextTick, provide } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter, useRoute } from 'vue-router'
 import {
   MenuUnfoldOutlined,
@@ -142,6 +143,7 @@ import SelectLang from '@/components/SelectLang/index.vue'
 import NoticeIcon from '@/components/NoticeIcon/index.vue'
 import SettingDrawer from '@/components/SettingDrawer/index.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()

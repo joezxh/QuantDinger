@@ -3,7 +3,7 @@
     <!-- Top Bar: Market Sentiment -->
     <div class="sentiment-bar">
       <div class="sentiment-item" v-if="sentiment.fear_greed">
-        <span class="label">恐惧贪婪指数</span>
+        <span>{{ t('aiAnalysis.fearGreedIndex') }}</span>
         <span class="value" :class="sentimentClass(sentiment.fear_greed.value)">
           {{ sentiment.fear_greed.value }}
         </span>
@@ -13,7 +13,7 @@
         <span class="value">{{ sentiment.vix.value?.toFixed(2) }}</span>
       </div>
       <div class="sentiment-item" v-if="sentiment.dxy">
-        <span class="label">美元指数</span>
+        <span>{{ t('aiAnalysis.dxy') }}</span>
         <span class="value">{{ sentiment.dxy.value?.toFixed(2) }}</span>
       </div>
     </div>
@@ -22,12 +22,12 @@
     <div class="main-content">
       <!-- Left Panel: Heatmap & Calendar -->
       <div class="left-panel">
-        <a-card title="市场热力图" :bordered="false" class="panel-card">
+        <a-card :title="t('aiAnalysis.heatmap')" :bordered="false" class="panel-card">
           <a-tabs v-model:activeKey="heatmapType" size="small">
-            <a-tab-pane key="crypto" tab="加密货币" />
-            <a-tab-pane key="commodities" tab="大宗商品" />
-            <a-tab-pane key="sectors" tab="行业板块" />
-            <a-tab-pane key="forex" tab="外汇" />
+            <a-tab-pane key="crypto" :tab="t('market.crypto')" />
+            <a-tab-pane key="commodities" :tab="t('market.commodities')" />
+            <a-tab-pane key="sectors" :tab="t('market.sectors')" />
+            <a-tab-pane key="forex" :tab="t('market.forex')" />
           </a-tabs>
           <div class="heatmap-container" v-if="heatmapData.length">
             <div v-for="item in heatmapData" :key="item.symbol" class="heatmap-item" :style="{ backgroundColor: getHeatmapColor(item.change) }">
@@ -38,7 +38,7 @@
           <a-spin v-else />
         </a-card>
 
-        <a-card title="财经日历" :bordered="false" class="panel-card">
+        <a-card :title="t('aiAnalysis.economicCalendar')" :bordered="false" class="panel-card">
           <div class="calendar-list" v-if="calendarData.length">
             <div v-for="event in calendarData.slice(0, 10)" :key="event.id" class="calendar-item">
               <div class="calendar-time">{{ formatTime(event.time) }}</div>
@@ -48,7 +48,7 @@
               </div>
             </div>
           </div>
-          <a-empty v-else description="暂无日历数据" />
+          <a-empty v-else :description="t('aiAnalysis.noCalendarData')" />
         </a-card>
       </div>
 
@@ -57,23 +57,21 @@
         <a-card :bordered="false" class="analysis-card">
           <template #title>
             <div class="analysis-header">
-              <span>AI 智能分析</span>
+              <span>{{ t('aiAnalysis.title') }}</span>
               <a-space>
                 <a-select v-model:value="selectedMarket" style="width: 120px" @change="onMarketChange">
-                  <a-select-option value="crypto">加密货币</a-select-option>
-                  <a-select-option value="stock">股票</a-select-option>
-                  <a-select-option value="forex">外汇</a-select-option>
-                  <a-select-option value="commodity">大宗商品</a-select-option>
+                  <a-select-option value="crypto">{{ t('market.crypto') }}</a-select-option>
+                  <a-select-option value="stock">{{ t('aiAnalysis.selectOptionStock') }}</a-select-option>
+                  <a-select-option value="forex">{{ t('market.forex') }}</a-select-option>
+                  <a-select-option value="commodity">{{ t('aiAnalysis.selectOptionCommodity') }}</a-select-option>
                 </a-select>
                 <a-input-search
                   v-model:value="selectedSymbol"
-                  placeholder="输入标的代码"
+                  :placeholder="t('aiAnalysis.inputSymbol')"
                   style="width: 150px"
                   @search="handleAnalyze"
                 />
-                <a-button type="primary" :loading="analyzing" @click="handleAnalyze">
-                  开始分析
-                </a-button>
+                <a-button type="primary" :loading="analyzing" @click="handleAnalyze">{{ t('aiAnalysis.startAnalysis') }}</a-button>
               </a-space>
             </div>
           </template>
@@ -89,20 +87,20 @@
               </template>
               <div class="result-content" v-html="analysisResult.content"></div>
               <div class="result-actions">
-                <a-button size="small" @click="handleHistory">历史记录</a-button>
-                <a-button size="small" type="primary" @click="handleAnalyze">重新分析</a-button>
+                <a-button size="small" @click="handleHistory">{{ t('indicatorIde.history') }}</a-button>
+                <a-button size="small" type="primary" @click="handleAnalyze">{{ t('aiAnalysis.reAnalyze') }}</a-button>
               </div>
             </a-card>
           </div>
 
           <!-- Empty State -->
-          <a-empty v-else description="输入标的并点击开始分析" class="empty-state" />
+          <a-empty v-else :description="t('aiAnalysis.emptyHint')" class="empty-state" />
         </a-card>
 
         <!-- History Drawer -->
         <a-drawer
           v-model:visible="historyDrawerVisible"
-          title="分析历史"
+          :title="t('aiAnalysis.analysisHistory')"
           width="400"
           placement="right"
         >
@@ -114,9 +112,9 @@
                   <template #description>{{ formatDateTime(item.created_at) }}</template>
                 </a-list-item-meta>
                 <template #actions>
-                  <a-button type="link" size="small" @click="viewHistory(item)">查看</a-button>
-                  <a-popconfirm title="确定删除？" @confirm="deleteHistory(item.id)">
-                    <a-button type="link" size="small" danger>删除</a-button>
+                  <a-button type="link" size="small" @click="viewHistory(item)">{{ t('common.view') }}</a-button>
+                  <a-popconfirm :title="t('common.confirmDelete')" @confirm="deleteHistory(item.id)">
+                    <a-button type="link" size="small" danger>{{ t('common.delete') }}</a-button>
                   </a-popconfirm>
                 </template>
               </a-list-item>
@@ -137,10 +135,8 @@
         <a-card :bordered="false" class="watchlist-card">
           <template #title>
             <div class="watchlist-header">
-              <span>关注列表</span>
-              <a-button type="link" size="small" @click="showAddWatchlistModal">
-                添加
-              </a-button>
+              <span>{{ t('aiAnalysis.watchlist') }}</span>
+              <a-button type="link" size="small" @click="showAddWatchlistModal">{{ t('common.add') }}</a-button>
             </div>
           </template>
 
@@ -156,9 +152,7 @@
                     <div class="price">{{ item.price?.toFixed(2) }}</div>
                     <div class="change" :class="changeClass(item.change)">{{ item.change?.toFixed(2) }}%</div>
                   </div>
-                  <a-button type="link" size="small" danger @click="removeFromWatchlist(item)">
-                    移除
-                  </a-button>
+                  <a-button type="link" size="small" danger @click="removeFromWatchlist(item)">{{ t('common.remove') }}</a-button>
                 </div>
               </a-list-item>
             </template>
@@ -166,22 +160,22 @@
         </a-card>
 
         <!-- Portfolio Summary -->
-        <a-card :bordered="false" title="持仓概览" class="portfolio-card">
+        <a-card :bordered="false" :title="t('portfolio.overview')" class="portfolio-card">
           <div class="portfolio-summary" v-if="portfolioSummary">
             <div class="portfolio-item">
-              <span class="label">总仓位</span>
+              <span>{{ t('portfolio.totalPositions') }}</span>
               <span class="value">{{ portfolioSummary.total_positions }}</span>
             </div>
             <div class="portfolio-item">
-              <span class="label">总盈亏</span>
+              <span>{{ t('portfolio.totalPnl') }}</span>
               <span class="value" :class="pnlClass(portfolioSummary.total_pnl)">${{ portfolioSummary.total_pnl?.toFixed(2) }}</span>
             </div>
             <div class="portfolio-item">
-              <span class="label">监控任务</span>
+              <span>{{ t('portfolio.monitorTasks') }}</span>
               <span class="value">{{ portfolioSummary.monitor_count }}</span>
             </div>
           </div>
-          <a-empty v-else description="暂无持仓" />
+          <a-empty v-else :description="t('portfolio.noPositions')" />
         </a-card>
       </div>
     </div>
@@ -189,19 +183,19 @@
     <!-- Add Watchlist Modal -->
     <a-modal
       v-model:visible="addWatchlistModalVisible"
-      title="添加关注"
+      :title="t('aiAnalysis.addWatchlist')"
       @ok="handleAddWatchlist"
     >
       <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }">
-        <a-form-item label="市场">
+        <a-form-item :label="t('common.market')">
           <a-select v-model:value="newWatchlistMarket">
-            <a-select-option value="crypto">加密货币</a-select-option>
-            <a-select-option value="stock">股票</a-select-option>
-            <a-select-option value="forex">外汇</a-select-option>
+            <a-select-option value="crypto">{{ t('market.crypto') }}</a-select-option>
+            <a-select-option value="stock">{{ t('aiAnalysis.selectOptionStock') }}</a-select-option>
+            <a-select-option value="forex">{{ t('market.forex') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="标的代码">
-          <a-input v-model:value="newWatchlistSymbol" placeholder="如 BTC, AAPL" />
+        <a-form-item :label="t('aiAnalysis.symbolCode')">
+          <a-input v-model:value="newWatchlistSymbol" :placeholder="t('aiAnalysis.symbolPlaceholder')" />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -210,6 +204,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import {
   getMarketSentiment,
@@ -276,6 +271,7 @@ interface PortfolioSummary {
 }
 
 // State
+const { t } = useI18n()
 const sentiment = ref<SentimentData>({})
 const heatmapType = ref('crypto')
 const heatmapData = ref<HeatmapItem[]>([])
@@ -326,7 +322,7 @@ function getImpactColor(impact: string): string {
 }
 
 function getImpactLabel(impact: string): string {
-  const map: Record<string, string> = { high: '高影响', medium: '中影响', low: '低影响' }
+  const map: Record<string, string> = { high: t('impact.high'), medium: t('impact.medium'), low: t('impact.low') }
   return map[impact] || impact
 }
 
@@ -336,7 +332,7 @@ function getStatusColor(status: string): string {
 }
 
 function getStatusLabel(status: string): string {
-  const map: Record<string, string> = { completed: '已完成', processing: '分析中', failed: '失败' }
+  const map: Record<string, string> = { completed: t('status.completed'), processing: t('status.processing'), failed: t('status.failed') }
   return map[status] || status
 }
 
@@ -421,7 +417,7 @@ async function refreshPrices() {
 
 async function handleAnalyze() {
   if (!selectedSymbol.value) {
-    message.warning('请输入标的代码')
+    message.warning(t('validation.symbolRequired'))
     return
   }
   analyzing.value = true
@@ -431,18 +427,18 @@ async function handleAnalyze() {
       symbol: selectedSymbol.value,
       language: 'zh',
     })
-    if (res.code === 1) {
-      analysisResult.value = {
-        status: 'completed',
-        content: res.data?.content || res.data?.report || '分析完成',
+      if (res.code === 1) {
+        analysisResult.value = {
+          status: 'completed',
+          content: res.data?.content || res.data?.report || t('aiAnalysis.analysisComplete'),
+        }
+        message.success(t('aiAnalysis.analysisComplete'))
+      } else {
+        message.error(res.msg || t('aiAnalysis.analysisFailed'))
       }
-      message.success('分析完成')
-    } else {
-      message.error(res.msg || '分析失败')
+    } catch (e: any) {
+      message.error(e.response?.data?.msg || t('aiAnalysis.analysisFailed'))
     }
-  } catch (e: any) {
-    message.error(e.response?.data?.msg || '分析失败')
-  }
   analyzing.value = false
 }
 
@@ -462,7 +458,7 @@ async function handleHistory() {
     historyList.value = res.data?.items || []
     historyTotal.value = res.data?.total || 0
   } catch (e) {
-    message.error('加载历史失败')
+    message.error(t('aiAnalysis.loadHistoryFailed'))
   }
   historyLoading.value = false
 }
@@ -481,7 +477,7 @@ async function deleteHistory(id: number) {
     message.success('删除成功')
     handleHistory()
   } catch (e) {
-    message.error('删除失败')
+    message.error(t('common.deleteFailed'))
   }
 }
 
@@ -491,7 +487,7 @@ function showAddWatchlistModal() {
 
 async function handleAddWatchlist() {
   if (!newWatchlistSymbol.value) {
-    message.warning('请输入标的代码')
+    message.warning(t('validation.symbolRequired'))
     return
   }
   try {
@@ -499,21 +495,21 @@ async function handleAddWatchlist() {
       market: newWatchlistMarket.value,
       symbol: newWatchlistSymbol.value,
     })
-    message.success('添加成功')
+    message.success(t('aiAnalysis.addSuccess'))
     addWatchlistModalVisible.value = false
     loadWatchlist()
   } catch (e) {
-    message.error('添加失败')
+    message.error(t('aiAnalysis.addFailed'))
   }
 }
 
 async function removeFromWatchlist(item: WatchlistItem) {
   try {
     await removeWatchlist({ symbol: item.symbol })
-    message.success('移除成功')
+    message.success(t('aiAnalysis.removeSuccess'))
     loadWatchlist()
   } catch (e) {
-    message.error('移除失败')
+    message.error(t('aiAnalysis.removeFailed'))
   }
 }
 

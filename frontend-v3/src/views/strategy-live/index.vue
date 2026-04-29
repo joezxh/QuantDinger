@@ -5,7 +5,7 @@
         <h1>策略与实盘</h1>
         <div class="stats-overview">
           <div class="stat">
-            <span class="lbl">运行中</span>
+            <span>{{ t('status.running') }}</span>
             <span class="val">{{ runningCount }}</span>
           </div>
           <div class="stat">
@@ -87,7 +87,7 @@
                   <a-empty description="交易历史加载中..." />
                 </div>
               </a-tab-pane>
-              <a-tab-pane key="logs" tab="运行日志">
+              <a-tab-pane key="logs" :tab="t('trading-assistant.tabs.logs')">
                 <StrategyLogs
                   :strategy-id="selectedId"
                   :logs="logs"
@@ -115,6 +115,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message, Modal } from 'ant-design-vue'
 import { 
   PlusOutlined, CaretRightOutlined, PauseOutlined, 
@@ -130,6 +131,7 @@ import {
 } from '@/api/strategy'
 
 // State
+const { t } = useI18n()
 const loading = ref(false)
 const strategies = ref<any[]>([])
 const selectedId = ref<number | null>(null)
@@ -214,7 +216,7 @@ const handleDelete = async () => {
   if (!selectedId.value) return
   const res = await deleteStrategy(selectedId.value)
   if (res.code === 1) {
-    message.success('已删除')
+    message.success(t('common.deleted'))
     selectedId.value = null
     selectedStrategy.value = null
     loadStrategies()

@@ -81,6 +81,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { CheckCircleTwoTone, EditOutlined } from '@ant-design/icons-vue'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -89,6 +90,7 @@ import 'dayjs/locale/zh-cn'
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
 
+const { t } = useI18n()
 const props = defineProps<{
   comments: any[]
   total: number

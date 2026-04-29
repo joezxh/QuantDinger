@@ -27,22 +27,14 @@
           />
         </template>
         <template #action="{ record }">
-          <a-button type="link" size="small" @click="showRunModal(record)">
-            执行
-          </a-button>
-          <a-button type="link" size="small" @click="showLogs(record)">
-            日志
-          </a-button>
-          <a-button type="link" size="small" @click="showEditModal(record)">
-            编辑
-          </a-button>
+          <a-button type="link" size="small" @click="showRunModal(record)">{{ t('graphAnalysis.executeQuery') }}</a-button>
+          <a-button type="link" size="small" @click="showLogs(record)">{{ t('trading-bot.tab.logs') }}</a-button>
+          <a-button type="link" size="small" @click="showEditModal(record)">{{ t('common.edit') }}</a-button>
           <a-popconfirm
             title="确认删除该工作流？"
             @confirm="handleDelete(record.code)"
           >
-            <a-button type="link" size="small" danger>
-              删除
-            </a-button>
+            <a-button type="link" size="small" danger>{{ t('common.delete') }}</a-button>
           </a-popconfirm>
         </template>
       </a-table>
@@ -60,13 +52,13 @@
         <a-form-item label="编码" required>
           <a-input v-model="form.code" placeholder="如 ai_stock_analysis_v1" :disabled="isEdit" />
         </a-form-item>
-        <a-form-item label="名称" required>
+        <a-form-item :label="t('common.name')" required>
           <a-input v-model="form.name" placeholder="工作流名称" />
         </a-form-item>
         <a-form-item label="描述">
           <a-textarea v-model="form.description" :rows="2" />
         </a-form-item>
-        <a-form-item label="类型">
+        <a-form-item :label="t('common.type')">
           <a-select v-model="form.workflow_type">
             <a-select-option value="chat">Chat</a-select-option>
             <a-select-option value="workflow">Workflow</a-select-option>
@@ -138,6 +130,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import {
@@ -177,18 +170,19 @@ interface WorkflowForm {
   is_active: boolean
 }
 
+const { t } = useI18n()
 const columns = [
   { title: '编码', dataIndex: 'code', width: 160 },
-  { title: '名称', dataIndex: 'name' },
-  { title: '类型', dataIndex: 'workflow_type', width: 100 },
-  { title: '状态', slots: { customRender: 'status' }, width: 80 },
-  { title: '操作', slots: { customRender: 'action' }, width: 200 }
+  { title: t('common.name'), dataIndex: 'name' },
+  { title: t('common.type'), dataIndex: 'workflow_type', width: 100 },
+  { title: t('common.status'), slots: { customRender: 'status' }, width: 80 },
+  { title: t('common.action'), slots: { customRender: 'action' }, width: 200 }
 ]
 
 const logColumns = [
   { title: 'ID', dataIndex: 'id', width: 60 },
-  { title: '状态', dataIndex: 'status', width: 100 },
-  { title: '模式', dataIndex: 'call_mode', width: 80 },
+  { title: t('common.status'), dataIndex: 'status', width: 100 },
+  { title: t('common.mode'), dataIndex: 'call_mode', width: 80 },
   { title: 'Token', dataIndex: 'tokens_used', width: 80 },
   { title: '延迟(ms)', dataIndex: 'latency_ms', width: 100 },
   { title: '开始时间', dataIndex: 'started_at' },
@@ -288,7 +282,7 @@ async function handleDelete(code: string) {
     message.success('删除成功')
     await loadWorkflows()
   } catch (e) {
-    message.error('删除失败')
+    message.error(t('common.deleteFailed'))
   }
 }
 

@@ -39,7 +39,7 @@
 
       <a-row :gutter="16">
         <a-col :span="12">
-          <a-form-item label="方向" required>
+          <a-form-item :label="t('indicatorIde.direction')" required>
             <a-radio-group v-model:value="form.side" button-style="solid" :disabled="!!editingPosition">
               <a-radio-button value="long">做多</a-radio-button>
               <a-radio-button value="short">做空</a-radio-button>
@@ -75,9 +75,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { message } from 'ant-design-vue'
 import { searchSymbols } from '@/api/portfolio'
 
+const { t } = useI18n()
 const props = defineProps<{
   visible: boolean
   editingPosition: any

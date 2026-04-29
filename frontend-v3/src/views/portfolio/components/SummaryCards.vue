@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { WalletOutlined, DollarOutlined, RiseOutlined, FallOutlined, FundOutlined } from '@ant-design/icons-vue'
 
 defineProps<{
@@ -74,6 +75,7 @@ defineProps<{
   profitLossStats: any
 }>()
 
+const { t } = useI18n()
 const formatNumber = (num: number) => {
   if (num === undefined || num === null) return '0.00'
   return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
