@@ -11,7 +11,7 @@
         <div class="search-bar">
           <a-input-search
             v-model:value="filters.keyword"
-            placeholder="搜索您感兴趣的指标..."
+            :placeholder="t('batch.auto111')"
             enter-button="搜 索"
             size="large"
             @search="handleSearch"
@@ -43,11 +43,11 @@
           </a-radio-group>
           
           <a-select v-model:value="filters.sortBy" style="width: 160px" @change="handleFilterChange">
-            <a-select-option value="newest">最新发布</a-select-option>
-            <a-select-option value="hot">最热门</a-select-option>
-            <a-select-option value="rating">评分最高</a-select-option>
-            <a-select-option value="price_asc">价格从低到高</a-select-option>
-            <a-select-option value="price_desc">价格从高到低</a-select-option>
+            <a-select-option value="newest">{{ t('batch.auto121') }}</a-select-option>
+            <a-select-option value="hot">{{ t('batch.auto122') }}</a-select-option>
+            <a-select-option value="rating">{{ t('batch.auto123') }}</a-select-option>
+            <a-select-option value="price_asc">{{ t('batch.auto124') }}</a-select-option>
+            <a-select-option value="price_desc">{{ t('batch.auto125') }}</a-select-option>
           </a-select>
         </div>
 
@@ -66,7 +66,7 @@
         <a-spin :spinning="loading">
           <div v-if="indicators.length === 0 && !loading" class="empty-state">
             <a-empty description="未找到符合条件的指标">
-              <a-button type="primary" @click="resetFilters">重置筛选</a-button>
+              <a-button type="primary" @click="resetFilters">{{ t('batch.auto116') }}</a-button>
             </a-empty>
           </div>
           <div v-else class="indicator-grid">
@@ -117,9 +117,7 @@
                 </div>
               </template>
               <template v-if="column.key === 'price'">
-                <a-tag :color="record.pricing_type === 'free' ? 'green' : 'orange'">
-                  {{ record.pricing_type === 'free' ? '免费' : `${record.price} 积分` }}
-                </a-tag>
+                <a-tag :color="record.pricing_type === 'free' ? 'green' : 'orange'">{{ t('batch.auto120') }}</a-tag>
               </template>
               <template v-if="column.key === 'status'">
                 <a-badge :status="getStatusBadge(record.review_status)" :text="getStatusText(record.review_status)" />
@@ -128,10 +126,10 @@
                 <div class="table-actions">
                   <a-button type="link" size="small" @click="openDetail(record)">{{ t('common.view') }}</a-button>
                   <template v-if="record.review_status === 'pending'">
-                    <a-button type="link" size="small" @click="handleReview(record, 'approve')">通过</a-button>
-                    <a-button type="link" size="small" danger @click="handleReview(record, 'reject')">驳回</a-button>
+                    <a-button type="link" size="small" @click="handleReview(record, 'approve')">{{ t('batch.auto117') }}</a-button>
+                    <a-button type="link" size="small" danger @click="handleReview(record, 'reject')">{{ t('batch.auto118') }}</a-button>
                   </template>
-                  <a-popconfirm title="确定删除吗？" @confirm="handleDelete(record)">
+                  <a-popconfirm :title="t('batch.auto113')" @confirm="handleDelete(record)">
                     <a-button type="link" size="small" danger>{{ t('common.delete') }}</a-button>
                   </a-popconfirm>
                 </div>
@@ -154,7 +152,7 @@
     <!-- My Purchases Modal -->
     <a-modal
       v-model:visible="showMyPurchases"
-      title="我的获取"
+      :title="t('batch.auto114')"
       :footer="null"
       width="640px"
     >
@@ -174,7 +172,7 @@
               </a-list-item-meta>
               <template #actions>
                 <a-button type="link" @click="openDetail(item.indicator)">{{ t('common.detail') }}</a-button>
-                <a-button type="primary" size="small" @click="goToUse">使用</a-button>
+                <a-button type="primary" size="small" @click="goToUse">{{ t('batch.auto119') }}</a-button>
               </template>
             </a-list-item>
           </template>
@@ -189,8 +187,8 @@
       @ok="submitReview"
     >
       <a-form layout="vertical">
-        <a-form-item label="审核备注">
-          <a-textarea v-model:value="reviewNote" placeholder="请输入审核意见或建议..." :rows="4" />
+        <a-form-item :label="t('batch.auto115')">
+          <a-textarea v-model:value="reviewNote" :placeholder="t('batch.auto112')" :rows="4" />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -265,8 +263,8 @@ const reviewPagination = reactive({
 })
 
 const reviewColumns = [
-  { title: '指标名称', dataIndex: 'name', key: 'name' },
-  { title: '作者', key: 'author' },
+  { title: t('batch.auto126'), dataIndex: 'name', key: 'name' },
+  { title: t('batch.auto127'), key: 'author' },
   { title: t('quickTrade.price'), key: 'price' },
   { title: t('common.status'), key: 'status' },
   { title: t('common.createdAt'), dataIndex: 'created_at', key: 'created_at', width: 180 },
@@ -295,7 +293,7 @@ const loadIndicators = async () => {
       pagination.total = res.data.total || 0
     }
   } catch (e) {
-    message.error('加载指标失败')
+    message.error(t('batch.auto106'))
   } finally {
     loading.value = false
   }
@@ -354,7 +352,7 @@ const loadMyPurchases = async () => {
       myPurchases.value = res.data.items || []
     }
   } catch (e) {
-    message.error('加载我的获取失败')
+    message.error(t('batch.auto107'))
   } finally {
     purchasesLoading.value = false
   }
@@ -390,7 +388,7 @@ const loadPendingIndicators = async () => {
       reviewPagination.total = res.data.total
     }
   } catch (e) {
-    message.error('加载审核列表失败')
+    message.error(t('batch.auto108'))
   } finally {
     reviewLoading.value = false
   }
@@ -416,13 +414,13 @@ const submitReview = async () => {
       note: reviewNote.value
     })
     if (res.code === 1) {
-      message.success('审核处理成功')
+      message.success(t('batch.auto109'))
       showReviewModal.value = false
       loadPendingIndicators()
       loadReviewStats()
     }
   } catch (e) {
-    message.error('审核处理失败')
+    message.error(t('batch.auto110'))
   }
 }
 
@@ -430,7 +428,7 @@ const handleDelete = async (indicator: any) => {
   try {
     const res = await adminDeleteIndicator(indicator.id)
     if (res.code === 1) {
-      message.success('删除成功')
+      message.success(t('batch.auto1'))
       loadPendingIndicators()
       loadReviewStats()
     }

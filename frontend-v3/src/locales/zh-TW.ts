@@ -590,6 +590,50 @@ const messages: Record<string, string> = {
   'common.influence': '影響',
   'common.holdings': '持倉',
   'common.deleteSuccess': '刪除成功',
+
+  // 錯誤提示
+  'error.sessionExpired': '登入已過期，請重新登入',
+  'error.forbidden': '沒有權限訪問該資源',
+  'error.notFound': '請求的資源不存在',
+  'error.serverError': '伺服器錯誤',
+  'error.requestFailed': '請求失敗',
+  'error.networkError': '網路連線失敗',
+
+  // 登入補充
+  'user.login.title': '登入',
+  'user.login.noToken': '登入成功但未返回有效 token',
+  'user.fetchInfoFailed': '獲取使用者資訊失敗',
+
+  // Dashboard 補充
+  'dashboard.graphStatus': '知識圖譜狀態',
+  'dashboard.status.ready': '已就緒',
+  'dashboard.status.building': '資料積累中',
+  'dashboard.label.entity': '實體',
+  'dashboard.label.relation': '關係',
+  'dashboard.viewGraphAnalysis': '查看圖譜分析',
+  'dashboard.ratio': '佔比',
+
+  // 交易機器人補充
+  'trading-bot.totalInvestment': '總投資額',
+  'trading-bot.gridDesc': '在設定價格區間內自動低買高賣',
+  'trading-bot.dcaDesc': '分批買入攤低成本，達標一次賣出',
+  'trading-bot.aiRecommend': 'AI 智能推薦',
+  'trading-bot.aiRecommendDesc': '由 AI 根據當前行情分析推薦最佳策略',
+  'trading-bot.botName': '機器人名稱',
+  'trading-bot.currentPnl': '當前盈虧',
+  'trading-bot.lastRun': '最後執行',
+
+  // 使用者管理補充
+  'userManage.registerIp': '註冊IP',
+  'userManage.lastLogin': '最後登入',
+  'userManage.realized': '已實現',
+  'userManage.unrealized': '未實現',
+
+  // 通用補充2
+  'common.remarkOptional': '可選備註資訊',
+
+  // 狀態補充
+  'status.expired': '已過期',
 }
 
 export default messages

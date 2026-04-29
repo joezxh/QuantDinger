@@ -3,7 +3,7 @@
     <div class="section-header">
       <div class="title">
         <EyeOutlined />
-        <span>资产监控任务</span>
+        <span>{{ t('batch.auto235') }}</span>
       </div>
       <a-button type="primary" size="small" @click="$emit('add-monitor')">
         <PlusOutlined /> 新建监控
@@ -63,7 +63,7 @@
             <a-button type="link" size="small" @click="$emit('edit-monitor', monitor)">
               <EditOutlined />
             </a-button>
-            <a-popconfirm title="确定删除监控吗？" @confirm="$emit('delete-monitor', monitor.id)">
+            <a-popconfirm :title="t('batch.auto234')" @confirm="$emit('delete-monitor', monitor.id)">
               <a-button type="link" size="small" danger>
                 <DeleteOutlined />
               </a-button>

@@ -4,22 +4,22 @@
     <a-row :gutter="16" class="status-cards">
       <a-col :span="6">
         <a-card size="small" :loading="loading">
-          <a-statistic title="运行中 Worker" :value="runningWorkers" />
+          <a-statistic :title="t('batch.auto45')" :value="runningWorkers" />
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card size="small" :loading="loading">
-          <a-statistic title="总任务数" :value="jobs.length" />
+          <a-statistic :title="t('batch.auto46')" :value="jobs.length" />
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card size="small" :loading="loading">
-          <a-statistic title="已启用" :value="enabledJobs" :value-style="{ color: '#52c41a' }" />
+          <a-statistic :title="t('batch.auto47')" :value="enabledJobs" :value-style="{ color: '#52c41a' }" />
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card size="small" :loading="loading">
-          <a-statistic title="上次失败" :value="failedJobs" :value-style="{ color: failedJobs > 0 ? '#ff4d4f' : '#52c41a' }" />
+          <a-statistic :title="t('batch.auto48')" :value="failedJobs" :value-style="{ color: failedJobs > 0 ? '#ff4d4f' : '#52c41a' }" />
         </a-card>
       </a-col>
     </a-row>
@@ -37,7 +37,7 @@
         </a-button>
         <a-select
           v-model:value="filterSourceType"
-          placeholder="筛选数据源类型"
+          :placeholder="t('batch.auto44')"
           style="width: 180px"
           allow-clear
         >
@@ -75,7 +75,7 @@
             <a @click="handleManualRun(record, 'incremental')">增量同步</a>
             <a @click="handleManualRun(record, 'full')">全量同步</a>
             <a @click="handleEdit(record)">配置</a>
-            <a-popconfirm title="确定删除此任务？" @confirm="handleDelete(record.id)">
+            <a-popconfirm :title="t('batch.auto49')" @confirm="handleDelete(record.id)">
               <a style="color: #ff4d4f">删除</a>
             </a-popconfirm>
           </a-space>
@@ -96,7 +96,7 @@
           >
             <template #bodyCell="{ column, record: run, text }">
               <template v-if="column.key === 'run_type'">
-                <a-tag :color="text === 'full' ? 'purple' : 'blue'">{{ text === 'full' ? '全量' : '增量' }}</a-tag>
+                <a-tag :color="text === 'full' ? 'purple' : 'blue'">{{ t('batch.auto54') }}</a-tag>
               </template>
               <template v-if="column.key === 'status'">
                 <a-badge :status="statusBadgeMap[text] || 'default'" :text="statusTextMap[text] || text" />
@@ -129,12 +129,12 @@
       width="600px"
     >
       <a-form :model="formState" layout="vertical">
-        <a-form-item label="任务名称" required>
+        <a-form-item :label="t('batch.auto50')" required>
           <a-input v-model:value="formState.name" />
         </a-form-item>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="数据源类型" required>
+            <a-form-item :label="t('batch.auto51')" required>
               <a-select v-model:value="formState.source_type" :disabled="!!editId">
                 <a-select-option value="polymarket">Polymarket</a-select-option>
                 <a-select-option value="crypto">Crypto</a-select-option>
@@ -143,15 +143,15 @@
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="执行间隔 (分钟)" required>
+            <a-form-item :label="t('batch.auto52')" required>
               <a-input-number v-model:value="formState.interval_minutes" :min="1" style="width: 100%" />
             </a-form-item>
           </a-col>
         </a-row>
-        <a-form-item label="启用状态">
+        <a-form-item :label="t('batch.auto14')">
           <a-switch v-model:checked="formState.enabled" />
         </a-form-item>
-        <a-form-item label="高级配置 (JSON)">
+        <a-form-item :label="t('batch.auto53')">
           <a-textarea v-model:value="formState.config_json" :rows="4" />
         </a-form-item>
       </a-form>
@@ -188,11 +188,11 @@ const statusTextMap = { success: '成功', failed: '失败', running: '运行中
 const jobColumns = [
   { title: 'ID', dataIndex: 'id', width: 60 },
   { title: t('common.name'), dataIndex: 'name' },
-  { title: '数据源', dataIndex: 'source_type', key: 'source_type', width: 120 },
-  { title: '间隔(min)', dataIndex: 'interval_minutes', width: 100 },
+  { title: t('batch.auto16'), dataIndex: 'source_type', key: 'source_type', width: 120 },
+  { title: t('batch.auto55'), dataIndex: 'interval_minutes', width: 100 },
   { title: t('common.status'), dataIndex: 'enabled', key: 'enabled', width: 80 },
-  { title: '上次执行', dataIndex: 'last_run_at', key: 'last_run_at', width: 160 },
-  { title: '结果', dataIndex: 'last_status', key: 'last_status', width: 100 },
+  { title: t('batch.auto56'), dataIndex: 'last_run_at', key: 'last_run_at', width: 160 },
+  { title: t('batch.auto57'), dataIndex: 'last_status', key: 'last_status', width: 100 },
   { title: t('common.action'), key: 'action', width: 240 }
 ]
 
@@ -200,7 +200,7 @@ const runColumns = [
   { title: 'ID', dataIndex: 'id', width: 50 },
   { title: t('common.type'), dataIndex: 'run_type', key: 'run_type', width: 80 },
   { title: t('common.status'), dataIndex: 'status', key: 'status', width: 80 },
-  { title: '数据量', key: 'items', width: 130 },
+  { title: t('batch.auto58'), key: 'items', width: 130 },
   { title: t('common.time'), key: 'time', width: 220 },
   { title: t('common.error'), dataIndex: 'error_message', ellipsis: true }
 ]
@@ -276,7 +276,7 @@ const handleDelete = async (id: number) => {
 const handleManualRun = async (record: any, type: string) => {
   const res = await runSyncJob(record.id, { run_type: type })
   if (res.code === 1) {
-    message.success('同步已触发')
+    message.success(t('batch.auto43'))
     setTimeout(loadStatus, 2000)
   }
 }

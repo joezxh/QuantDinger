@@ -4,7 +4,7 @@
       <div class="search-box">
         <a-input-search
           v-model:value="searchText"
-          placeholder="搜索策略或标的..."
+          :placeholder="t('batch.auto282')"
           size="small"
           allow-clear
         />

@@ -10,8 +10,8 @@
     <a-form layout="vertical">
       <a-row :gutter="16">
         <a-col :span="12">
-          <a-form-item label="市场类型" required>
-            <a-select v-model:value="form.market" placeholder="选择市场" @change="handleMarketChange" :disabled="!!editingPosition">
+          <a-form-item :label="t('batch.auto247')" required>
+            <a-select v-model:value="form.market" :placeholder="t('batch.auto243')" @change="handleMarketChange" :disabled="!!editingPosition">
               <a-select-option v-for="m in marketTypes" :key="m.value" :value="m.value">
                 {{ m.label }}
               </a-select-option>
@@ -19,11 +19,11 @@
           </a-form-item>
         </a-col>
         <a-col :span="12">
-          <a-form-item label="交易标的" required>
+          <a-form-item :label="t('batch.auto248')" required>
             <a-select
               v-model:value="form.symbol"
               show-search
-              placeholder="搜索代码"
+              :placeholder="t('batch.auto244')"
               :filter-option="false"
               @search="handleSymbolSearch"
               @change="handleSymbolSelect"
@@ -47,7 +47,7 @@
           </a-form-item>
         </a-col>
         <a-col :span="12">
-          <a-form-item label="持仓数量" required>
+          <a-form-item :label="t('batch.auto249')" required>
             <a-input-number v-model:value="form.quantity" style="width: 100%" :min="0" />
           </a-form-item>
         </a-col>
@@ -55,19 +55,19 @@
 
       <a-row :gutter="16">
         <a-col :span="12">
-          <a-form-item label="入场价格" required>
+          <a-form-item :label="t('batch.auto250')" required>
             <a-input-number v-model:value="form.entry_price" style="width: 100%" :min="0" />
           </a-form-item>
         </a-col>
         <a-col :span="12">
-          <a-form-item label="所属分组">
-            <a-auto-complete v-model:value="form.group_name" :options="groupOptions" placeholder="输入或选择分组" />
+          <a-form-item :label="t('batch.auto251')">
+            <a-auto-complete v-model:value="form.group_name" :options="groupOptions" :placeholder="t('batch.auto245')" />
           </a-form-item>
         </a-col>
       </a-row>
 
-      <a-form-item label="备注说明">
-        <a-textarea v-model:value="form.notes" :rows="3" placeholder="添加备注信息..." />
+      <a-form-item :label="t('batch.auto252')">
+        <a-textarea v-model:value="form.notes" :rows="3" :placeholder="t('batch.auto246')" />
       </a-form-item>
     </a-form>
   </a-modal>
@@ -157,7 +157,7 @@ const handleSymbolSelect = (val: string) => {
 
 const handleOk = () => {
   if (!form.symbol || !form.market || !form.quantity || !form.entry_price) {
-    message.warning('请填写必要信息')
+    message.warning(t('batch.auto24'))
     return
   }
   emit('save', { ...form })

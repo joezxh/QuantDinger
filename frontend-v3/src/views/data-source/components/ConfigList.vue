@@ -8,21 +8,21 @@
         </a-button>
         <a-input-search
           v-model:value="searchText"
-          placeholder="搜索代码或名称"
+          :placeholder="t('batch.auto5')"
           style="width: 250px"
           @search="handleSearch"
         />
         <a-select
           v-model:value="filterLayer"
-          placeholder="层级筛选"
+          :placeholder="t('batch.auto6')"
           style="width: 150px"
           allow-clear
           @change="handleSearch"
         >
-          <a-select-option value="data_source">数据源</a-select-option>
-          <a-select-option value="data_provider">数据提供商</a-select-option>
-          <a-select-option value="fundamental">基本面</a-select-option>
-          <a-select-option value="sentiment">情绪</a-select-option>
+          <a-select-option value="data_source">{{ t('batch.auto16') }}</a-select-option>
+          <a-select-option value="data_provider">{{ t('batch.auto17') }}</a-select-option>
+          <a-select-option value="fundamental">{{ t('batch.auto18') }}</a-select-option>
+          <a-select-option value="sentiment">{{ t('batch.auto19') }}</a-select-option>
         </a-select>
       </a-space>
     </div>
@@ -47,7 +47,7 @@
           <a-space>
             <a @click="handleTest(record)">测试</a>
             <a @click="handleEdit(record)">编辑</a>
-            <a-popconfirm title="确定删除此数据源？关联的密钥和数据集也会被删除" @confirm="handleDelete(record.id)">
+            <a-popconfirm :title="t('batch.auto9')" @confirm="handleDelete(record.id)">
               <a style="color: #ff4d4f">删除</a>
             </a-popconfirm>
           </a-space>
@@ -66,42 +66,42 @@
       <a-form :model="formState" layout="vertical">
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="源代码" required>
-              <a-input v-model:value="formState.source_code" :disabled="!!editId" placeholder="如: crypto_ccxt" />
+            <a-form-item :label="t('batch.auto10')" required>
+              <a-input v-model:value="formState.source_code" :disabled="!!editId" :placeholder="t('batch.auto7')" />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="显示名称" required>
+            <a-form-item :label="t('batch.auto11')" required>
               <a-input v-model:value="formState.source_name" />
             </a-form-item>
           </a-col>
         </a-row>
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="层级" required>
+            <a-form-item :label="t('batch.auto12')" required>
               <a-select v-model:value="formState.layer">
-                <a-select-option value="data_source">数据源</a-select-option>
-                <a-select-option value="data_provider">数据提供商</a-select-option>
-                <a-select-option value="fundamental">基本面</a-select-option>
-                <a-select-option value="sentiment">情绪</a-select-option>
-                <a-select-option value="collector">采集器</a-select-option>
+                <a-select-option value="data_source">{{ t('batch.auto16') }}</a-select-option>
+                <a-select-option value="data_provider">{{ t('batch.auto17') }}</a-select-option>
+                <a-select-option value="fundamental">{{ t('batch.auto18') }}</a-select-option>
+                <a-select-option value="sentiment">{{ t('batch.auto19') }}</a-select-option>
+                <a-select-option value="collector">{{ t('batch.auto20') }}</a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="市场类别">
-              <a-select v-model:value="formState.market_categories" mode="multiple" placeholder="选择市场类别">
-                <a-select-option value="Crypto">加密货币</a-select-option>
-                <a-select-option value="USStock">美股</a-select-option>
-                <a-select-option value="CNStock">A股</a-select-option>
+            <a-form-item :label="t('batch.auto13')">
+              <a-select v-model:value="formState.market_categories" mode="multiple" :placeholder="t('batch.auto8')">
+                <a-select-option value="Crypto">{{ t('batch.auto21') }}</a-select-option>
+                <a-select-option value="USStock">{{ t('batch.auto22') }}</a-select-option>
+                <a-select-option value="CNStock">{{ t('batch.auto23') }}</a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
         </a-row>
-        <a-form-item label="启用状态">
+        <a-form-item :label="t('batch.auto14')">
           <a-switch v-model:checked="formState.enabled" />
         </a-form-item>
-        <a-form-item label="配置参数 (JSON)">
+        <a-form-item :label="t('batch.auto15')">
           <a-textarea v-model:value="formState.config_json_str" :rows="6" placeholder='{"base_url": "https://api.example.com"}' />
         </a-form-item>
         <a-form-item :label="t('common.remark')">
@@ -137,10 +137,10 @@ const pagination = reactive({
 
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 60 },
-  { title: '源代码', dataIndex: 'source_code' },
+  { title: t('batch.auto10'), dataIndex: 'source_code' },
   { title: t('common.name'), dataIndex: 'source_name' },
-  { title: '层级', dataIndex: 'layer' },
-  { title: '市场类别', dataIndex: 'market_categories', key: 'market_categories' },
+  { title: t('batch.auto12'), dataIndex: 'layer' },
+  { title: t('batch.auto13'), dataIndex: 'market_categories', key: 'market_categories' },
   { title: t('common.status'), dataIndex: 'enabled', key: 'enabled', width: 80 },
   { title: t('common.action'), key: 'action', width: 180 }
 ]
@@ -214,7 +214,7 @@ const handleOk = async () => {
     try {
       configJson = JSON.parse(formState.config_json_str)
     } catch (e) {
-      return message.error('JSON 格式错误')
+      return message.error(t('batch.auto3'))
     }
 
     const payload = { ...formState, id: editId.value, config_json: configJson }
@@ -240,7 +240,7 @@ const handleDelete = async (id: number) => {
 const handleTest = async (record: any) => {
   const res = await testConfig(record.id)
   if (res.code === 1) {
-    message.success('连接正常')
+    message.success(t('batch.auto4'))
   } else {
     message.error('连接失败: ' + res.msg)
   }

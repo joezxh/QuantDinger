@@ -514,6 +514,52 @@ const messages: Record<string, string> = {
   'exception.403Desc': 'Sorry, you are not authorized to access this page',
   'exception.404Desc': 'Sorry, the page you visited does not exist',
   'exception.500Desc': 'Sorry, server error',
+
+  // Errors
+  'error.sessionExpired': 'Session expired, please login again',
+  'error.forbidden': 'Forbidden',
+  'error.notFound': 'Not found',
+  'error.serverError': 'Server error',
+  'error.requestFailed': 'Request failed',
+  'error.networkError': 'Network error',
+
+  // Login additions
+  'user.login.title': 'Login',
+  'user.login.noToken': 'Login succeeded but no valid token returned',
+  'user.fetchInfoFailed': 'Failed to fetch user info',
+
+  // Dashboard additions
+  'dashboard.graphStatus': 'Knowledge Graph Status',
+  'dashboard.status.ready': 'Ready',
+  'dashboard.status.building': 'Building',
+  'dashboard.label.entity': 'Entities',
+  'dashboard.label.relation': 'Relations',
+  'dashboard.viewGraphAnalysis': 'View Graph Analysis',
+  'dashboard.ratio': 'Ratio',
+
+  // Trading Bot additions
+  'trading-bot.totalInvestment': 'Total Investment',
+  'trading-bot.gridDesc': 'Auto buy low and sell high within price range',
+  'trading-bot.dcaDesc': 'Batch buying to lower cost, sell when target reached',
+  'trading-bot.aiRecommend': 'AI Smart Recommendation',
+  'trading-bot.aiRecommendDesc': 'AI recommends optimal strategy based on current market',
+  'trading-bot.botName': 'Bot Name',
+  'trading-bot.currentPnl': 'Current P&L',
+  'trading-bot.lastRun': 'Last Run',
+
+  // User Management additions
+  'userManage.createUser': 'Create User',
+  'userManage.registerIp': 'Register IP',
+  'userManage.lastLogin': 'Last Login',
+  'userManage.realized': 'Realized',
+  'userManage.unrealized': 'Unrealized',
+
+  // Common additions
+  'common.remarkOptional': 'Optional remark',
+
+  // Status additions
+  'status.expired': 'Expired',
+
   // Graph analysis additions
   'graphAnalysis.usStock': 'US Stocks',
   'graphAnalysis.hkStock': 'HK Stocks',
@@ -579,6 +625,70 @@ const messages: Record<string, string> = {
   'common.influence': 'Influence',
   'common.holdings': 'Holdings',
   'common.deleteSuccess': 'Deleted successfully',
+
+  // Errors
+  'error.sessionExpired': 'Session expired, please login again',
+  'error.forbidden': 'Forbidden',
+  'error.notFound': 'Not found',
+  'error.serverError': 'Server error',
+  'error.requestFailed': 'Request failed',
+  'error.networkError': 'Network error',
+
+  // Login additions
+  'user.login.title': 'Login',
+  'user.login.noToken': 'Login succeeded but no valid token returned',
+  'user.fetchInfoFailed': 'Failed to fetch user info',
+
+  // Dashboard additions
+  'dashboard.graphStatus': 'Knowledge Graph Status',
+  'dashboard.status.ready': 'Ready',
+  'dashboard.status.building': 'Building',
+  'dashboard.label.entity': 'Entities',
+  'dashboard.label.relation': 'Relations',
+  'dashboard.viewGraphAnalysis': 'View Graph Analysis',
+  'dashboard.ratio': 'Ratio',
+
+  // Trading Bot additions
+  'trading-bot.totalInvestment': 'Total Investment',
+  'trading-bot.gridDesc': 'Auto buy low and sell high within price range',
+  'trading-bot.dcaDesc': 'Batch buying to lower cost, sell when target reached',
+  'trading-bot.aiRecommend': 'AI Smart Recommendation',
+  'trading-bot.aiRecommendDesc': 'AI recommends optimal strategy based on current market',
+  'trading-bot.botName': 'Bot Name',
+  'trading-bot.currentPnl': 'Current P&L',
+  'trading-bot.lastRun': 'Last Run',
+
+  // User Management additions
+  'userManage.createUser': 'Create User',
+  'userManage.registerIp': 'Register IP',
+  'userManage.lastLogin': 'Last Login',
+  'userManage.realized': 'Realized',
+  'userManage.unrealized': 'Unrealized',
+
+  // Common additions 2
+  'common.remarkOptional': 'Optional remark',
+
+  // Status additions
+  'status.expired': 'Expired',
+
+  // Trading Assistant additions
+  'trading-assistant.pageSubtitle': 'Manage strategies, monitor trades and analyze performance',
+  'trading-assistant.deleteConfirm': 'Are you sure to delete this strategy?',
+  'trading-assistant.form.strategyType': 'Strategy Type',
+  'trading-assistant.form.selectStrategyType': 'Select strategy type',
+  'trading-assistant.strategyType.maCross': 'MA Cross',
+  'trading-assistant.strategyType.bollinger': 'Bollinger Bands',
+  'trading-assistant.strategyType.custom': 'Custom',
+  'trading-assistant.form.intervalMinutes': 'Interval (minutes)',
+  'trading-assistant.form.strategyCode': 'Strategy Code',
+  'trading-assistant.form.codePlaceholder': 'Enter strategy code (optional)',
+  'trading-assistant.table.strategy': 'Strategy',
+  'trading-assistant.avgPnl': 'Average P&L',
+  'trading-assistant.loadTradesFailed': 'Failed to load trades',
+
+  // Common additions 3
+  'common.minute': 'min',
+  'common.pause': 'Pause',
 }
 
 export default messages

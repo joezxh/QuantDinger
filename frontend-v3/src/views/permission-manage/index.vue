@@ -5,7 +5,7 @@
         <LockOutlined />
         <span>{{ t('menu.permissionManage') }}</span>
       </h2>
-      <p class="page-desc">管理系统菜单和权限节点</p>
+      <p class="page-desc">{{ t('permissionManage.pageSubtitle') }}</p>
     </div>
 
     <!-- Toolbar -->
@@ -13,20 +13,20 @@
       <a-space>
         <a-button type="primary" @click="showCreateModal('dir')">
           <FolderAddOutlined />
-          新增目录
+          {{ t('permissionManage.addDir') }}
         </a-button>
         <a-button @click="showCreateModal('menu')">
           <MenuOutlined />
-          新增菜单
+          {{ t('permissionManage.addMenu') }}
         </a-button>
         <a-button @click="showCreateModal('button')">
           <ControlOutlined />
-          新增按钮
+          {{ t('permissionManage.addButton') }}
         </a-button>
       </a-space>
       <a-button @click="fetchTree">
         <ReloadOutlined />
-        刷新
+        {{ t('common.refresh') }}
       </a-button>
     </div>
 
@@ -63,7 +63,7 @@
             <EditOutlined />
           </a-button>
           <a-popconfirm
-            title="确定删除此权限？子节点将一并删除"
+            :title="t('batch.auto195')"
             @confirm="handleDelete(record.id)"
           >
             <a-button type="link" size="small" style="color: #ff4d4f">
@@ -90,21 +90,21 @@
             <a-radio value="button">按钮</a-radio>
           </a-radio-group>
         </a-form-item>
-        <a-form-item label="权限名称">
-          <a-input v-model:value="form.name" placeholder="如 用户管理" />
+        <a-form-item :label="t('batch.auto196')">
+          <a-input v-model:value="form.name" :placeholder="t('batch.auto192')" />
         </a-form-item>
-        <a-form-item label="权限编码">
+        <a-form-item :label="t('batch.auto197')">
           <a-input
             v-model:value="form.permission_code"
-            placeholder="如 system:user:view"
+            :placeholder="t('batch.auto193')"
             :disabled="!!editingPerm"
           />
         </a-form-item>
-        <a-form-item label="父级权限">
+        <a-form-item :label="t('batch.auto198')">
           <a-tree-select
             v-model:value="form.parent_id"
             :tree-data="parentTree"
-            placeholder="选择父级（目录下才能为菜单/按钮）"
+            :placeholder="t('batch.auto194')"
             :replace-fields="{ title: 'name', key: 'permId', value: 'id' }"
             tree-default-expand-all
             allow-clear
@@ -113,22 +113,22 @@
         <a-form-item v-if="form.type === 'menu'" :label="t('menuManage.column.path')">
           <a-input v-model:value="form.path" placeholder="/user-manage" />
         </a-form-item>
-        <a-form-item v-if="form.type === 'menu'" label="组件路径">
+        <a-form-item v-if="form.type === 'menu'" :label="t('batch.auto199')">
           <a-input v-model:value="form.component" placeholder="@/views/user-manage" />
         </a-form-item>
-        <a-form-item v-if="form.type !== 'button'" label="图标">
+        <a-form-item v-if="form.type !== 'button'" :label="t('batch.auto200')">
           <a-input v-model:value="form.icon" placeholder="team / setting" />
         </a-form-item>
-        <a-form-item label="排序">
+        <a-form-item :label="t('batch.auto201')">
           <a-input-number v-model:value="form.sort_order" :min="0" style="width: 100%" />
         </a-form-item>
-        <a-form-item v-if="form.type !== 'button'" label="可见">
+        <a-form-item v-if="form.type !== 'button'" :label="t('batch.auto202')">
           <a-switch v-model:checked="form.visible" />
         </a-form-item>
         <a-form-item :label="t('common.status')">
           <a-select v-model:value="form.status">
-            <a-select-option value="active">启用</a-select-option>
-            <a-select-option value="disabled">禁用</a-select-option>
+            <a-select-option value="active">{{ t('batch.auto203') }}</a-select-option>
+            <a-select-option value="disabled">{{ t('batch.auto156') }}</a-select-option>
           </a-select>
         </a-form-item>
       </a-form>
@@ -223,9 +223,9 @@ const form = reactive<PermissionForm>({
 })
 
 const columns = [
-  { title: '权限名称', dataIndex: 'name', key: 'name', slots: { customRender: 'name' } },
+  { title: t('batch.auto196'), dataIndex: 'name', key: 'name', slots: { customRender: 'name' } },
   { title: t('common.type'), dataIndex: 'type', key: 'type', slots: { customRender: 'type' }, width: 80 },
-  { title: '权限编码', dataIndex: 'permission_code', key: 'permission_code', width: 200 },
+  { title: t('batch.auto197'), dataIndex: 'permission_code', key: 'permission_code', width: 200 },
   { title: t('menuManage.column.path'), dataIndex: 'path', key: 'path', ellipsis: true, width: 160 },
   { title: t('common.status'), dataIndex: 'status', key: 'status', slots: { customRender: 'status' }, width: 80 },
   { title: t('common.action'), key: 'action', slots: { customRender: 'action' }, width: 120 },
@@ -285,7 +285,7 @@ async function fetchTree() {
     treeData.value = res.data || []
     flatList.value = flattenTree(treeData.value)
   } catch (e: any) {
-    message.error('加载权限树失败')
+    message.error(t('batch.auto187'))
   }
   loading.value = false
 }
@@ -343,17 +343,17 @@ function showEditModal(record: Permission) {
 
 async function handleModalOk() {
   if (!form.name || !form.permission_code) {
-    message.warning('请填写权限名称和编码')
+    message.warning(t('batch.auto188'))
     return
   }
   modalLoading.value = true
   try {
     if (editingPerm.value) {
       await updatePermission(editingPerm.value.id, form)
-      message.success('权限更新成功')
+      message.success(t('batch.auto189'))
     } else {
       await createPermission(form)
-      message.success('权限创建成功')
+      message.success(t('batch.auto190'))
     }
     modalVisible.value = false
     await fetchTree()
@@ -366,7 +366,7 @@ async function handleModalOk() {
 async function handleDelete(id: number) {
   try {
     await deletePermission(id)
-    message.success('权限删除成功')
+    message.success(t('batch.auto191'))
     await fetchTree()
   } catch (e: any) {
     message.error(e.response?.data?.msg || '操作失败')

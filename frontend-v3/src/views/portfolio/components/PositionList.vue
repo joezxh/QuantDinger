@@ -3,7 +3,7 @@
     <div class="section-header">
       <div class="title">
         <StockOutlined />
-        <span>持仓明细</span>
+        <span>{{ t('batch.auto239') }}</span>
       </div>
       <div class="actions">
         <a-radio-group v-model:value="viewMode" size="small" class="view-toggle">
@@ -13,13 +13,13 @@
         
         <a-select
           v-model:value="selectedGroup"
-          placeholder="全部分组"
+          :placeholder="t('batch.auto236')"
           style="width: 140px"
           allow-clear
           @change="$emit('filter-group', selectedGroup)"
         >
-          <a-select-option value="">全部分组</a-select-option>
-          <a-select-option value="__ungrouped__">未分组</a-select-option>
+          <a-select-option value="">{{ t('batch.auto236') }}</a-select-option>
+          <a-select-option value="__ungrouped__">{{ t('batch.auto240') }}</a-select-option>
           <a-select-option v-for="g in groups" :key="g.name" :value="g.name">
             {{ g.name }}
           </a-select-option>
@@ -34,7 +34,7 @@
     <div class="positions-content">
       <template v-if="positions.length === 0">
         <a-empty description="暂无持仓数据">
-          <a-button type="primary" @click="$emit('add-position')">立即添加</a-button>
+          <a-button type="primary" @click="$emit('add-position')">{{ t('batch.auto238') }}</a-button>
         </a-empty>
       </template>
 
@@ -62,7 +62,7 @@
               <a-button type="link" size="small" @click="$emit('edit-position', pos)">
                 <EditOutlined />
               </a-button>
-              <a-popconfirm title="确定删除该持仓吗？" @confirm="$emit('delete-position', pos.id)">
+              <a-popconfirm :title="t('batch.auto237')" @confirm="$emit('delete-position', pos.id)">
                 <a-button type="link" size="small" danger>
                   <DeleteOutlined />
                 </a-button>
@@ -148,7 +148,7 @@
           <template v-if="column.key === 'actions'">
             <div class="table-ops">
               <a-button type="link" size="small" @click="$emit('edit-position', record)">{{ t('common.edit') }}</a-button>
-              <a-popconfirm title="确定删除吗？" @confirm="$emit('delete-position', record.id)">
+              <a-popconfirm :title="t('batch.auto113')" @confirm="$emit('delete-position', record.id)">
                 <a-button type="link" size="small" danger>{{ t('common.delete') }}</a-button>
               </a-popconfirm>
             </div>
@@ -181,13 +181,13 @@ const viewMode = ref('grid')
 const selectedGroup = ref('')
 
 const columns = [
-  { title: '标的', key: 'symbol', fixed: 'left' },
+  { title: t('batch.auto241'), key: 'symbol', fixed: 'left' },
   { title: t('common.market'), key: 'market' },
   { title: t('portfolio.quantity'), dataIndex: 'quantity', align: 'right' },
   { title: t('portfolio.avgCost'), dataIndex: 'entry_price', align: 'right' },
   { title: t('portfolio.currentPrice'), key: 'price', align: 'right' },
   { title: t('portfolio.pnl'), key: 'pnl', align: 'right' },
-  { title: '市值', dataIndex: 'market_value', align: 'right' },
+  { title: t('batch.auto242'), dataIndex: 'market_value', align: 'right' },
   { title: t('common.action'), key: 'actions', width: 120, fixed: 'right' }
 ]
 

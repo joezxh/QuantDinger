@@ -590,6 +590,51 @@ const messages: Record<string, string> = {
   'common.influence': 'Influence',
   'common.holdings': 'Détentions',
   'common.deleteSuccess': 'Suppression réussie',
+
+  // Messages d'erreur
+  'error.sessionExpired': 'Session expirée, veuillez vous reconnecter',
+  'error.forbidden': "Accès interdit à cette ressource",
+  'error.notFound': 'Ressource introuvable',
+  'error.serverError': 'Erreur serveur',
+  'error.requestFailed': 'Échec de la requête',
+  'error.networkError': 'Échec de la connexion réseau',
+
+  // Ajouts connexion
+  'user.login.title': 'Connexion',
+  'user.login.noToken': 'Connexion réussie mais aucun token valide retourné',
+  'user.fetchInfoFailed': 'Échec de la récupération des informations utilisateur',
+
+  // Ajouts Dashboard
+  'dashboard.graphStatus': 'État du graphe de connaissances',
+  'dashboard.status.ready': 'Prêt',
+  'dashboard.status.building': 'Accumulation de données',
+  'dashboard.label.entity': 'Entité',
+  'dashboard.label.relation': 'Relation',
+  'dashboard.viewGraphAnalysis': "Voir l'analyse du graphe",
+  'dashboard.ratio': 'Ratio',
+
+  // Ajouts Trading Bot
+  'trading-bot.totalInvestment': 'Investissement total',
+  'trading-bot.gridDesc': 'Achat bas et vente haut automatiques dans la fourchette de prix',
+  'trading-bot.dcaDesc': "Achat par lots pour réduire le coût, vente unique une fois l'objectif atteint",
+  'trading-bot.aiRecommend': 'Recommandation IA',
+  'trading-bot.aiRecommendDesc': "L'IA recommande la meilleure stratégie basée sur l'analyse du marché actuel",
+  'trading-bot.botName': 'Nom du robot',
+  'trading-bot.currentPnl': 'P&L actuel',
+  'trading-bot.lastRun': 'Dernière exécution',
+
+  // Ajouts gestion utilisateurs
+  'userManage.createUser': 'Créer un utilisateur',
+  'userManage.registerIp': "IP d'enregistrement",
+  'userManage.lastLogin': 'Dernière connexion',
+  'userManage.realized': 'Réalisé',
+  'userManage.unrealized': 'Non réalisé',
+
+  // Ajouts communs 2
+  'common.remarkOptional': 'Remarque optionnelle',
+
+  // Ajouts statut
+  'status.expired': 'Expiré',
 }
 
 export default messages

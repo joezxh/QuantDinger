@@ -3,13 +3,13 @@
     <a-row :gutter="16">
       <a-col :span="6">
         <a-card>
-          <a-statistic title="总调用次数" :value="stats.total_calls" />
+          <a-statistic :title="t('batch.auto157')" :value="stats.total_calls" />
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card>
           <a-statistic
-            title="成功率"
+            :title="t('batch.auto158')"
             :value="stats.success_rate * 100"
             suffix="%"
             :precision="2"
@@ -19,17 +19,17 @@
       </a-col>
       <a-col :span="6">
         <a-card>
-          <a-statistic title="平均延迟" :value="stats.avg_latency" suffix="ms" :precision="0" />
+          <a-statistic :title="t('batch.auto159')" :value="stats.avg_latency" suffix="ms" :precision="0" />
         </a-card>
       </a-col>
       <a-col :span="6">
         <a-card>
-          <a-statistic title="活跃 Key 数量" :value="stats.active_keys" />
+          <a-statistic :title="t('batch.auto160')" :value="stats.active_keys" />
         </a-card>
       </a-col>
     </a-row>
 
-    <a-card style="margin-top: 24px" title="最近调用日志">
+    <a-card style="margin-top: 24px" :title="t('batch.auto161')">
       <a-table
         :columns="logColumns"
         :data-source="logs"
@@ -41,7 +41,7 @@
       >
         <template #bodyCell="{ column, text }">
           <template v-if="column.dataIndex === 'status'">
-            <a-tag :color="text === 1 ? 'green' : 'red'">{{ text === 1 ? '成功' : '失败' }}</a-tag>
+            <a-tag :color="text === 1 ? 'green' : 'red'">{{ t('batch.auto162') }}</a-tag>
           </template>
         </template>
       </a-table>
@@ -74,11 +74,11 @@ const pagination = reactive({
 
 const logColumns = [
   { title: t('common.time'), dataIndex: 'created_at', width: 180, customRender: ({ text }: any) => dayjs(text).format('YYYY-MM-DD HH:mm:ss') },
-  { title: '模型', dataIndex: 'model' },
-  { title: '供应商', dataIndex: 'provider_name' },
-  { title: '延迟', dataIndex: 'latency', width: 100, customRender: ({ text }: any) => `${text}ms` },
+  { title: t('batch.auto163'), dataIndex: 'model' },
+  { title: t('batch.auto150'), dataIndex: 'provider_name' },
+  { title: t('batch.auto164'), dataIndex: 'latency', width: 100, customRender: ({ text }: any) => `${text}ms` },
   { title: t('common.status'), dataIndex: 'status', width: 100 },
-  { title: '错误详情', dataIndex: 'error_msg', ellipsis: true }
+  { title: t('batch.auto165'), dataIndex: 'error_msg', ellipsis: true }
 ]
 
 const loadStats = async () => {

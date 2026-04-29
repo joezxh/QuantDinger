@@ -81,7 +81,7 @@
 
         <div class="bottom-pane" :style="{ height: (100 - editorHeight) + '%' }">
           <a-tabs v-model:activeKey="activeTab" size="small" class="ide-tabs">
-            <a-tab-pane key="chart" tab="K线图表">
+            <a-tab-pane key="chart" :tab="t('batch.auto139')">
               <div class="pane-content chart-pane">
                 <KlineChart :data="klineData" theme="dark" />
               </div>
@@ -98,7 +98,7 @@
                 </div>
               </div>
             </a-tab-pane>
-            <a-tab-pane key="ai" tab="AI 调参">
+            <a-tab-pane key="ai" :tab="t('batch.auto140')">
               <div class="pane-content ai-pane">
                 <div class="ai-empty">
                   <RobotOutlined style="font-size: 48px; color: #363c4e; margin-bottom: 16px;" />
@@ -212,10 +212,10 @@ const saveCurrentCode = async () => {
         })
       ]),
       onOk: async () => {
-        if (!name) return message.warning('请输入名称')
+        if (!name) return message.warning(t('batch.auto134'))
         const res = await saveIndicator({ name, code: code.value })
         if (res.code === 1) {
-          message.success('已保存')
+          message.success(t('batch.auto135'))
           fetchIndicators()
         }
       }
@@ -225,7 +225,7 @@ const saveCurrentCode = async () => {
 
   const res = await saveIndicator({ id: selectedIndicator.value.id, code: code.value })
   if (res.code === 1) {
-    message.success('已保存')
+    message.success(t('batch.auto135'))
     isDirty.value = false
     fetchIndicators()
   }
@@ -234,7 +234,7 @@ const saveCurrentCode = async () => {
 const handleVerifyCode = async () => {
   const res = await verifyCode({ code: code.value })
   if (res.code === 1) {
-    message.success('代码校验成功')
+    message.success(t('batch.auto136'))
   } else {
     message.error('代码存在错误: ' + res.msg)
   }
@@ -260,7 +260,7 @@ const handleDeleteIndicator = (ind: any) => {
 }
 
 const runBacktest = async (params = {}) => {
-  if (!code.value) return message.warning('请先编写代码')
+  if (!code.value) return message.warning(t('batch.auto137'))
   
   activeTab.value = 'backtest'
   backtesting.value = true
@@ -273,7 +273,7 @@ const runBacktest = async (params = {}) => {
     })
     if (res.code === 1) {
       backtestResult.value = res.data
-      message.success('回测完成')
+      message.success(t('batch.auto138'))
     }
   } finally {
     backtesting.value = false

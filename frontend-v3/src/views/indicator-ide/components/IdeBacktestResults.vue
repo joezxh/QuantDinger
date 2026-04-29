@@ -44,9 +44,7 @@
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'side'">
-              <a-tag :color="record.side === 'long' ? 'green' : 'red'">
-                {{ record.side === 'long' ? '多' : '空' }}
-              </a-tag>
+              <a-tag :color="record.side === 'long' ? 'green' : 'red'">{{ t('batch.auto133') }}</a-tag>
             </template>
             <template v-if="column.key === 'pnl'">
               <span :class="record.pnl >= 0 ? 'up' : 'down'">

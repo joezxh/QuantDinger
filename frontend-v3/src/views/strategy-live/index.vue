@@ -41,9 +41,7 @@
             <div class="strategy-title">
               <div class="name-row">
                 <h2>{{ selectedStrategy.name }}</h2>
-                <a-tag :color="selectedStrategy.status === 'running' ? 'green' : 'default'">
-                  {{ selectedStrategy.status === 'running' ? '运行中' : '已停止' }}
-                </a-tag>
+                <a-tag :color="selectedStrategy.status === 'running' ? 'green' : 'default'">{{ t('batch.auto294') }}</a-tag>
               </div>
               <div class="symbol-row">
                 <span class="symbol">{{ selectedStrategy.symbol }}</span>
@@ -63,7 +61,7 @@
               <a-button @click="openEditModal">
                 <EditOutlined /> 设置
               </a-button>
-              <a-popconfirm title="确定删除该策略吗？" @confirm="handleDelete">
+              <a-popconfirm :title="t('batch.auto290')" @confirm="handleDelete">
                 <a-button danger ghost>
                   <DeleteOutlined />
                 </a-button>
@@ -73,7 +71,7 @@
 
           <div class="detail-tabs">
             <a-tabs v-model:activeKey="activeTab">
-              <a-tab-pane key="overview" tab="概览">
+              <a-tab-pane key="overview" :tab="t('batch.auto291')">
                 <StrategyOverview
                   :strategy="selectedStrategy"
                   :stats="strategyStats"
@@ -81,7 +79,7 @@
                   :equity-curve="equityCurve"
                 />
               </a-tab-pane>
-              <a-tab-pane key="trades" tab="交易历史">
+              <a-tab-pane key="trades" :tab="t('batch.auto292')">
                 <!-- Trading Records would go here -->
                 <div class="tab-card">
                   <a-empty description="交易历史加载中..." />
@@ -102,9 +100,9 @@
           <div class="empty-selection">
             <div class="empty-box">
               <img src="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg" />
-              <h3>请从左侧选择一个策略</h3>
+              <h3>{{ t('batch.auto295') }}</h3>
               <p>查看实时运行状态、性能分析和成交历史</p>
-              <a-button type="primary" @click="openCreateModal">立即创建</a-button>
+              <a-button type="primary" @click="openCreateModal">{{ t('batch.auto293') }}</a-button>
             </div>
           </div>
         </template>
@@ -196,7 +194,7 @@ const handleStart = async () => {
   if (!selectedId.value) return
   const res = await startStrategy(selectedId.value)
   if (res.code === 1) {
-    message.success('策略已启动')
+    message.success(t('batch.auto286'))
     loadStrategies()
     if (selectedStrategy.value) selectedStrategy.value.status = 'running'
   }
@@ -206,7 +204,7 @@ const handleStop = async () => {
   if (!selectedId.value) return
   const res = await stopStrategy(selectedId.value)
   if (res.code === 1) {
-    message.success('策略已停止')
+    message.success(t('batch.auto287'))
     loadStrategies()
     if (selectedStrategy.value) selectedStrategy.value.status = 'stopped'
   }
@@ -223,8 +221,8 @@ const handleDelete = async () => {
   }
 }
 
-const openCreateModal = () => message.info('新建策略功能开发中')
-const openEditModal = () => message.info('编辑策略功能开发中')
+const openCreateModal = () => message.info(t('batch.auto288'))
+const openEditModal = () => message.info(t('batch.auto289'))
 
 // Computed
 const runningCount = computed(() => strategies.value.filter(s => s.status === 'running').length)

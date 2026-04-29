@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { login as loginApi, getUserInfo as getUserInfoApi, logout as logoutApi } from '@/api/auth'
 import { setToken, clearAuth } from '@/utils/request'
+import i18n from '@/locales'
 import type { UserInfo, LoginParams, LoginResult } from '@/types/api'
 
 export const useUserStore = defineStore('user', () => {
@@ -17,7 +18,7 @@ export const useUserStore = defineStore('user', () => {
     const res = await loginApi(params)
     const result = res?.data as LoginResult | undefined
     const accessToken = result?.token ?? (res as any)?.token ?? null
-    if (!accessToken) throw new Error('登录成功但未返回有效 token')
+    if (!accessToken) throw new Error(i18n.global.t('user.login.noToken'))
 
     token.value = accessToken
     setToken(accessToken)
@@ -37,7 +38,7 @@ export const useUserStore = defineStore('user', () => {
   async function fetchUserInfo(): Promise<UserInfo> {
     const res = await getUserInfoApi()
     const info = res?.data as UserInfo | undefined
-    if (!info) throw new Error('获取用户信息失败')
+    if (!info) throw new Error(i18n.global.t('user.fetchInfoFailed'))
 
     userInfo.value = info
     normalizeAndSetRoles(info)

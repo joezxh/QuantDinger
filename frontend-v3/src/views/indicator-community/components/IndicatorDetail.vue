@@ -56,15 +56,15 @@
         <!-- Body Content -->
         <div class="detail-body">
           <a-tabs v-model:activeKey="activeTab" class="detail-tabs">
-            <a-tab-pane key="overview" tab="概览信息">
+            <a-tab-pane key="overview" :tab="t('batch.auto101')">
               <div class="tab-content">
                 <section class="desc-section">
-                  <h3>指标描述</h3>
+                  <h3>{{ t('batch.auto104') }}</h3>
                   <p class="description">{{ detail.description || '暂无详细描述' }}</p>
                 </section>
 
                 <section v-if="performance" class="perf-section">
-                  <h3>实盘表现</h3>
+                  <h3>{{ t('batch.auto105') }}</h3>
                   <div class="perf-grid">
                     <div class="perf-card">
                       <div class="label">关联策略</div>
@@ -113,7 +113,7 @@
         <div class="detail-footer">
           <div class="price-area">
             <template v-if="detail.vip_free">
-              <a-tag color="gold" class="vip-tag">VIP 免费</a-tag>
+              <a-tag color="gold" class="vip-tag">{{ t('batch.auto103') }}</a-tag>
             </template>
             <span v-if="detail.pricing_type === 'free' || detail.price <= 0" class="price free">免费获取</span>
             <span v-else class="price paid">{{ detail.price }} <small>积分</small></span>
@@ -121,7 +121,7 @@
           
           <div class="action-btns">
             <template v-if="detail.is_own">
-              <a-button disabled size="large">您是该指标的作者</a-button>
+              <a-button disabled size="large">{{ t('batch.auto102') }}</a-button>
             </template>
             <template v-else-if="detail.is_purchased">
               <a-badge :dot="!!detail.has_update">
@@ -246,7 +246,7 @@ const loadAllData = async () => {
     }
     if (myCommentRes.code === 1) myComment.value = myCommentRes.data
   } catch (e) {
-    message.error('加载详情失败')
+    message.error(t('batch.auto91'))
   } finally {
     loading.value = false
   }
@@ -264,7 +264,7 @@ const loadMoreComments = async () => {
       comments.value.page = page
     }
   } catch (e) {
-    message.error('加载更多评价失败')
+    message.error(t('batch.auto92'))
   } finally {
     commentsLoading.value = false
   }
@@ -274,13 +274,13 @@ const handleAddComment = async (data: any) => {
   try {
     const res = await addIndicatorComment(props.indicatorId!, data)
     if (res.code === 1) {
-      message.success('评价成功')
+      message.success(t('batch.auto93'))
       loadAllData() // Reload to update scores and list
     } else {
       message.error(res.msg || '评价失败')
     }
   } catch (e) {
-    message.error('评价失败')
+    message.error(t('batch.auto94'))
   }
 }
 
@@ -291,13 +291,13 @@ const handleUpdateComment = async (data: any) => {
       content: data.content
     })
     if (res.code === 1) {
-      message.success('更新评价成功')
+      message.success(t('batch.auto95'))
       loadAllData()
     } else {
       message.error(res.msg || '更新评价失败')
     }
   } catch (e) {
-    message.error('更新评价失败')
+    message.error(t('batch.auto96'))
   }
 }
 
@@ -306,14 +306,14 @@ const handlePurchase = async () => {
   try {
     const res = await purchaseIndicator(props.indicatorId!)
     if (res.code === 1) {
-      message.success('获取成功')
+      message.success(t('batch.auto97'))
       loadAllData()
       emit('purchased')
     } else {
       message.error(res.msg || '获取失败')
     }
   } catch (e) {
-    message.error('获取失败')
+    message.error(t('batch.auto98'))
   } finally {
     purchasing.value = false
   }
@@ -328,14 +328,14 @@ const handleSyncCode = () => {
       try {
         const res = await syncIndicatorCode(props.indicatorId!)
         if (res.code === 1) {
-          message.success('同步成功')
+          message.success(t('batch.auto99'))
           loadAllData()
           emit('synced')
         } else {
           message.error(res.msg || '同步失败')
         }
       } catch (e) {
-        message.error('同步失败')
+        message.error(t('batch.auto100'))
       } finally {
         syncing.value = false
       }

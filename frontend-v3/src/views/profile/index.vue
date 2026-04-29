@@ -5,7 +5,7 @@
         <UserOutlined />
         <span>{{ t('menu.profile') }}</span>
       </h2>
-      <p class="page-desc">管理您的账户设置和偏好</p>
+      <p class="page-desc">{{ t('profile.pageSubtitle') }}</p>
     </div>
 
     <a-row :gutter="24" class="profile-cards-row">
@@ -29,17 +29,17 @@
           <div class="profile-info">
             <div class="info-item">
               <UserOutlined />
-              <span class="label">用户名:</span>
+              <span class="label">{{ t('common.username') }}:</span>
               <span class="value">{{ profile.username }}</span>
             </div>
             <div class="info-item">
               <MailOutlined />
-              <span class="label">邮箱:</span>
+              <span class="label">{{ t('common.email') }}:</span>
               <span class="value">{{ profile.email || '-' }}</span>
             </div>
             <div class="info-item">
               <CalendarOutlined />
-              <span class="label">最后登录:</span>
+              <span class="label">{{ t('userManage.lastLogin') }}:</span>
               <span class="value">{{ formatTime(profile.last_login_at) || '-' }}</span>
             </div>
           </div>
@@ -85,7 +85,7 @@
               </div>
               <div class="credits-hint" v-if="billing.billing_enabled">
                 <InfoCircleOutlined />
-                <span>使用AI分析/回测/监控等功能会消耗积分；VIP仅可免费使用VIP免费指标。</span>
+                <span>{{ t('batch.auto275') }}</span>
               </div>
             </a-card>
           </a-col>
@@ -120,7 +120,7 @@
                       size="small"
                     >
                       <template #suffix>
-                        <a-tooltip title="复制链接">
+                        <a-tooltip :title="t('batch.auto266')">
                           <CopyOutlined style="cursor: pointer" @click="copyReferralLink" />
                         </a-tooltip>
                       </template>
@@ -129,7 +129,7 @@
                 </div>
                 <div class="referral-hint" v-if="referralData.register_bonus > 0">
                   <GiftOutlined />
-                  <span>新用户注册获得 {{ referralData.register_bonus }} 积分</span>
+                  <span>{{ t('batch.auto276') }}</span>
                 </div>
               </div>
             </a-card>
@@ -144,7 +144,7 @@
         <a-card :bordered="false" class="edit-card">
           <a-tabs v-model:activeKey="activeTab">
             <!-- Basic Info Tab -->
-            <a-tab-pane key="basic" tab="基本信息">
+            <a-tab-pane key="basic" :tab="t('batch.auto268')">
               <a-form :model="profileForm" layout="vertical" class="profile-form">
                 <a-form-item :label="t('common.nickname')">
                   <a-input
@@ -162,23 +162,21 @@
                   >
                     <template #prefix><MailOutlined /></template>
                     <template #suffix>
-                      <a-tooltip title="注册后邮箱不可更改">
+                      <a-tooltip :title="t('batch.auto267')">
                         <InfoCircleOutlined style="color: rgba(0,0,0,.45)" />
                       </a-tooltip>
                     </template>
                   </a-input>
                 </a-form-item>
 
-                <a-form-item label="时区">
+                <a-form-item :label="t('batch.auto270')">
                   <a-select
                     v-model:value="profileForm.timezone"
-                    placeholder="跟随浏览器/系统"
+                    :placeholder="t('batch.auto261')"
                     show-search
                     allow-clear
                   >
-                    <a-select-option value="">
-                      跟随浏览器
-                    </a-select-option>
+                    <a-select-option value="">{{ t('batch.auto277') }}</a-select-option>
                     <a-select-option v-for="z in timezoneList" :key="z" :value="z">
                       {{ z }}
                     </a-select-option>
@@ -195,7 +193,7 @@
             </a-tab-pane>
 
             <!-- Change Password Tab -->
-            <a-tab-pane key="password" tab="修改密码">
+            <a-tab-pane key="password" :tab="t('batch.auto269')">
               <a-form :model="passwordForm" layout="vertical" class="password-form">
                 <a-alert
                   message="为了安全，修改密码需要验证邮箱。密码至少8位，包含大小写字母和数字。"
@@ -204,10 +202,10 @@
                   style="margin-bottom: 24px"
                 />
 
-                <a-form-item label="当前密码">
+                <a-form-item :label="t('batch.auto271')">
                   <a-input-password
                     v-model:value="passwordForm.current_password"
-                    placeholder="请输入当前密码"
+                    :placeholder="t('batch.auto262')"
                   >
                     <template #prefix><LockOutlined /></template>
                   </a-input-password>
@@ -216,16 +214,16 @@
                 <a-form-item :label="t('common.newPassword')">
                   <a-input-password
                     v-model:value="passwordForm.new_password"
-                    placeholder="请输入新密码"
+                    :placeholder="t('batch.auto263')"
                   >
                     <template #prefix><LockOutlined /></template>
                   </a-input-password>
                 </a-form-item>
 
-                <a-form-item label="确认新密码">
+                <a-form-item :label="t('batch.auto272')">
                   <a-input-password
                     v-model:value="passwordForm.confirm_password"
-                    placeholder="请再次输入新密码"
+                    :placeholder="t('batch.auto264')"
                   >
                     <template #prefix><LockOutlined /></template>
                   </a-input-password>
@@ -243,21 +241,21 @@
             <!-- Notification Settings Tab -->
             <a-tab-pane key="notifications" :tab="t('settings.tabs.notification')">
               <a-form :model="notificationForm" layout="vertical">
-                <a-form-item label="邮件通知">
+                <a-form-item :label="t('batch.auto273')">
                   <a-switch v-model:checked="notificationForm.email_enabled" />
                   <span style="margin-left: 8px; color: #666;">接收邮件通知</span>
                 </a-form-item>
 
-                <a-form-item label="通知类型">
+                <a-form-item :label="t('batch.auto274')">
                   <a-select
                     v-model:value="notificationForm.notification_types"
                     mode="multiple"
-                    placeholder="选择通知类型"
+                    :placeholder="t('batch.auto265')"
                   >
-                    <a-select-option value="alert">预警通知</a-select-option>
-                    <a-select-option value="monitor">监控结果</a-select-option>
-                    <a-select-option value="report">日报/周报</a-select-option>
-                    <a-select-option value="system">系统公告</a-select-option>
+                    <a-select-option value="alert">{{ t('batch.auto278') }}</a-select-option>
+                    <a-select-option value="monitor">{{ t('batch.auto279') }}</a-select-option>
+                    <a-select-option value="report">{{ t('batch.auto280') }}</a-select-option>
+                    <a-select-option value="system">{{ t('batch.auto281') }}</a-select-option>
                   </a-select>
                 </a-form-item>
 
@@ -404,7 +402,7 @@ async function loadProfile() {
       })
     }
   } catch (e: any) {
-    message.error('加载个人信息失败')
+    message.error(t('batch.auto253'))
   }
 }
 
@@ -437,7 +435,7 @@ function handleRecharge() {
 async function copyReferralLink() {
   try {
     await navigator.clipboard.writeText(referralLink.value)
-    message.success('链接已复制')
+    message.success(t('batch.auto254'))
   } catch (e) {
     message.error(t('common.copyFailed'))
   }
@@ -445,7 +443,7 @@ async function copyReferralLink() {
 
 async function handleSaveProfile() {
   if (!profileForm.nickname) {
-    message.warning('昵称不能为空')
+    message.warning(t('batch.auto255'))
     return
   }
   saving.value = true
@@ -464,15 +462,15 @@ async function handleSaveProfile() {
 
 async function handleChangePassword() {
   if (!passwordForm.current_password || !passwordForm.new_password || !passwordForm.confirm_password) {
-    message.warning('请填写完整密码信息')
+    message.warning(t('batch.auto256'))
     return
   }
   if (passwordForm.new_password !== passwordForm.confirm_password) {
-    message.warning('两次输入的密码不一致')
+    message.warning(t('batch.auto257'))
     return
   }
   if (passwordForm.new_password.length < 8) {
-    message.warning('密码至少8位')
+    message.warning(t('batch.auto258'))
     return
   }
   saving.value = true
@@ -481,7 +479,7 @@ async function handleChangePassword() {
       old_password: passwordForm.current_password,
       new_password: passwordForm.new_password,
     })
-    message.success('密码修改成功，请重新登录')
+    message.success(t('batch.auto259'))
     userStore.logout()
     router.push('/login')
   } catch (e: any) {
@@ -493,7 +491,7 @@ async function handleChangePassword() {
 async function handleSaveNotifications() {
   saving.value = true
   try {
-    message.success('通知设置已保存')
+    message.success(t('batch.auto260'))
   } catch (e: any) {
     message.error(t('common.saveFailed'))
   }

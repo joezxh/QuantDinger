@@ -474,7 +474,7 @@ async function viewHistory(item: HistoryItem) {
 async function deleteHistory(id: number) {
   try {
     await deleteHistoryApi(id)
-    message.success('删除成功')
+    message.success(t('batch.auto1'))
     handleHistory()
   } catch (e) {
     message.error(t('common.deleteFailed'))

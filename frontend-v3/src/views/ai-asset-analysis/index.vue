@@ -158,7 +158,7 @@ const formatPrice = (price: number) => {
 
 const handleOppClick = (opp: any) => {
   presetSymbol.value = opp.symbol
-  message.info(`正在分析 ${opp.symbol}`)
+  message.info(t('batch.auto2'))
 }
 
 onMounted(() => {

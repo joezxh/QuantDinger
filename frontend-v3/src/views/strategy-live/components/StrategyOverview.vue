@@ -76,9 +76,9 @@ let lineSeries: ILineSeriesApi<'Line'> | null = null
 
 const columns = [
   { title: t('common.time'), dataIndex: 'time', key: 'time' },
-  { title: '信号', key: 'type', width: 80 },
+  { title: t('batch.auto284'), key: 'type', width: 80 },
   { title: t('quickTrade.price'), dataIndex: 'price', key: 'price', align: 'right' },
-  { title: '收益', key: 'pnl', align: 'right' }
+  { title: t('batch.auto285'), key: 'pnl', align: 'right' }
 ]
 
 const initChart = () => {

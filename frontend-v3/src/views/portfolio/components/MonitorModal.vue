@@ -8,24 +8,24 @@
     width="580px"
   >
     <a-form layout="vertical">
-      <a-form-item label="任务名称" required>
-        <a-input v-model:value="form.name" placeholder="例如: 每日资产分析" />
+      <a-form-item :label="t('batch.auto50')" required>
+        <a-input v-model:value="form.name" :placeholder="t('batch.auto222')" />
       </a-form-item>
 
       <a-row :gutter="16">
         <a-col :span="12">
-          <a-form-item label="执行间隔" required>
+          <a-form-item :label="t('batch.auto225')" required>
             <a-select v-model:value="form.config.interval_minutes">
-              <a-select-option :value="5">5 分钟</a-select-option>
-              <a-select-option :value="15">15 分钟</a-select-option>
-              <a-select-option :value="60">1 小时</a-select-option>
-              <a-select-option :value="240">4 小时</a-select-option>
-              <a-select-option :value="1440">每天 (24小时)</a-select-option>
+              <a-select-option :value="5">{{ t('batch.auto229') }}</a-select-option>
+              <a-select-option :value="15">{{ t('batch.auto230') }}</a-select-option>
+              <a-select-option :value="60">{{ t('batch.auto231') }}</a-select-option>
+              <a-select-option :value="240">{{ t('batch.auto232') }}</a-select-option>
+              <a-select-option :value="1440">{{ t('batch.auto233') }}</a-select-option>
             </a-select>
           </a-form-item>
         </a-col>
         <a-col :span="12">
-          <a-form-item label="监控范围" required>
+          <a-form-item :label="t('batch.auto226')" required>
             <a-radio-group v-model:value="scopeType" button-style="solid" style="width: 100%">
               <a-radio-button value="all" style="width: 50%; text-align: center">全部持仓</a-radio-button>
               <a-radio-button value="selected" style="width: 50%; text-align: center">指定持仓</a-radio-button>
@@ -34,11 +34,11 @@
         </a-col>
       </a-row>
 
-      <a-form-item v-if="scopeType === 'selected'" label="选择监控持仓" required>
+      <a-form-item v-if="scopeType === 'selected'" :label="t('batch.auto227')" required>
         <a-select
           v-model:value="form.position_ids"
           mode="multiple"
-          placeholder="搜索并选择持仓"
+          :placeholder="t('batch.auto223')"
           style="width: 100%"
         >
           <a-select-option v-for="p in positions" :key="p.id" :value="p.id">
@@ -47,16 +47,16 @@
         </a-select>
       </a-form-item>
 
-      <a-form-item label="AI 分析提示词 (Prompt)">
+      <a-form-item :label="t('batch.auto228')">
         <a-textarea
           v-model:value="form.config.prompt"
           :rows="4"
-          placeholder="可选: 输入特定的分析指令，AI 将根据此指令对持仓进行深度评估..."
+          :placeholder="t('batch.auto224')"
         />
         <div class="hint">留空则使用系统默认的资产评估模板</div>
       </a-form-item>
 
-      <a-form-item label="通知渠道">
+      <a-form-item :label="t('batch.auto208')">
         <a-checkbox-group v-model:value="form.notification_config.channels">
           <a-checkbox value="browser">浏览器推送</a-checkbox>
           <a-checkbox value="telegram">Telegram</a-checkbox>
@@ -64,7 +64,7 @@
         </a-checkbox-group>
       </a-form-item>
 
-      <a-form-item label="激活状态">
+      <a-form-item :label="t('batch.auto210')">
         <a-switch v-model:checked="form.is_active" />
       </a-form-item>
     </a-form>
@@ -142,11 +142,11 @@ const resetForm = () => {
 
 const handleOk = () => {
   if (!form.name) {
-    message.warning('请输入任务名称')
+    message.warning(t('batch.auto220'))
     return
   }
   if (scopeType.value === 'selected' && form.position_ids.length === 0) {
-    message.warning('请至少选择一个监控持仓')
+    message.warning(t('batch.auto221'))
     return
   }
 

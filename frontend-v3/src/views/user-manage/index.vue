@@ -173,15 +173,15 @@
             <div class="card-icon green"><PlayCircleOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ strategySummary.running_strategies || 0 }}</div>
-              <div class="card-sub">实盘: {{ strategySummary.running_live_strategies || 0 }} / 仅信号: {{ strategySummary.running_signal_strategies || 0 }}</div>
-              <div class="card-label">运行中</div>
+              <div class="card-sub">{{ t('userManage.liveColon') }}: {{ strategySummary.running_live_strategies || 0 }} / {{ t('userManage.signalColon') }}: {{ strategySummary.running_signal_strategies || 0 }}</div>
+              <div class="card-label">{{ t('status.running') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
             <div class="card-icon orange"><DollarOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ formatLargeNumber(strategySummary.total_capital) }}</div>
-              <div class="card-sub">实盘: {{ formatLargeNumber(strategySummary.live_capital) }} / 仅信号: {{ formatLargeNumber(strategySummary.signal_capital) }}</div>
+              <div class="card-sub">{{ t('userManage.liveColon') }}: {{ formatLargeNumber(strategySummary.live_capital) }} / {{ t('userManage.signalColon') }}: {{ formatLargeNumber(strategySummary.signal_capital) }}</div>
               <div class="card-label">{{ t('userManage.totalCapital') }}</div>
             </div>
           </div>
@@ -192,8 +192,8 @@
                 {{ formatPnl(strategySummary.total_pnl) }}
                 <span class="roi-badge">{{ strategySummary.total_roi || 0 }}%</span>
               </div>
-              <div class="card-sub">实盘: {{ formatPnl(strategySummary.live_pnl) }} / 仅信号: {{ formatPnl(strategySummary.signal_pnl) }}</div>
-              <div class="card-label">总盈亏</div>
+              <div class="card-sub">{{ t('userManage.liveColon') }}: {{ formatPnl(strategySummary.live_pnl) }} / {{ t('userManage.signalColon') }}: {{ formatPnl(strategySummary.signal_pnl) }}</div>
+              <div class="card-label">{{ t('portfolio.totalPnl') }}</div>
             </div>
           </div>
         </div>
@@ -208,7 +208,7 @@
               <a-select-option value="stopped">{{ t('status.stopped') }}</a-select-option>
             </a-select>
             <a-select v-model:value="strategyExecutionFilter" class="toolbar-select" @change="handleStrategyExecutionFilterChange">
-              <a-select-option value="all">所有执行模式</a-select-option>
+              <a-select-option value="all">{{ t('common.allExecutionModes') }}</a-select-option>
               <a-select-option value="live">{{ t('userManage.executionLive') }}</a-select-option>
               <a-select-option value="signal">{{ t('userManage.executionSignal') }}</a-select-option>
             </a-select>
@@ -250,7 +250,7 @@
             <template #pnlInfo="{ record }">
               <div :class="record.total_pnl >= 0 ? 'text-profit' : 'text-loss'">
                 <div class="pnl-main">{{ formatPnl(record.total_pnl) }} ({{ record.roi }}%)</div>
-                <div class="pnl-sub text-muted">已实现: {{ formatPnl(record.total_realized_pnl) }} / 未实现: {{ formatPnl(record.total_unrealized_pnl) }}</div>
+                <div class="pnl-sub text-muted">{{ t('userManage.realized') }}: {{ formatPnl(record.total_realized_pnl) }} / {{ t('userManage.unrealized') }}: {{ formatPnl(record.total_unrealized_pnl) }}</div>
               </div>
             </template>
             <template #executionModeInfo="{ text }">
@@ -296,14 +296,14 @@
             <div class="card-icon green"><CheckCircleOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ orderSummary.paid_orders || 0 }}</div>
-              <div class="card-label">已支付</div>
+              <div class="card-label">{{ t('status.paid') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
             <div class="card-icon yellow"><ClockCircleOutlined /></div>
             <div class="card-content">
               <div class="card-value">{{ orderSummary.pending_orders || 0 }}</div>
-              <div class="card-label">待处理</div>
+              <div class="card-label">{{ t('status.pending') }}</div>
             </div>
           </div>
           <div class="summary-card glass-effect">
@@ -482,14 +482,14 @@
     </a-tabs>
 
     <!-- Modal sections (Keep existing) -->
-    <a-modal v-model:open="modalVisible" :title="isEdit ? '编辑用户' : '创建用户'" :confirmLoading="modalLoading" @ok="handleModalOk" @cancel="handleModalCancel">
+    <a-modal v-model:open="modalVisible" :title="isEdit ? t('userManage.editUser') : t('userManage.createUser')" :confirmLoading="modalLoading" @ok="handleModalOk" @cancel="handleModalCancel">
       <a-form :model="form" layout="vertical">
         <a-form-item :label="t('user.login.username')"><a-input v-model:value="form.username" :disabled="isEdit" :placeholder="t('user.login.usernameRequired')"><template #prefix><UserOutlined /></template></a-input></a-form-item>
         <a-form-item v-if="!isEdit" :label="t('common.password')"><a-input-password v-model:value="form.password" :placeholder="t('validation.passwordHint')"><template #prefix><LockOutlined /></template></a-input-password></a-form-item>
         <a-form-item :label="t('common.nickname')"><a-input v-model:value="form.nickname" :placeholder="t('validation.nicknameRequired')"><template #prefix><SmileOutlined /></template></a-input></a-form-item>
         <a-form-item :label="t('user.login.email')"><a-input v-model:value="form.email" type="email" :placeholder="t('user.login.emailRequired')"><template #prefix><MailOutlined /></template></a-input></a-form-item>
-        <a-form-item :label="t('common.role')"><a-select v-model:value="form.role" placeholder="选择角色"><a-select-option v-for="role in roles" :key="role.id" :value="role.id">{{ getRoleLabel(role.id) }}</a-select-option></a-select></a-form-item>
-        <a-form-item v-if="isEdit" :label="t('common.status')"><a-select v-model:value="form.status"><a-select-option value="active">启用</a-select-option><a-select-option value="disabled">禁用</a-select-option></a-select></a-form-item>
+        <a-form-item :label="t('common.role')"><a-select v-model:value="form.role" :placeholder="t('common.pleaseSelect') + t('common.role')"><a-select-option v-for="role in roles" :key="role.id" :value="role.id">{{ getRoleLabel(role.id) }}</a-select-option></a-select></a-form-item>
+        <a-form-item v-if="isEdit" :label="t('common.status')"><a-select v-model:value="form.status"><a-select-option value="active">{{ t('common.enable') }}</a-select-option><a-select-option value="disabled">{{ t('common.disable') }}</a-select-option></a-select></a-form-item>
       </a-form>
     </a-modal>
 
@@ -498,18 +498,18 @@
       <a-form :model="resetPasswordForm" layout="vertical" style="margin-top: 16px"><a-form-item :label="t('common.newPassword')"><a-input-password v-model:value="resetPasswordForm.new_password" :placeholder="t('validation.newPasswordHint')"><template #prefix><LockOutlined /></template></a-input-password></a-form-item></a-form>
     </a-modal>
 
-    <a-modal v-model:open="creditsModalVisible" :title="'调整积分' + (creditsEditingUser ? ` - ${creditsEditingUser.username}` : '')" :confirmLoading="creditsLoading" @ok="handleSetCredits">
+    <a-modal v-model:open="creditsModalVisible" :title="t('userManage.adjustCredits') + (creditsEditingUser ? ` - ${creditsEditingUser.username}` : '')" :confirmLoading="creditsLoading" @ok="handleSetCredits">
       <div class="current-credits-info" v-if="creditsEditingUser"><span class="label">{{ t('userManage.currentCredits') }}</span><span class="value">{{ formatCredits(creditsEditingUser.credits) }}</span></div>
-      <a-form layout="vertical" style="margin-top: 16px"><a-form-item :label="t('userManage.newCredits')"><a-input-number v-model:value="newCredits" :min="0" :precision="2" style="width: 100%" :placeholder="t('validation.newCreditsRequired')" /></a-form-item><a-form-item :label="t('common.remark')"><a-input v-model:value="creditsRemark" placeholder="可选备注信息" /></a-form-item></a-form>
+      <a-form layout="vertical" style="margin-top: 16px"><a-form-item :label="t('userManage.newCredits')"><a-input-number v-model:value="newCredits" :min="0" :precision="2" style="width: 100%" :placeholder="t('validation.newCreditsRequired')" /></a-form-item><a-form-item :label="t('common.remark')"><a-input v-model:value="creditsRemark" :placeholder="t('common.remarkOptional')" /></a-form-item></a-form>
     </a-modal>
 
-    <a-modal v-model:open="vipModalVisible" :title="'设置VIP' + (vipEditingUser ? ` - ${vipEditingUser.username}` : '')" :confirmLoading="vipLoading" @ok="handleSetVip">
+    <a-modal v-model:open="vipModalVisible" :title="t('userManage.setVip') + (vipEditingUser ? ` - ${vipEditingUser.username}` : '')" :confirmLoading="vipLoading" @ok="handleSetVip">
       <a-form layout="vertical" style="margin-top: 16px">
         <a-form-item :label="t('userManage.vipDays')">
-          <a-select v-model:value="vipDays" style="width: 100%"><a-select-option :value="0">{{ t('userManage.cancelVip') }}</a-select-option><a-select-option :value="7">7天</a-select-option><a-select-option :value="30">30天</a-select-option><a-select-option :value="90">90天</a-select-option><a-select-option :value="180">180天</a-select-option><a-select-option :value="365">365天</a-select-option><a-select-option :value="-1">自定义日期</a-select-option></a-select>
+          <a-select v-model:value="vipDays" style="width: 100%"><a-select-option :value="0">{{ t('userManage.cancelVip') }}</a-select-option><a-select-option :value="7">{{ t('common.days7') }}</a-select-option><a-select-option :value="30">{{ t('common.days30') }}</a-select-option><a-select-option :value="90">{{ t('common.days90') }}</a-select-option><a-select-option :value="180">{{ t('common.days180') }}</a-select-option><a-select-option :value="365">{{ t('common.days365') }}</a-select-option><a-select-option :value="-1">{{ t('common.customDate') }}</a-select-option></a-select>
         </a-form-item>
         <a-form-item v-if="vipDays === -1" :label="t('userManage.expiryTime')"><a-date-picker v-model:value="vipCustomDate" show-time format="YYYY-MM-DD HH:mm:ss" style="width: 100%" /></a-form-item>
-        <a-form-item :label="t('common.remark')"><a-input v-model:value="vipRemark" placeholder="可选备注信息" /></a-form-item>
+        <a-form-item :label="t('common.remark')"><a-input v-model:value="vipRemark" :placeholder="t('common.remarkOptional')" /></a-form-item>
       </a-form>
     </a-modal>
 
@@ -521,7 +521,7 @@
       @ok="handleAssignRoles"
     >
       <div v-if="roleEditingUser" style="margin-bottom: 16px">
-        正在为用户 <a-tag color="blue">{{ roleEditingUser.username }}</a-tag> 分配角色
+        {{ t('userManage.assigningRole', { name: roleEditingUser.username }) }}
       </div>
       <a-checkbox-group v-model:value="selectedRoleIds" style="width: 100%">
         <a-row>
@@ -636,8 +636,8 @@ const columns = [
   { title: t('userManage.credits'), dataIndex: 'credits', width: 100, slots: { customRender: 'credits' } },
   { title: t('common.vip'), dataIndex: 'vip_expires_at', width: 120, slots: { customRender: 'vip_expires_at' } },
   { title: t('common.status'), dataIndex: 'status', width: 90, slots: { customRender: 'status' } },
-  { title: '注册IP', dataIndex: 'register_ip', width: 120, slots: { customRender: 'register_ip' } },
-  { title: '最后登录', dataIndex: 'last_login_at', width: 150, slots: { customRender: 'last_login_at' } },
+  { title: t('userManage.registerIp'), dataIndex: 'register_ip', width: 120, slots: { customRender: 'register_ip' } },
+  { title: t('userManage.lastLogin'), dataIndex: 'last_login_at', width: 150, slots: { customRender: 'last_login_at' } },
   { title: t('common.action'), key: 'action', width: 220, fixed: 'right', slots: { customRender: 'action' } },
 ]
 
@@ -766,7 +766,7 @@ const loadAiStats = async () => {
 
 // Helpers
 const getRoleColor = (role) => ({ admin: 'red', manager: 'orange', user: 'blue' }[role] || 'default')
-const getRoleLabel = (role) => ({ admin: '管理员', manager: '经理', user: '用户' }[role] || role)
+const getRoleLabel = (role) => ({ admin: t('role.admin'), manager: t('role.manager'), user: t('role.user') }[role] || role)
 const formatTime = (t) => t ? dayjs(t).format('YYYY-MM-DD HH:mm:ss') : ''
 const formatDate = (t) => t ? dayjs(t).format('YYYY-MM-DD') : ''
 const formatCredits = (c) => Number(c || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
@@ -775,7 +775,7 @@ const formatLargeNumber = (n) => Number(n || 0).toLocaleString('en-US', { maximu
 const isVipActive = (e) => dayjs(e).isAfter(dayjs())
 const getUserColor = (id) => ['#1890ff', '#722ed1', '#13c2c2', '#fa8c16', '#eb2f96', '#52c41a', '#2f54eb', '#faad14'][(id || 0) % 8]
 const getOrderStatusColor = (s) => ({ paid: 'green', confirmed: 'blue', pending: 'orange', expired: 'red' }[s] || 'default')
-const getOrderStatusLabel = (s) => ({ paid: '已支付', confirmed: '已完成', pending: '待处理', expired: '已过期' }[s] || s)
+const getOrderStatusLabel = (s) => ({ paid: t('status.paid'), confirmed: t('status.completed'), pending: t('status.pending'), expired: t('status.expired') }[s] || s)
 
 // Handlers
 const handleSearch = () => { pagination.current = 1; loadUsers() }

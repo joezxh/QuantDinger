@@ -18,17 +18,17 @@
               <ConfigList />
             </div>
           </a-tab-pane>
-          <a-tab-pane key="sync-tasks" tab="调度任务管理">
+          <a-tab-pane key="sync-tasks" :tab="t('batch.auto59')">
             <div class="tab-content">
               <SyncTaskTab />
             </div>
           </a-tab-pane>
-          <a-tab-pane key="keys" tab="API 密钥">
+          <a-tab-pane key="keys" :tab="t('batch.auto60')">
             <div class="tab-content empty-content">
               <a-empty description="密钥管理模块正在迁移中..." />
             </div>
           </a-tab-pane>
-          <a-tab-pane key="datasets" tab="数据集元数据">
+          <a-tab-pane key="datasets" :tab="t('batch.auto61')">
             <div class="tab-content empty-content">
               <a-empty description="数据集管理模块正在迁移中..." />
             </div>

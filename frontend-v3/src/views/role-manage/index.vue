@@ -5,19 +5,19 @@
         <SafetyOutlined />
         <span>{{ t('menu.roleManage') }}</span>
       </h2>
-      <p class="page-desc">管理系统角色和权限分配</p>
+      <p class="page-desc">{{ t('roleManage.pageSubtitle') }}</p>
     </div>
 
     <!-- Toolbar -->
     <div class="toolbar">
       <a-button type="primary" @click="showCreateModal">
         <PlusOutlined />
-        新增角色
+        {{ t('roleManage.addRole') }}
       </a-button>
       <a-input-search
         v-model="keyword"
         class="toolbar-search"
-        placeholder="搜索角色名称/编码"
+        :placeholder="t('roleManage.searchPlaceholder')"
         allowClear
         @search="fetchRoles"
       />
@@ -33,26 +33,26 @@
     >
       <template #status="{ record }">
         <a-badge :status="record.status === 'active' ? 'success' : 'default'" />
-        {{ record.status === 'active' ? '启用' : '禁用' }}
+        {{ record.status === 'active' ? t('common.enable') : t('common.disable') }}
       </template>
 
       <template #action="{ record }">
         <a-space>
           <a-button type="link" size="small" @click="showEditModal(record)">
             <EditOutlined />
-            编辑
+            {{ t('common.edit') }}
           </a-button>
           <a-button type="link" size="small" @click="showPermissionModal(record)">
             <KeyOutlined />
-            分配权限
+            {{ t('roleManage.assignPermission') }}
           </a-button>
           <a-popconfirm
-            title="确定删除此角色？"
+            :title="t('roleManage.deleteConfirm')"
             @confirm="handleDelete(record.id)"
           >
             <a-button type="link" size="small" style="color: #ff4d4f">
               <DeleteOutlined />
-              删除
+              {{ t('common.delete') }}
             </a-button>
           </a-popconfirm>
         </a-space>
@@ -67,27 +67,27 @@
       :confirmLoading="modalLoading"
     >
       <a-form :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }">
-        <a-form-item label="角色名称">
-          <a-input v-model:value="form.name" placeholder="请输入角色名称" />
+        <a-form-item :label="t('roleManage.roleName')">
+          <a-input v-model:value="form.name" :placeholder="t('roleManage.roleNamePlaceholder')" />
         </a-form-item>
-        <a-form-item label="角色编码">
+        <a-form-item :label="t('roleManage.roleCode')">
           <a-input
             v-model:value="form.role_code"
-            placeholder="如 admin / trader"
+            :placeholder="t('roleManage.roleCodePlaceholder')"
             :disabled="!!editingRole"
           />
         </a-form-item>
-        <a-form-item label="描述">
+        <a-form-item :label="t('common.remark')">
           <a-textarea
             v-model:value="form.description"
             :rows="3"
-            placeholder="角色描述说明"
+            :placeholder="t('roleManage.descriptionPlaceholder')"
           />
         </a-form-item>
         <a-form-item :label="t('common.status')">
           <a-select v-model:value="form.status">
-            <a-select-option value="active">启用</a-select-option>
-            <a-select-option value="disabled">禁用</a-select-option>
+            <a-select-option value="active">{{ t('common.enable') }}</a-select-option>
+            <a-select-option value="disabled">{{ t('common.disable') }}</a-select-option>
           </a-select>
         </a-form-item>
       </a-form>
@@ -185,17 +185,17 @@ const checkedPermIds = ref<number[]>([])
 const permIdMap = ref<Record<string, number>>({})
 
 const modalTitle = computed(() =>
-  editingRole.value ? '编辑角色' : '新增角色'
+  editingRole.value ? t('roleManage.editRole') : t('roleManage.addRole')
 )
 
 const permDrawerTitle = computed(() =>
-  `分配权限 - ${editingRole.value?.name || ''}`
+  `${t('roleManage.assignPermission')} - ${editingRole.value?.name || ''}`
 )
 
 const columns = [
-  { title: '角色名称', dataIndex: 'name', key: 'name' },
-  { title: '角色编码', dataIndex: 'role_code', key: 'role_code' },
-  { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true },
+  { title: t('roleManage.roleName'), dataIndex: 'name', key: 'name' },
+  { title: t('roleManage.roleCode'), dataIndex: 'role_code', key: 'role_code' },
+  { title: t('common.remark'), dataIndex: 'description', key: 'description', ellipsis: true },
   { title: t('common.status'), key: 'status', slots: { customRender: 'status' }, width: 80 },
   { title: t('common.action'), key: 'action', slots: { customRender: 'action' }, width: 280 },
 ]
@@ -206,7 +206,7 @@ async function fetchRoles() {
     const res = await getRoleList({ page: 1, page_size: 200 })
     roles.value = res.data?.items || []
   } catch (e: any) {
-    message.error('加载角色列表失败')
+    message.error(t('roleManage.loadFailed'))
   }
   loading.value = false
 }
@@ -225,22 +225,22 @@ function showEditModal(record: Role) {
 
 async function handleModalOk() {
   if (!form.name || !form.role_code) {
-    message.warning('请填写角色名称和编码')
+    message.warning(t('roleManage.nameCodeRequired'))
     return
   }
   modalLoading.value = true
   try {
     if (editingRole.value) {
       await updateRole(editingRole.value.id, form)
-      message.success('角色更新成功')
+      message.success(t('common.updateSuccess'))
     } else {
       await createRole(form)
-      message.success('角色创建成功')
+      message.success(t('common.createSuccess'))
     }
     modalVisible.value = false
     await fetchRoles()
   } catch (e: any) {
-    message.error(e.response?.data?.msg || '操作失败')
+    message.error(e.response?.data?.msg || t('common.failed'))
   }
   modalLoading.value = false
 }
@@ -248,10 +248,10 @@ async function handleModalOk() {
 async function handleDelete(id: number) {
   try {
     await deleteRole(id)
-    message.success('角色删除成功')
+    message.success(t('common.deleteSuccess'))
     await fetchRoles()
   } catch (e: any) {
-    message.error(e.response?.data?.msg || '操作失败')
+    message.error(e.response?.data?.msg || t('common.failed'))
   }
 }
 
@@ -292,7 +292,7 @@ async function showPermissionModal(record: Role) {
     checkedKeys.value = backendIds.map((id: number) => idToTreeKey[id]).filter(Boolean)
     checkedPermIds.value = [...backendIds]
   } catch (e: any) {
-    message.error('加载权限数据失败')
+    message.error(t('roleManage.permLoadFailed'))
   }
   permLoading.value = false
 }
@@ -309,11 +309,11 @@ async function savePermissions() {
   try {
     if (permRoleId.value !== null) {
       await assignPermissionsToRole(permRoleId.value, checkedPermIds.value)
-      message.success('权限分配成功')
+      message.success(t('roleManage.permAssignSuccess'))
       permDrawerVisible.value = false
     }
   } catch (e: any) {
-    message.error(e.response?.data?.msg || '操作失败')
+    message.error(e.response?.data?.msg || t('common.failed'))
   }
   permSaving.value = false
 }

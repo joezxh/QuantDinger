@@ -37,30 +37,30 @@
       @ok="handleOk"
     >
       <a-form :model="formState" :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }">
-        <a-form-item label="供应商" name="provider_id" required>
-          <a-select v-model:value="formState.provider_id" placeholder="选择供应商">
+        <a-form-item :label="t('batch.auto150')" name="provider_id" required>
+          <a-select v-model:value="formState.provider_id" :placeholder="t('batch.auto147')">
             <a-select-option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="模型代码" name="model_name" required>
-          <a-input v-model:value="formState.model_name" placeholder="例如: gpt-4o" />
+        <a-form-item :label="t('batch.auto168')" name="model_name" required>
+          <a-input v-model:value="formState.model_name" :placeholder="t('batch.auto166')" />
         </a-form-item>
-        <a-form-item label="显示名称" name="display_name" required>
-          <a-input v-model:value="formState.display_name" placeholder="例如: GPT-4 Omni" />
+        <a-form-item :label="t('batch.auto11')" name="display_name" required>
+          <a-input v-model:value="formState.display_name" :placeholder="t('batch.auto167')" />
         </a-form-item>
-        <a-form-item label="负载均衡策略" name="lb_strategy">
+        <a-form-item :label="t('batch.auto169')" name="lb_strategy">
           <a-select v-model:value="formState.lb_strategy">
-            <a-select-option value="round_robin">轮询 (Round Robin)</a-select-option>
-            <a-select-option value="weighted_round_robin">加权轮询</a-select-option>
-            <a-select-option value="random">随机</a-select-option>
-            <a-select-option value="least_connections">最小连接数</a-select-option>
-            <a-select-option value="consistent_hash">一致性哈希</a-select-option>
+            <a-select-option value="round_robin">{{ t('batch.auto172') }}</a-select-option>
+            <a-select-option value="weighted_round_robin">{{ t('batch.auto173') }}</a-select-option>
+            <a-select-option value="random">{{ t('batch.auto174') }}</a-select-option>
+            <a-select-option value="least_connections">{{ t('batch.auto175') }}</a-select-option>
+            <a-select-option value="consistent_hash">{{ t('batch.auto176') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="最大重试次数" name="retries">
+        <a-form-item :label="t('batch.auto170')" name="retries">
           <a-input-number v-model:value="formState.retries" :min="0" :max="10" style="width: 100%" />
         </a-form-item>
-        <a-form-item label="超时时间 (s)" name="timeout">
+        <a-form-item :label="t('batch.auto171')" name="timeout">
           <a-input-number v-model:value="formState.timeout" :min="1" :max="300" style="width: 100%" />
         </a-form-item>
       </a-form>
@@ -78,10 +78,10 @@ import { getModels, saveModel, deleteModel, getProviders } from '@/api/llm'
 const { t } = useI18n()
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 80 },
-  { title: '供应商', dataIndex: 'provider_name' },
-  { title: '模型名称', dataIndex: 'model_name' },
-  { title: '显示名称', dataIndex: 'display_name' },
-  { title: '均衡策略', dataIndex: 'lb_strategy' },
+  { title: t('batch.auto150'), dataIndex: 'provider_name' },
+  { title: t('batch.auto177'), dataIndex: 'model_name' },
+  { title: t('batch.auto11'), dataIndex: 'display_name' },
+  { title: t('batch.auto178'), dataIndex: 'lb_strategy' },
   { title: t('common.action'), key: 'action', width: 150 }
 ]
 
@@ -164,7 +164,7 @@ const handleEdit = (record: any) => {
 
 const handleOk = async () => {
   if (!formState.provider_id || !formState.model_name || !formState.display_name) {
-    message.warning('请填写必填项')
+    message.warning(t('batch.auto146'))
     return
   }
   confirmLoading.value = true
@@ -185,7 +185,7 @@ const handleOk = async () => {
 const handleDelete = async (id: number) => {
   try {
     await deleteModel(id)
-    message.success('删除成功')
+    message.success(t('batch.auto1'))
     loadData()
   } catch (e) {
     message.error(t('common.deleteFailed'))

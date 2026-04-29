@@ -590,6 +590,51 @@ const messages: Record<string, string> = {
   'common.influence': 'Einfluss',
   'common.holdings': 'Bestände',
   'common.deleteSuccess': 'Erfolgreich gelöscht',
+
+  // Fehlermeldungen
+  'error.sessionExpired': 'Sitzung abgelaufen, bitte erneut anmelden',
+  'error.forbidden': 'Zugriff auf diese Ressource verweigert',
+  'error.notFound': 'Ressource nicht gefunden',
+  'error.serverError': 'Serverfehler',
+  'error.requestFailed': 'Anfrage fehlgeschlagen',
+  'error.networkError': 'Netzwerkverbindung fehlgeschlagen',
+
+  // Anmeldung Ergänzungen
+  'user.login.title': 'Anmeldung',
+  'user.login.noToken': 'Anmeldung erfolgreich, aber kein gültiges Token zurückgegeben',
+  'user.fetchInfoFailed': 'Benutzerinformationen konnten nicht abgerufen werden',
+
+  // Dashboard Ergänzungen
+  'dashboard.graphStatus': 'Wissensgraph-Status',
+  'dashboard.status.ready': 'Bereit',
+  'dashboard.status.building': 'Daten werden aufgebaut',
+  'dashboard.label.entity': 'Entität',
+  'dashboard.label.relation': 'Relation',
+  'dashboard.viewGraphAnalysis': 'Graph-Analyse anzeigen',
+  'dashboard.ratio': 'Anteil',
+
+  // Trading Bot Ergänzungen
+  'trading-bot.totalInvestment': 'Gesamtinvestition',
+  'trading-bot.gridDesc': 'Automatisch niedrig kaufen und hoch verkaufen im festgelegten Preisbereich',
+  'trading-bot.dcaDesc': 'Stückweise kaufen um Kosten zu senken, einmal verkaufen wenn Ziel erreicht',
+  'trading-bot.aiRecommend': 'KI Smart Empfehlung',
+  'trading-bot.aiRecommendDesc': 'KI empfiehlt optimale Strategie basierend auf aktueller Marktanalyse',
+  'trading-bot.botName': 'Bot-Name',
+  'trading-bot.currentPnl': 'Aktueller Gewinn/Verlust',
+  'trading-bot.lastRun': 'Letzte Ausführung',
+
+  // Benutzerverwaltung Ergänzungen
+  'userManage.createUser': 'Benutzer erstellen',
+  'userManage.registerIp': 'Registrierungs-IP',
+  'userManage.lastLogin': 'Letzte Anmeldung',
+  'userManage.realized': 'Realisiert',
+  'userManage.unrealized': 'Unrealisiert',
+
+  // Gemeinsame Ergänzungen 2
+  'common.remarkOptional': 'Optionale Bemerkung',
+
+  // Status Ergänzungen
+  'status.expired': 'Abgelaufen',
 }
 
 export default messages

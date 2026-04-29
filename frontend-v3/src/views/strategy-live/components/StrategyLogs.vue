@@ -6,7 +6,7 @@
       </div>
       <div class="actions">
         <a-checkbox v-model:checked="autoScroll">自动滚动</a-checkbox>
-        <a-button size="small" @click="clearLogs">清空日志</a-button>
+        <a-button size="small" @click="clearLogs">{{ t('batch.auto283') }}</a-button>
       </div>
     </div>
     

@@ -590,6 +590,51 @@ const messages: Record<string, string> = {
   'common.influence': '影響',
   'common.holdings': '保有量',
   'common.deleteSuccess': '削除しました',
+
+  // エラー提示
+  'error.sessionExpired': 'セッションの有効期限が切れました。再ログインしてください',
+  'error.forbidden': 'このリソースへのアクセス権限がありません',
+  'error.notFound': 'リクエストされたリソースが存在しません',
+  'error.serverError': 'サーバーエラー',
+  'error.requestFailed': 'リクエストに失敗しました',
+  'error.networkError': 'ネットワーク接続に失敗しました',
+
+  // ログイン追加
+  'user.login.title': 'ログイン',
+  'user.login.noToken': 'ログインに成功しましたが、有効なトークンが返されませんでした',
+  'user.fetchInfoFailed': 'ユーザー情報の取得に失敗しました',
+
+  // Dashboard 追加
+  'dashboard.graphStatus': 'ナレッジグラフ状態',
+  'dashboard.status.ready': '準備完了',
+  'dashboard.status.building': 'データ蓄積中',
+  'dashboard.label.entity': 'エンティティ',
+  'dashboard.label.relation': 'リレーション',
+  'dashboard.viewGraphAnalysis': 'グラフ分析を表示',
+  'dashboard.ratio': '比率',
+
+  // トレードボット追加
+  'trading-bot.totalInvestment': '総投資額',
+  'trading-bot.gridDesc': '設定した価格帯で自動的に低買い高売り',
+  'trading-bot.dcaDesc': '分散購入でコストを抑え、目標達成で一括売却',
+  'trading-bot.aiRecommend': 'AI スマート推奨',
+  'trading-bot.aiRecommendDesc': 'AIが現在の市場分析に基づいて最適な戦略を推奨',
+  'trading-bot.botName': 'ボット名',
+  'trading-bot.currentPnl': '現在の損益',
+  'trading-bot.lastRun': '最終実行',
+
+  // ユーザー管理追加
+  'userManage.createUser': 'ユーザーを作成',
+  'userManage.registerIp': '登録IP',
+  'userManage.lastLogin': '最終ログイン',
+  'userManage.realized': '実現済み',
+  'userManage.unrealized': '未実現',
+
+  // 共通追加2
+  'common.remarkOptional': 'オプションの備考',
+
+  // ステータス追加
+  'status.expired': '期限切れ',
 }
 
 export default messages

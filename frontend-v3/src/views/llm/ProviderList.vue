@@ -40,16 +40,16 @@
       @ok="handleOk"
     >
       <a-form :model="formState" :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }">
-        <a-form-item label="供应商名称" name="name" required>
-          <a-input v-model:value="formState.name" placeholder="例如: OpenAI" />
+        <a-form-item :label="t('batch.auto182')" name="name" required>
+          <a-input v-model:value="formState.name" :placeholder="t('batch.auto179')" />
         </a-form-item>
-        <a-form-item label="代码 (Code)" name="code" required>
-          <a-input v-model:value="formState.code" placeholder="例如: openai" />
+        <a-form-item :label="t('batch.auto183')" name="code" required>
+          <a-input v-model:value="formState.code" :placeholder="t('batch.auto180')" />
         </a-form-item>
-        <a-form-item label="API 地址" name="base_url" required>
-          <a-input v-model:value="formState.base_url" placeholder="例如: https://api.openai.com/v1" />
+        <a-form-item :label="t('batch.auto184')" name="base_url" required>
+          <a-input v-model:value="formState.base_url" :placeholder="t('batch.auto181')" />
         </a-form-item>
-        <a-form-item label="API 类型" name="api_type">
+        <a-form-item :label="t('batch.auto185')" name="api_type">
           <a-select v-model:value="formState.api_type">
             <a-select-option value="openai">OpenAI</a-select-option>
             <a-select-option value="openrouter">OpenRouter</a-select-option>
@@ -79,9 +79,9 @@ const { t } = useI18n()
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 80 },
   { title: t('common.name'), dataIndex: 'name' },
-  { title: '代码', dataIndex: 'code' },
-  { title: 'API 地址', dataIndex: 'base_url' },
-  { title: 'API 类型', dataIndex: 'api_type' },
+  { title: t('batch.auto186'), dataIndex: 'code' },
+  { title: t('batch.auto184'), dataIndex: 'base_url' },
+  { title: t('batch.auto185'), dataIndex: 'api_type' },
   { title: t('common.status'), dataIndex: 'status' },
   { title: t('common.action'), key: 'action', width: 150 }
 ]
@@ -154,7 +154,7 @@ const handleEdit = (record: any) => {
 
 const handleOk = async () => {
   if (!formState.name || !formState.code || !formState.base_url) {
-    message.warning('请填写必填项')
+    message.warning(t('batch.auto146'))
     return
   }
   confirmLoading.value = true
@@ -178,7 +178,7 @@ const handleOk = async () => {
 const handleDelete = async (id: number) => {
   try {
     await deleteProvider(id)
-    message.success('删除成功')
+    message.success(t('batch.auto1'))
     loadData()
   } catch (e) {
     message.error(t('common.deleteFailed'))

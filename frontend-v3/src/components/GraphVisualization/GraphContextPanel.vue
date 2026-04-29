@@ -10,24 +10,24 @@
             </a-tag>
           </a-space>
         </a-descriptions-item>
-        <a-descriptions-item label="近期事件" v-if="hasEvents">
+        <a-descriptions-item :label="t('batch.auto296')" v-if="hasEvents">
           <a-timeline size="small" class="mt-8">
             <a-timeline-item v-for="(evt, idx) in events.slice(0, 5)" :key="idx">
               {{ evt.title || '未知事件' }}
             </a-timeline-item>
           </a-timeline>
         </a-descriptions-item>
-        <a-descriptions-item label="主要股东" v-if="hasHolders">
+        <a-descriptions-item :label="t('batch.auto297')" v-if="hasHolders">
           <a-space wrap>
             <span v-for="(h, idx) in holders.slice(0, 3)" :key="idx">
               {{ h.institution }}<span v-if="idx < holders.slice(0, 3).length - 1">, </span>
             </span>
           </a-space>
         </a-descriptions-item>
-        <a-descriptions-item label="KOL 共识" v-if="context.kol_consensus">
+        <a-descriptions-item :label="t('batch.auto298')" v-if="context.kol_consensus">
           <pre class="json-pre">{{ JSON.stringify(context.kol_consensus, null, 2) }}</pre>
         </a-descriptions-item>
-        <a-descriptions-item label="聪明钱" v-if="context.smart_money">
+        <a-descriptions-item :label="t('batch.auto299')" v-if="context.smart_money">
           <pre class="json-pre">{{ JSON.stringify(context.smart_money, null, 2) }}</pre>
         </a-descriptions-item>
         <a-descriptions-item :label="t('market.crypto')" v-if="hasPredictionSignals">

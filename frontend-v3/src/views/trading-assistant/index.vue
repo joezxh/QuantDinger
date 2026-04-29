@@ -5,7 +5,7 @@
         <ThunderboltOutlined />
         <span>{{ t('menu.tradingAssistant') }}</span>
       </h2>
-      <p class="page-desc">管理策略、监控交易记录和分析性能</p>
+      <p class="page-desc">{{ t('trading-assistant.pageSubtitle') }}</p>
     </div>
 
     <!-- 策略管理Tab -->
@@ -15,14 +15,14 @@
           <div class="section-header">
             <div class="header-left">
               <a-radio-group v-model:value="groupByMode" size="small">
-                <a-radio-button value="strategy">按策略</a-radio-button>
-                <a-radio-button value="symbol">按标的</a-radio-button>
+                <a-radio-button value="strategy">{{ t('trading-assistant.groupByStrategy') }}</a-radio-button>
+                <a-radio-button value="symbol">{{ t('trading-assistant.groupBySymbol') }}</a-radio-button>
               </a-radio-group>
             </div>
             <div class="header-right">
               <a-button type="primary" @click="showCreateStrategy">
                 <PlusOutlined />
-                创建策略
+                {{ t('trading-assistant.createStrategy') }}
               </a-button>
             </div>
           </div>
@@ -32,7 +32,7 @@
               <a-empty :description="t('trading-assistant.empty.title')">
                 <a-button type="primary" @click="showCreateStrategy">
                   <PlusOutlined />
-                  创建第一个策略
+                  {{ t('trading-assistant.empty.primary') }}
                 </a-button>
               </a-empty>
             </div>
@@ -47,7 +47,7 @@
                     <a-button type="link" size="small" @click="editStrategy(strategy)">
                       <EditOutlined />
                     </a-button>
-                    <a-popconfirm title="确定删除此策略？" @confirm="deleteStrategy(strategy.id)">
+                    <a-popconfirm :title="t('trading-assistant.deleteConfirm')" @confirm="deleteStrategy(strategy.id)">
                       <a-button type="link" size="small">
                         <DeleteOutlined style="color: #ff4d4f" />
                       </a-button>
@@ -56,15 +56,15 @@
                 </div>
                 <div class="strategy-details">
                   <div class="detail-item">
-                    <span class="label">标的:</span>
+                    <span class="label">{{ t('common.tradingPair') }}:</span>
                     <span class="value">{{ strategy.symbol }}</span>
                   </div>
                   <div class="detail-item">
-                    <span class="label">周期:</span>
-                    <span class="value">{{ strategy.interval }}分钟</span>
+                    <span class="label">{{ t('common.timeframe') }}:</span>
+                    <span class="value">{{ strategy.interval }}{{ t('common.minute') }}</span>
                   </div>
                   <div class="detail-item" v-if="strategy.last_run_at">
-                    <span class="label">最后运行:</span>
+                    <span class="label">{{ t('trading-bot.lastRun') }}:</span>
                     <span class="value">{{ formatTime(strategy.last_run_at) }}</span>
                   </div>
                 </div>
@@ -89,12 +89,12 @@
             :columns="tradeColumns"
             :data-source="trades"
             :loading="loadingTrades"
-            :pagination="{ pageSize: 20, showTotal: (total: number) => `共 ${total} 条` }"
+            :pagination="{ pageSize: 20, showTotal: (total: number) => t('common.total', { total }) }"
             :row-key="(record: any) => record.id"
           >
             <template #side="{ record }">
               <a-tag :color="record.side === 'BUY' ? 'green' : 'red'">
-                {{ record.side === 'BUY' ? '买入' : '卖出' }}
+                {{ record.side === 'BUY' ? t('quickTrade.buy') : t('quickTrade.sell') }}
               </a-tag>
             </template>
 
@@ -107,24 +107,24 @@
         </div>
       </a-tab-pane>
 
-      <a-tab-pane key="performance" tab="性能分析">
+      <a-tab-pane key="performance" :tab="t('trading-assistant.tabs.performance')">
         <div class="performance-section">
           <a-row :gutter="16">
             <a-col :span="6">
               <a-card class="stat-card">
-                <div class="stat-label">总交易次数</div>
+                <div class="stat-label">{{ t('dashboard.totalTrades') }}</div>
                 <div class="stat-value">{{ performanceStats.total_trades || 0 }}</div>
               </a-card>
             </a-col>
             <a-col :span="6">
               <a-card class="stat-card">
-                <div class="stat-label">胜率</div>
+                <div class="stat-label">{{ t('dashboard.winRate') }}</div>
                 <div class="stat-value">{{ performanceStats.win_rate || 0 }}%</div>
               </a-card>
             </a-col>
             <a-col :span="6">
               <a-card class="stat-card">
-                <div class="stat-label">总盈亏</div>
+                <div class="stat-label">{{ t('portfolio.totalPnl') }}</div>
                 <div class="stat-value" :class="performanceStats.total_pnl >= 0 ? 'profit' : 'loss'">
                   ${{ formatNumber(performanceStats.total_pnl || 0) }}
                 </div>
@@ -132,7 +132,7 @@
             </a-col>
             <a-col :span="6">
               <a-card class="stat-card">
-                <div class="stat-label">平均盈亏</div>
+                <div class="stat-label">{{ t('trading-assistant.avgPnl') }}</div>
                 <div class="stat-value" :class="performanceStats.avg_pnl >= 0 ? 'profit' : 'loss'">
                   ${{ formatNumber(performanceStats.avg_pnl || 0) }}
                 </div>
@@ -146,7 +146,7 @@
     <!-- 创建/编辑策略Modal -->
     <a-modal
       v-model:visible="strategyModalVisible"
-      :title="editingStrategy ? '编辑策略' : '创建策略'"
+      :title="editingStrategy ? t('trading-assistant.editStrategy') : t('trading-assistant.createStrategy')"
       :confirmLoading="savingStrategy"
       @ok="handleSaveStrategy"
       @cancel="closeStrategyModal"
@@ -157,20 +157,20 @@
         </a-form-item>
 
         <a-form-item :label="t('aiAnalysis.symbolCode')">
-          <a-input v-model:value="strategyForm.symbol" placeholder="例如: AAPL, BTC/USD" />
+          <a-input v-model:value="strategyForm.symbol" :placeholder="t('aiAnalysis.symbolPlaceholder')" />
         </a-form-item>
 
-        <a-form-item label="策略类型">
-          <a-select v-model:value="strategyForm.strategy_type" placeholder="选择策略类型">
-            <a-select-option value="ma_cross">均线交叉</a-select-option>
+        <a-form-item :label="t('trading-assistant.form.strategyType')">
+          <a-select v-model:value="strategyForm.strategy_type" :placeholder="t('trading-assistant.form.selectStrategyType')">
+            <a-select-option value="ma_cross">{{ t('trading-assistant.strategyType.maCross') }}</a-select-option>
             <a-select-option value="rsi">RSI</a-select-option>
             <a-select-option value="macd">MACD</a-select-option>
-            <a-select-option value="bollinger">布林带</a-select-option>
-            <a-select-option value="custom">自定义</a-select-option>
+            <a-select-option value="bollinger">{{ t('trading-assistant.strategyType.bollinger') }}</a-select-option>
+            <a-select-option value="custom">{{ t('trading-assistant.strategyType.custom') }}</a-select-option>
           </a-select>
         </a-form-item>
 
-        <a-form-item label="运行间隔(分钟)">
+        <a-form-item :label="t('trading-assistant.form.intervalMinutes')">
           <a-input-number
             v-model:value="strategyForm.interval"
             :min="1"
@@ -181,17 +181,17 @@
 
         <a-form-item :label="t('common.status')">
           <a-select v-model:value="strategyForm.status">
-            <a-select-option value="active">启用</a-select-option>
-            <a-select-option value="paused">暂停</a-select-option>
-            <a-select-option value="stopped">停止</a-select-option>
+            <a-select-option value="active">{{ t('common.enable') }}</a-select-option>
+            <a-select-option value="paused">{{ t('common.pause') }}</a-select-option>
+            <a-select-option value="stopped">{{ t('common.stop') }}</a-select-option>
           </a-select>
         </a-form-item>
 
-        <a-form-item label="策略代码">
+        <a-form-item :label="t('trading-assistant.form.strategyCode')">
           <a-textarea
             v-model:value="strategyForm.code"
             :rows="6"
-            placeholder="输入策略代码（可选）"
+            :placeholder="t('trading-assistant.form.codePlaceholder')"
           />
         </a-form-item>
       </a-form>
@@ -265,8 +265,8 @@ const strategyForm = reactive({
 
 const tradeColumns = [
   { title: 'ID', dataIndex: 'id', width: 60 },
-  { title: '策略', dataIndex: 'strategy_name', width: 120 },
-  { title: '标的', dataIndex: 'symbol', width: 100 },
+  { title: t('trading-assistant.table.strategy'), dataIndex: 'strategy_name', width: 120 },
+  { title: t('common.tradingPair'), dataIndex: 'symbol', width: 100 },
   { title: t('indicatorIde.direction'), dataIndex: 'side', width: 80, slots: { customRender: 'side' } },
   { title: t('portfolio.quantity'), dataIndex: 'quantity', width: 100 },
   { title: t('quickTrade.price'), dataIndex: 'price', width: 100 },
@@ -297,7 +297,7 @@ async function loadStrategies() {
       strategies.value = Array.isArray(res.data) ? res.data : []
     }
   } catch (e: any) {
-    message.error('加载策略失败')
+    message.error(t('common.loadFailed'))
   }
   loadingStrategies.value = false
 }
@@ -315,7 +315,7 @@ async function loadTrades() {
       trades.value = Array.isArray(res.data) ? res.data : []
     }
   } catch (e: any) {
-    message.error('加载交易记录失败')
+    message.error(t('trading-assistant.loadTradesFailed'))
   }
   loadingTrades.value = false
 }
@@ -356,7 +356,7 @@ function closeStrategyModal() {
 
 async function handleSaveStrategy() {
   if (!strategyForm.name || !strategyForm.symbol) {
-    message.warning('请填写必要信息')
+    message.warning(t('validation.strategyNameRequired'))
     return
   }
   savingStrategy.value = true
@@ -371,7 +371,7 @@ async function handleSaveStrategy() {
     closeStrategyModal()
     loadStrategies()
   } catch (e: any) {
-    message.error(e.response?.data?.msg || '操作失败')
+    message.error(e.response?.data?.msg || t('common.failed'))
   }
   savingStrategy.value = false
 }

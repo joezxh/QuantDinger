@@ -13,12 +13,12 @@
         <div class="price">当前价格: ${{ formatPrice(targetPosition?.current_price) }}</div>
       </div>
 
-      <a-form-item label="预警类型" required>
+      <a-form-item :label="t('batch.auto206')" required>
         <a-select v-model:value="form.alert_type">
-          <a-select-option value="price_above">价格上涨至</a-select-option>
-          <a-select-option value="price_below">价格下跌至</a-select-option>
-          <a-select-option value="pnl_above">收益率上涨至 (%)</a-select-option>
-          <a-select-option value="pnl_below">收益率下跌至 (%)</a-select-option>
+          <a-select-option value="price_above">{{ t('batch.auto211') }}</a-select-option>
+          <a-select-option value="price_below">{{ t('batch.auto212') }}</a-select-option>
+          <a-select-option value="pnl_above">{{ t('batch.auto213') }}</a-select-option>
+          <a-select-option value="pnl_below">{{ t('batch.auto214') }}</a-select-option>
         </a-select>
       </a-form-item>
 
@@ -26,17 +26,17 @@
         <a-input-number v-model:value="form.threshold" style="width: 100%" :precision="isPriceAlert ? 4 : 2" />
       </a-form-item>
 
-      <a-form-item label="重复提醒">
+      <a-form-item :label="t('batch.auto207')">
         <a-select v-model:value="form.repeat_interval">
-          <a-select-option :value="0">不重复 (仅一次)</a-select-option>
-          <a-select-option :value="5">每 5 分钟</a-select-option>
-          <a-select-option :value="15">每 15 分钟</a-select-option>
-          <a-select-option :value="60">每 1 小时</a-select-option>
-          <a-select-option :value="1440">每天一次</a-select-option>
+          <a-select-option :value="0">{{ t('batch.auto215') }}</a-select-option>
+          <a-select-option :value="5">{{ t('batch.auto216') }}</a-select-option>
+          <a-select-option :value="15">{{ t('batch.auto217') }}</a-select-option>
+          <a-select-option :value="60">{{ t('batch.auto218') }}</a-select-option>
+          <a-select-option :value="1440">{{ t('batch.auto219') }}</a-select-option>
         </a-select>
       </a-form-item>
 
-      <a-form-item label="通知渠道">
+      <a-form-item :label="t('batch.auto208')">
         <a-checkbox-group v-model:value="form.notification_config.channels">
           <a-checkbox value="browser">浏览器推送</a-checkbox>
           <a-checkbox value="telegram">Telegram</a-checkbox>
@@ -44,11 +44,11 @@
         </a-checkbox-group>
       </a-form-item>
 
-      <a-form-item label="预警备注">
-        <a-textarea v-model:value="form.notes" :rows="2" placeholder="备注预警原因..." />
+      <a-form-item :label="t('batch.auto209')">
+        <a-textarea v-model:value="form.notes" :rows="2" :placeholder="t('batch.auto205')" />
       </a-form-item>
 
-      <a-form-item label="激活状态">
+      <a-form-item :label="t('batch.auto210')">
         <a-switch v-model:checked="form.is_active" />
       </a-form-item>
     </a-form>
@@ -116,7 +116,7 @@ const formatPrice = (price: number) => {
 
 const handleOk = () => {
   if (form.threshold === 0) {
-    message.warning('请输入有效的阈值')
+    message.warning(t('batch.auto204'))
     return
   }
   emit('save', {

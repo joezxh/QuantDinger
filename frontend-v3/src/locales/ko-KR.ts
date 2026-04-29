@@ -590,6 +590,51 @@ const messages: Record<string, string> = {
   'common.influence': '영향',
   'common.holdings': '보유량',
   'common.deleteSuccess': '삭제 성공',
+
+  // 오류 메시지
+  'error.sessionExpired': '세션이 만료되었습니다. 다시 로그인해 주세요',
+  'error.forbidden': '해당 리소스에 접근할 권한이 없습니다',
+  'error.notFound': '요청한 리소스가 존재하지 않습니다',
+  'error.serverError': '서버 오류',
+  'error.requestFailed': '요청 실패',
+  'error.networkError': '네트워크 연결 실패',
+
+  // 로그인 추가
+  'user.login.title': '로그인',
+  'user.login.noToken': '로그인은 성공했지만 유효한 토큰이 반환되지 않았습니다',
+  'user.fetchInfoFailed': '사용자 정보를 가져오지 못했습니다',
+
+  // Dashboard 추가
+  'dashboard.graphStatus': '지식 그래프 상태',
+  'dashboard.status.ready': '준비 완료',
+  'dashboard.status.building': '데이터 축적 중',
+  'dashboard.label.entity': '엔티티',
+  'dashboard.label.relation': '관계',
+  'dashboard.viewGraphAnalysis': '그래프 분석 보기',
+  'dashboard.ratio': '비율',
+
+  // 트레이딩 봇 추가
+  'trading-bot.totalInvestment': '총 투자액',
+  'trading-bot.gridDesc': '설정된 가격대에서 자동으로 저점매수 고점매도',
+  'trading-bot.dcaDesc': '분할 매수로 평균 단가를 낮추고 목표 달성 시 일괄 매도',
+  'trading-bot.aiRecommend': 'AI 스마트 추천',
+  'trading-bot.aiRecommendDesc': 'AI가 현재 시장 분석을 기반으로 최적의 전략을 추천',
+  'trading-bot.botName': '봇 이름',
+  'trading-bot.currentPnl': '현재 손익',
+  'trading-bot.lastRun': '마지막 실행',
+
+  // 사용자 관리 추가
+  'userManage.createUser': '사용자 생성',
+  'userManage.registerIp': '등록 IP',
+  'userManage.lastLogin': '마지막 로그인',
+  'userManage.realized': '실현됨',
+  'userManage.unrealized': '미실현',
+
+  // 공통 추가2
+  'common.remarkOptional': '선택적 비고',
+
+  // 상태 추가
+  'status.expired': '만료됨',
 }
 
 export default messages

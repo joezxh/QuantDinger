@@ -2,7 +2,7 @@
   <div class="backtest-params">
     <div class="params-header">
       <ControlOutlined />
-      <span>回测参数配置</span>
+      <span>{{ t('batch.auto132') }}</span>
     </div>
     
     <a-form layout="vertical" size="small">
@@ -28,24 +28,24 @@
         <div class="group-title">资金与风控</div>
         <a-row :gutter="8">
           <a-col :span="12">
-            <a-form-item label="初始资金 ($)">
+            <a-form-item :label="t('batch.auto128')">
               <a-input-number v-model:value="params.initial_capital" style="width: 100%" :min="100" />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="杠杆倍数 (x)">
+            <a-form-item :label="t('batch.auto129')">
               <a-input-number v-model:value="params.leverage" style="width: 100%" :min="1" :max="125" />
             </a-form-item>
           </a-col>
         </a-row>
         <a-row :gutter="8">
           <a-col :span="12">
-            <a-form-item label="手续费 (%)">
+            <a-form-item :label="t('batch.auto130')">
               <a-input-number v-model:value="params.commission" style="width: 100%" :min="0" :max="1" :step="0.01" />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="滑点 (%)">
+            <a-form-item :label="t('batch.auto131')">
               <a-input-number v-model:value="params.slippage" style="width: 100%" :min="0" :max="5" :step="0.01" />
             </a-form-item>
           </a-col>

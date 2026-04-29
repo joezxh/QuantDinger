@@ -3,9 +3,9 @@
     <div class="page-header">
       <h2 class="page-title">
         <RobotOutlined />
-        <span>{{ $t('menu.tradingBot', '交易机器人') }}</span>
+        <span>{{ $t('menu.tradingBot') }}</span>
       </h2>
-      <p class="page-desc">部署、监控和管理自动化量化交易机器人</p>
+      <p class="page-desc">{{ t('trading-bot.pageSubtitle') }}</p>
     </div>
 
     <!-- KPI Cards -->
@@ -17,7 +17,7 @@
               <WalletOutlined />
             </div>
             <div class="kpi-body">
-              <div class="kpi-label">总投资额</div>
+              <div class="kpi-label">{{ t('trading-bot.totalInvestment') }}</div>
               <div class="kpi-value">${{ formatNumber(totalEquity) }}</div>
             </div>
           </div>
@@ -30,7 +30,7 @@
               <StockOutlined />
             </div>
             <div class="kpi-body">
-              <div class="kpi-label">总盈亏</div>
+              <div class="kpi-label">{{ t('portfolio.totalPnl') }}</div>
               <div class="kpi-value" :class="totalPnl >= 0 ? 'profit' : 'loss'">
                 {{ totalPnl >= 0 ? '+' : '' }}${{ formatNumber(totalPnl) }}
               </div>
@@ -45,7 +45,7 @@
               <PlayCircleOutlined />
             </div>
             <div class="kpi-body">
-              <div class="kpi-label">运行中</div>
+              <div class="kpi-label">{{ t('status.running') }}</div>
               <div class="kpi-value">{{ runningCount }} / {{ totalCount }}</div>
             </div>
           </div>
@@ -58,7 +58,7 @@
               <PauseCircleOutlined />
             </div>
             <div class="kpi-body">
-              <div class="kpi-label">已停止</div>
+              <div class="kpi-label">{{ t('status.stopped') }}</div>
               <div class="kpi-value">{{ stoppedCount }}</div>
             </div>
           </div>
@@ -68,15 +68,15 @@
 
     <!-- Bot Types -->
     <div class="section-title">
-      <h3>新建机器人</h3>
+      <h3>{{ t('trading-bot.createNew') }}</h3>
     </div>
     <a-row :gutter="16" class="bot-types-row">
       <a-col :span="8">
         <a-card class="type-card" hoverable @click="createBot('grid')">
           <div class="type-icon"><AppstoreOutlined /></div>
           <div class="type-info">
-            <h4>网格交易</h4>
-            <p>在设定价格区间内自动低买高卖</p>
+            <h4>{{ t('trading-bot.type.grid') }}</h4>
+            <p>{{ t('trading-bot.gridDesc') }}</p>
           </div>
         </a-card>
       </a-col>
@@ -84,8 +84,8 @@
         <a-card class="type-card" hoverable @click="createBot('dca')">
           <div class="type-icon"><LineChartOutlined /></div>
           <div class="type-info">
-            <h4>DCA定投</h4>
-            <p>分批买入摊低成本，达标一次卖出</p>
+            <h4>{{ t('trading-bot.type.dca') }}</h4>
+            <p>{{ t('trading-bot.dcaDesc') }}</p>
           </div>
         </a-card>
       </a-col>
@@ -93,8 +93,8 @@
         <a-card class="type-card ai-card" hoverable @click="showAiDialog = true">
           <div class="type-icon"><BulbOutlined /></div>
           <div class="type-info">
-            <h4>AI 智能推荐</h4>
-            <p>由 AI 根据当前行情分析推荐最佳策略</p>
+            <h4>{{ t('trading-bot.aiRecommend') }}</h4>
+            <p>{{ t('trading-bot.aiRecommendDesc') }}</p>
           </div>
         </a-card>
       </a-col>
@@ -102,7 +102,7 @@
 
     <!-- Bot List -->
     <div class="section-title" style="margin-top: 24px;">
-      <h3>我的机器人</h3>
+      <h3>{{ t('trading-bot.myBots') }}</h3>
       <a-button type="primary" size="small" @click="loadBots" :loading="loading">{{ t('common.refresh') }}</a-button>
     </div>
     <a-table
@@ -121,7 +121,7 @@
         </template>
         <template v-if="column.key === 'status'">
           <a-tag :color="record.status === 'running' ? 'success' : 'default'">
-            {{ record.status === 'running' ? '运行中' : '已停止' }}
+            {{ record.status === 'running' ? t('status.running') : t('status.stopped') }}
           </a-tag>
         </template>
         <template v-if="column.key === 'pnl'">
@@ -138,7 +138,7 @@
               :danger="record.status === 'running'"
               @click="toggleStatus(record)"
             >
-              {{ record.status === 'running' ? '停止' : '启动' }}
+              {{ record.status === 'running' ? t('common.stop') : t('common.start') }}
             </a-button>
           </a-space>
         </template>
@@ -175,11 +175,11 @@ const totalCount = computed(() => bots.value.length)
 const stoppedCount = computed(() => totalCount.value - runningCount.value)
 
 const columns = [
-  { title: '机器人名称', dataIndex: 'name', key: 'name' },
+  { title: t('trading-bot.botName'), dataIndex: 'name', key: 'name' },
   { title: t('common.tradingPair'), dataIndex: 'symbol', key: 'symbol' },
   { title: t('common.status'), dataIndex: 'status', key: 'status' },
-  { title: '当前盈亏', dataIndex: 'unrealized_pnl', key: 'pnl' },
-  { title: '最后运行', dataIndex: 'last_run_at', key: 'last_run_at' },
+  { title: t('trading-bot.currentPnl'), dataIndex: 'unrealized_pnl', key: 'pnl' },
+  { title: t('trading-bot.lastRun'), dataIndex: 'last_run_at', key: 'last_run_at' },
   { title: t('common.action'), key: 'action' }
 ]
 
@@ -198,7 +198,7 @@ const loadBots = async () => {
       bots.value = all.filter((s: any) => s.strategy_mode === 'bot' || s.bot_type)
     }
   } catch (error) {
-    message.error('Failed to load bots')
+    message.error(t('common.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -217,13 +217,13 @@ const toggleStatus = async (record: any) => {
     const action = record.status === 'running' ? stopStrategy : startStrategy
     const res: any = await action(record.id)
     if (res.code === 1) {
-      message.success('状态已更新')
+      message.success(t('common.updateSuccess'))
       loadBots()
     } else {
-      message.error(res.msg || '操作失败')
+      message.error(res.msg || t('common.failed'))
     }
   } catch (error) {
-    message.error('请求失败')
+    message.error(t('common.failed'))
   }
 }
 

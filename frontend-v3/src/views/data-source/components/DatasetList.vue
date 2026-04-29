@@ -22,7 +22,7 @@
         <template v-if="column.key === 'action'">
           <a-space>
             <a-button type="link" size="small" @click="editDataset(record)">{{ t('common.edit') }}</a-button>
-            <a-popconfirm title="确定删除?" @confirm="handleDelete(record.id)">
+            <a-popconfirm :title="t('batch.auto28')" @confirm="handleDelete(record.id)">
               <a-button type="link" danger size="small">{{ t('common.delete') }}</a-button>
             </a-popconfirm>
           </a-space>
@@ -38,22 +38,22 @@
     >
       <a-form layout="vertical">
         <a-form-item :label="t('common.name')" required>
-          <a-input v-model:value="form.name" placeholder="数据集名称" />
+          <a-input v-model:value="form.name" :placeholder="t('batch.auto26')" />
         </a-form-item>
-        <a-form-item label="代码 (Symbol)" required>
-          <a-input v-model:value="form.symbol" placeholder="例如: BTC-USDT" />
+        <a-form-item :label="t('batch.auto29')" required>
+          <a-input v-model:value="form.symbol" :placeholder="t('batch.auto27')" />
         </a-form-item>
-        <a-form-item label="时间周期">
+        <a-form-item :label="t('batch.auto30')">
           <a-select v-model:value="form.timeframe">
-            <a-select-option value="1m">1分钟</a-select-option>
-            <a-select-option value="5m">5分钟</a-select-option>
-            <a-select-option value="15m">15分钟</a-select-option>
-            <a-select-option value="1H">1小时</a-select-option>
-            <a-select-option value="4H">4小时</a-select-option>
-            <a-select-option value="1D">1天</a-select-option>
+            <a-select-option value="1m">{{ t('batch.auto32') }}</a-select-option>
+            <a-select-option value="5m">{{ t('batch.auto33') }}</a-select-option>
+            <a-select-option value="15m">{{ t('batch.auto34') }}</a-select-option>
+            <a-select-option value="1H">{{ t('batch.auto35') }}</a-select-option>
+            <a-select-option value="4H">{{ t('batch.auto36') }}</a-select-option>
+            <a-select-option value="1D">{{ t('batch.auto37') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="数据源配置ID">
+        <a-form-item :label="t('batch.auto31')">
           <a-input-number v-model:value="form.config_id" style="width: 100%" />
         </a-form-item>
       </a-form>
@@ -86,8 +86,8 @@ const columns = [
   { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
   { title: t('common.name'), dataIndex: 'name', key: 'name' },
   { title: t('aiAnalysis.symbolCode'), dataIndex: 'symbol', key: 'symbol' },
-  { title: '时间周期', dataIndex: 'timeframe', key: 'timeframe' },
-  { title: '配置ID', dataIndex: 'config_id', key: 'config_id' },
+  { title: t('batch.auto30'), dataIndex: 'timeframe', key: 'timeframe' },
+  { title: t('batch.auto38'), dataIndex: 'config_id', key: 'config_id' },
   { title: t('common.createdAt'), dataIndex: 'created_at', key: 'created_at' },
   { title: t('common.action'), key: 'action', width: 150 }
 ]
@@ -125,7 +125,7 @@ const editDataset = (record: any) => {
 
 const handleSave = async () => {
   if (!form.name || !form.symbol) {
-    message.warning('请填写必要信息')
+    message.warning(t('batch.auto24'))
     return
   }
   saving.value = true
@@ -140,7 +140,7 @@ const handleSave = async () => {
       message.error(res.msg || '保存失败')
     }
   } catch (error) {
-    message.error('请求失败')
+    message.error(t('batch.auto25'))
   } finally {
     saving.value = false
   }
@@ -150,13 +150,13 @@ const handleDelete = async (id: number) => {
   try {
     const res: any = await deleteDataset(id)
     if (res.code === 1) {
-      message.success('删除成功')
+      message.success(t('batch.auto1'))
       loadData()
     } else {
       message.error(res.msg || '删除失败')
     }
   } catch (error) {
-    message.error('请求失败')
+    message.error(t('batch.auto25'))
   }
 }
 

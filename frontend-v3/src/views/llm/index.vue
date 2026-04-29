@@ -7,19 +7,19 @@
 
     <a-card :bordered="false" class="content-card">
       <a-tabs v-model:activeKey="activeTab" class="custom-tabs">
-        <a-tab-pane key="providers" tab="供应商管理">
+        <a-tab-pane key="providers" :tab="t('batch.auto141')">
           <provider-list />
         </a-tab-pane>
-        <a-tab-pane key="keys" tab="API Key 管理">
+        <a-tab-pane key="keys" :tab="t('batch.auto142')">
           <key-list />
         </a-tab-pane>
-        <a-tab-pane key="models" tab="模型管理">
+        <a-tab-pane key="models" :tab="t('batch.auto143')">
           <model-list />
         </a-tab-pane>
-        <a-tab-pane key="stats" tab="调用统计">
+        <a-tab-pane key="stats" :tab="t('batch.auto144')">
           <llm-stats />
         </a-tab-pane>
-        <a-tab-pane key="workflow" tab="工作流集成">
+        <a-tab-pane key="workflow" :tab="t('batch.auto145')">
           <div class="workflow-integration">
             <a-row :gutter="24">
               <a-col :span="12">

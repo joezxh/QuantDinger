@@ -1,8 +1,8 @@
 <template>
   <div class="dify-workflow-page">
     <a-page-header
-      title="Dify 工作流管理"
-      sub-title="配置和管理 AI 分析工作流"
+      :title="t('batch.auto68')"
+      sub-:title="t('batch.auto69')"
     >
       <template #extra>
         <a-button type="primary" @click="showCreateModal">
@@ -31,7 +31,7 @@
           <a-button type="link" size="small" @click="showLogs(record)">{{ t('trading-bot.tab.logs') }}</a-button>
           <a-button type="link" size="small" @click="showEditModal(record)">{{ t('common.edit') }}</a-button>
           <a-popconfirm
-            title="确认删除该工作流？"
+            :title="t('batch.auto70')"
             @confirm="handleDelete(record.code)"
           >
             <a-button type="link" size="small" danger>{{ t('common.delete') }}</a-button>
@@ -49,13 +49,13 @@
       width="700px"
     >
       <a-form :model="form" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
-        <a-form-item label="编码" required>
-          <a-input v-model="form.code" placeholder="如 ai_stock_analysis_v1" :disabled="isEdit" />
+        <a-form-item :label="t('batch.auto73')" required>
+          <a-input v-model="form.code" :placeholder="t('batch.auto66')" :disabled="isEdit" />
         </a-form-item>
         <a-form-item :label="t('common.name')" required>
-          <a-input v-model="form.name" placeholder="工作流名称" />
+          <a-input v-model="form.name" :placeholder="t('batch.auto67')" />
         </a-form-item>
-        <a-form-item label="描述">
+        <a-form-item :label="t('batch.auto74')">
           <a-textarea v-model="form.description" :rows="2" />
         </a-form-item>
         <a-form-item :label="t('common.type')">
@@ -71,16 +71,16 @@
         <a-form-item label="API Key" required>
           <a-input-password v-model="form.api_key" placeholder="Dify API Key" />
         </a-form-item>
-        <a-form-item label="输入 Schema">
+        <a-form-item :label="t('batch.auto75')">
           <a-textarea v-model="form.input_schema" :rows="3" placeholder='{"market": "string", "symbol": "string"}' />
         </a-form-item>
-        <a-form-item label="输出 Schema">
+        <a-form-item :label="t('batch.auto76')">
           <a-textarea v-model="form.output_schema" :rows="3" placeholder='{"signal": "string", "confidence": "number"}' />
         </a-form-item>
-        <a-form-item label="超时(秒)">
+        <a-form-item :label="t('batch.auto77')">
           <a-input-number v-model="form.timeout_seconds" :min="10" :max="600" />
         </a-form-item>
-        <a-form-item label="最大重试">
+        <a-form-item :label="t('batch.auto78')">
           <a-input-number v-model="form.max_retries" :min="0" :max="10" />
         </a-form-item>
       </a-form>
@@ -88,16 +88,16 @@
 
     <!-- Run Modal -->
     <a-modal
-      title="执行工作流"
+      :title="t('batch.auto71')"
       v-model:visible="runModalVisible"
       :confirm-loading="runLoading"
       @ok="handleRunSubmit"
     >
       <a-form :model="runForm" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
-        <a-form-item label="工作流">
+        <a-form-item :label="t('batch.auto79')">
           <span>{{ runForm.code }}</span>
         </a-form-item>
-        <a-form-item label="输入参数">
+        <a-form-item :label="t('batch.auto80')">
           <a-textarea
             v-model="runForm.inputsJson"
             :rows="5"
@@ -111,7 +111,7 @@
 
     <!-- Logs Modal -->
     <a-modal
-      title="执行日志"
+      :title="t('batch.auto72')"
       v-model:visible="logsModalVisible"
       :footer="null"
       width="800px"
@@ -172,7 +172,7 @@ interface WorkflowForm {
 
 const { t } = useI18n()
 const columns = [
-  { title: '编码', dataIndex: 'code', width: 160 },
+  { title: t('batch.auto73'), dataIndex: 'code', width: 160 },
   { title: t('common.name'), dataIndex: 'name' },
   { title: t('common.type'), dataIndex: 'workflow_type', width: 100 },
   { title: t('common.status'), slots: { customRender: 'status' }, width: 80 },
@@ -184,9 +184,9 @@ const logColumns = [
   { title: t('common.status'), dataIndex: 'status', width: 100 },
   { title: t('common.mode'), dataIndex: 'call_mode', width: 80 },
   { title: 'Token', dataIndex: 'tokens_used', width: 80 },
-  { title: '延迟(ms)', dataIndex: 'latency_ms', width: 100 },
-  { title: '开始时间', dataIndex: 'started_at' },
-  { title: '错误信息', dataIndex: 'error_message', ellipsis: true }
+  { title: t('batch.auto81'), dataIndex: 'latency_ms', width: 100 },
+  { title: t('batch.auto82'), dataIndex: 'started_at' },
+  { title: t('batch.auto83'), dataIndex: 'error_message', ellipsis: true }
 ]
 
 const workflows = ref<Workflow[]>([])
@@ -229,7 +229,7 @@ async function loadWorkflows() {
       workflows.value = (res as any).data || []
     }
   } catch (e) {
-    message.error('加载工作流失败')
+    message.error(t('batch.auto62'))
   } finally {
     loading.value = false
   }
@@ -279,7 +279,7 @@ async function handleModalSubmit() {
 async function handleDelete(code: string) {
   try {
     await deleteWorkflow(code)
-    message.success('删除成功')
+    message.success(t('batch.auto1'))
     await loadWorkflows()
   } catch (e) {
     message.error(t('common.deleteFailed'))
@@ -300,7 +300,7 @@ async function handleRunSubmit() {
     const res = await runWorkflow(runForm.code, { inputs, streaming: false })
     if ((res as any).success) {
       runResult.value = (res as any).data
-      message.success('执行成功')
+      message.success(t('batch.auto63'))
     } else {
       message.error((res as any).error || '执行失败')
     }
@@ -320,7 +320,7 @@ async function showLogs(record: Workflow) {
       logs.value = (res as any).data || []
     }
   } catch (e) {
-    message.error('加载日志失败')
+    message.error(t('batch.auto64'))
   } finally {
     logsLoading.value = false
   }
@@ -331,7 +331,7 @@ async function toggleActive(record: Workflow, checked: boolean) {
     await updateWorkflow(record.code, { ...record, is_active: checked })
     record.is_active = checked
   } catch (e) {
-    message.error('状态更新失败')
+    message.error(t('batch.auto65'))
   }
 }
 

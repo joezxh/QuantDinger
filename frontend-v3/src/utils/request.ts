@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { message } from 'ant-design-vue'
 import type { AxiosRequestConfig } from 'axios'
+import i18n from '@/locales'
 
 // Token storage keys
 const ACCESS_TOKEN = 'access_token'
@@ -124,7 +125,7 @@ service.interceptors.response.use(
           if (!isRedirectingToLogin) {
             isRedirectingToLogin = true
             clearAuth()
-            message.error('登录已过期，请重新登录')
+            message.error(i18n.global.t('error.sessionExpired'))
             const curPath = window.location.pathname
             if (!curPath.includes('/login')) {
               const redirect = encodeURIComponent(curPath)
@@ -133,21 +134,21 @@ service.interceptors.response.use(
           }
           break
         case 403:
-          message.error('没有权限访问该资源')
+          message.error(i18n.global.t('error.forbidden'))
           break
         case 404:
-          message.error('请求的资源不存在')
+          message.error(i18n.global.t('error.notFound'))
           break
         case 500:
-          message.error('服务器错误')
+          message.error(i18n.global.t('error.serverError'))
           break
         default:
-          message.error(data?.message || data?.msg || '请求失败')
+          message.error(data?.message || data?.msg || i18n.global.t('error.requestFailed'))
       }
     } else if (error.message) {
       message.error(error.message)
     } else {
-      message.error('网络连接失败')
+      message.error(i18n.global.t('error.networkError'))
     }
 
     return Promise.reject(error)

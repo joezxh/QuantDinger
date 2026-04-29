@@ -20,14 +20,12 @@
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'is_active'">
-          <a-tag :color="record.is_active ? 'success' : 'default'">
-            {{ record.is_active ? '启用' : '禁用' }}
-          </a-tag>
+          <a-tag :color="record.is_active ? 'success' : 'default'">{{ t('batch.auto42') }}</a-tag>
         </template>
         <template v-if="column.key === 'action'">
           <a-space>
             <a-button type="link" size="small" @click="editKey(record)">{{ t('common.edit') }}</a-button>
-            <a-popconfirm title="确定删除?" @confirm="handleDelete(record.id)">
+            <a-popconfirm :title="t('batch.auto28')" @confirm="handleDelete(record.id)">
               <a-button type="link" danger size="small">{{ t('common.delete') }}</a-button>
             </a-popconfirm>
           </a-space>
@@ -43,7 +41,7 @@
     >
       <a-form layout="vertical">
         <a-form-item :label="t('common.name')" required>
-          <a-input v-model:value="form.name" placeholder="如: Binance Main Account" />
+          <a-input v-model:value="form.name" :placeholder="t('batch.auto39')" />
         </a-form-item>
         <a-form-item :label="t('common.exchange')" required>
           <a-select v-model:value="form.exchange">
@@ -52,10 +50,10 @@
           </a-select>
         </a-form-item>
         <a-form-item label="API Key">
-          <a-input v-model:value="form.api_key" placeholder="输入API Key" />
+          <a-input v-model:value="form.api_key" :placeholder="t('batch.auto40')" />
         </a-form-item>
         <a-form-item label="API Secret">
-          <a-input-password v-model:value="form.api_secret" placeholder="输入API Secret" />
+          <a-input-password v-model:value="form.api_secret" :placeholder="t('batch.auto41')" />
         </a-form-item>
         <a-form-item :label="t('common.status')">
           <a-switch v-model:checked="form.is_active" />
@@ -131,7 +129,7 @@ const editKey = (record: any) => {
 
 const handleSave = async () => {
   if (!form.name || !form.exchange) {
-    message.warning('请填写必要信息')
+    message.warning(t('batch.auto24'))
     return
   }
   saving.value = true
@@ -146,7 +144,7 @@ const handleSave = async () => {
       message.error(res.msg || '保存失败')
     }
   } catch (error) {
-    message.error('请求失败')
+    message.error(t('batch.auto25'))
   } finally {
     saving.value = false
   }
@@ -156,13 +154,13 @@ const handleDelete = async (id: number) => {
   try {
     const res: any = await deleteDataSourceKey(id)
     if (res.code === 1) {
-      message.success('删除成功')
+      message.success(t('batch.auto1'))
       loadData()
     } else {
       message.error(res.msg || '删除失败')
     }
   } catch (error) {
-    message.error('请求失败')
+    message.error(t('batch.auto25'))
   }
 }
 

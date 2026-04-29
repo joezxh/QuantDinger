@@ -17,7 +17,7 @@
       <template #bodyCell="{ column, text, record }">
         <template v-if="column.dataIndex === 'status'">
           <a-tag v-if="text === 1" color="green">{{ t('dataSource.status.active') }}</a-tag>
-          <a-tag v-else-if="text === 2" color="orange">已损坏</a-tag>
+          <a-tag v-else-if="text === 2" color="orange">{{ t('batch.auto154') }}</a-tag>
           <a-tag v-else color="red">{{ t('dataSource.status.inactive') }}</a-tag>
         </template>
         <template v-if="column.key === 'action'">
@@ -39,31 +39,31 @@
       @ok="handleOk"
     >
       <a-form :model="formState" :label-col="{ span: 6 }" :wrapper-col="{ span: 16 }">
-        <a-form-item label="供应商" name="provider_id" required>
-          <a-select v-model:value="formState.provider_id" placeholder="选择供应商">
+        <a-form-item :label="t('batch.auto150')" name="provider_id" required>
+          <a-select v-model:value="formState.provider_id" :placeholder="t('batch.auto147')">
             <a-select-option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="名称/备注" name="name" required>
-          <a-input v-model:value="formState.name" placeholder="例如: OpenAI Main Key" />
+        <a-form-item :label="t('batch.auto151')" name="name" required>
+          <a-input v-model:value="formState.name" :placeholder="t('batch.auto148')" />
         </a-form-item>
         <a-form-item label="API Key" name="api_key">
           <a-input-password
             v-model:value="formState.api_key"
-            :placeholder="editId ? '留空表示不修改' : '输入 API Key'"
+            ::placeholder="t('batch.auto149')"
           />
         </a-form-item>
-        <a-form-item label="权重" name="weight">
+        <a-form-item :label="t('batch.auto152')" name="weight">
           <a-input-number v-model:value="formState.weight" :min="1" :max="100" style="width: 100%" />
         </a-form-item>
-        <a-form-item label="公开" name="is_public">
+        <a-form-item :label="t('batch.auto153')" name="is_public">
           <a-switch v-model:checked="formState.is_public" />
         </a-form-item>
         <a-form-item :label="t('common.status')" name="status">
           <a-select v-model:value="formState.status">
-            <a-select-option :value="1">正常</a-select-option>
-            <a-select-option :value="0">禁用</a-select-option>
-            <a-select-option :value="2">已损坏</a-select-option>
+            <a-select-option :value="1">{{ t('batch.auto155') }}</a-select-option>
+            <a-select-option :value="0">{{ t('batch.auto156') }}</a-select-option>
+            <a-select-option :value="2">{{ t('batch.auto154') }}</a-select-option>
           </a-select>
         </a-form-item>
       </a-form>
@@ -81,9 +81,9 @@ import { getKeys, saveKey, deleteKey, getProviders } from '@/api/llm'
 const { t } = useI18n()
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 80 },
-  { title: '供应商', dataIndex: 'provider_name' },
+  { title: t('batch.auto150'), dataIndex: 'provider_name' },
   { title: t('common.name'), dataIndex: 'name' },
-  { title: '权重', dataIndex: 'weight', width: 100 },
+  { title: t('batch.auto152'), dataIndex: 'weight', width: 100 },
   { title: t('common.status'), dataIndex: 'status', width: 120 },
   { title: t('common.action'), key: 'action', width: 150 }
 ]
@@ -156,7 +156,7 @@ const handleEdit = (record: any) => {
 
 const handleOk = async () => {
   if (!formState.provider_id || !formState.name) {
-    message.warning('请填写必填项')
+    message.warning(t('batch.auto146'))
     return
   }
   confirmLoading.value = true
@@ -180,7 +180,7 @@ const handleOk = async () => {
 const handleDelete = async (id: number) => {
   try {
     await deleteKey(id)
-    message.success('删除成功')
+    message.success(t('batch.auto1'))
     loadData()
   } catch (e) {
     message.error(t('common.deleteFailed'))

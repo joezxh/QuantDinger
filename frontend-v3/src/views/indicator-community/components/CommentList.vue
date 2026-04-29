@@ -4,7 +4,7 @@
     <div v-if="canComment || isEditing" class="comment-form">
       <div class="form-header" v-if="isEditing">
         <span class="edit-label">编辑评价</span>
-        <a-button type="link" size="small" @click="cancelEdit">取消编辑</a-button>
+        <a-button type="link" size="small" @click="cancelEdit">{{ t('batch.auto85') }}</a-button>
       </div>
       
       <div class="rating-input">
@@ -14,26 +14,22 @@
       
       <a-textarea
         v-model:value="formData.content"
-        placeholder="写下您对该指标的使用体验..."
+        :placeholder="t('batch.auto84')"
         :rows="3"
         :max-length="500"
       />
       
       <div class="form-footer">
         <span class="char-count">{{ formData.content.length }}/500</span>
-        <a-button type="primary" :loading="submitting" @click="submitComment">
-          {{ isEditing ? '更新评价' : '发表评价' }}
-        </a-button>
+        <a-button type="primary" :loading="submitting" @click="submitComment">{{ t('batch.auto86') }}</a-button>
       </div>
     </div>
 
     <!-- Already Commented Hint -->
     <div v-else-if="myComment && !canComment && !isEditing" class="my-comment-hint">
       <CheckCircleTwoTone two-tone-color="#52c41a" />
-      <span>您已评价过该指标</span>
-      <a-button type="link" size="small" @click="startEdit(myComment)">
-        修改我的评价
-      </a-button>
+      <span>{{ t('batch.auto90') }}</span>
+      <a-button type="link" size="small" @click="startEdit(myComment)">{{ t('batch.auto87') }}</a-button>
     </div>
 
     <!-- Comments List -->
@@ -53,7 +49,7 @@
             <div class="user-info">
               <div class="name">
                 {{ comment.user?.nickname || comment.user?.username }}
-                <a-tag v-if="comment.user?.id === currentUserId" color="blue" size="small">我</a-tag>
+                <a-tag v-if="comment.user?.id === currentUserId" color="blue" size="small">{{ t('batch.auto89') }}</a-tag>
               </div>
               <div class="meta">
                 <a-rate :value="comment.rating" disabled style="font-size: 12px" />
@@ -74,7 +70,7 @@
     </a-spin>
 
     <div v-if="hasMore" class="load-more">
-      <a-button type="link" @click="$emit('load-more')">加载更多评价</a-button>
+      <a-button type="link" @click="$emit('load-more')">{{ t('batch.auto88') }}</a-button>
     </div>
   </div>
 </template>

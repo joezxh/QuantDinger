@@ -32,7 +32,7 @@
             <span class="kpi-icon">
               <TrophyOutlined />
             </span>
-            <span class="kpi-label">{{ t('dashboard.winRate') || '胜率' }}</span>
+            <span class="kpi-label">{{ t('dashboard.winRate') }}</span>
           </div>
           <div class="kpi-value">
             <span class="amount">{{ formatNumber(performance.win_rate, 1) }}</span>
@@ -68,7 +68,7 @@
             <span class="kpi-icon">
               <RiseOutlined />
             </span>
-            <span class="kpi-label">{{ t('dashboard.profitFactor') || '盈亏比' }}</span>
+            <span class="kpi-label">{{ t('dashboard.profitFactor') }}</span>
           </div>
           <div class="kpi-value">
             <span class="amount">{{ formatNumber(performance.profit_factor, 2) }}</span>
@@ -88,7 +88,7 @@
             <span class="kpi-icon">
               <FallOutlined />
             </span>
-            <span class="kpi-label">{{ t('dashboard.maxDrawdown') || '最大回撤' }}</span>
+            <span class="kpi-label">{{ t('dashboard.maxDrawdown') }}</span>
           </div>
           <div class="kpi-value">
             <span class="amount negative">{{ formatNumber(performance.max_drawdown_pct, 1) }}</span>
@@ -107,7 +107,7 @@
             <span class="kpi-icon">
               <SwapOutlined />
             </span>
-            <span class="kpi-label">{{ t('dashboard.totalTrades') || '总交易' }}</span>
+            <span class="kpi-label">{{ t('dashboard.totalTrades') }}</span>
           </div>
           <div class="kpi-value">
             <span class="amount">{{ performance.total_trades }}</span>
@@ -128,7 +128,7 @@
             <span class="kpi-icon">
               <ThunderboltOutlined />
             </span>
-            <span class="kpi-label">{{ t('dashboard.runningStrategies') || '运行中策略' }}</span>
+            <span class="kpi-label">{{ t('dashboard.runningStrategies') }}</span>
           </div>
           <div class="kpi-value">
             <span class="amount">{{ summary.indicator_strategy_count }}</span>
@@ -149,9 +149,9 @@
     <div v-if="graphQuality" class="graph-quality-card">
       <div class="graph-quality-header">
         <ClusterOutlined />
-        <span>知识图谱状态</span>
+        <span>{{ t('dashboard.graphStatus') }}</span>
         <a-tag :color="graphQuality.is_ready ? 'green' : 'orange'" size="small">
-          {{ graphQuality.is_ready ? '已就绪' : '积累中' }}
+          {{ graphQuality.is_ready ? t('dashboard.status.ready') : t('dashboard.status.building') }}
         </a-tag>
       </div>
       <div class="graph-quality-stats">
@@ -161,11 +161,11 @@
         </div>
         <div class="gq-stat">
           <span class="gq-value">{{ graphQuality.entity_count || 0 }}</span>
-          <span class="gq-label">实体</span>
+          <span class="gq-label">{{ t('dashboard.label.entity') }}</span>
         </div>
         <div class="gq-stat">
           <span class="gq-value">{{ graphQuality.relation_count || 0 }}</span>
-          <span class="gq-label">关系</span>
+          <span class="gq-label">{{ t('dashboard.label.relation') }}</span>
         </div>
         <div class="gq-stat">
           <span class="gq-value">{{ (graphQuality.min_confidence_avg || 0).toFixed(2) }}</span>
@@ -174,7 +174,7 @@
       </div>
       <div class="graph-quality-actions">
         <a-button type="link" size="small" @click="router.push('/graph-analysis')">
-          查看图谱分析
+          {{ t('dashboard.viewGraphAnalysis') }}
         </a-button>
       </div>
     </div>
@@ -204,7 +204,7 @@
         <div class="panel-header">
           <div class="panel-title">
             <CalendarOutlined />
-            <span>{{ t('dashboard.profitCalendar') || '收益日曆' }}</span>
+            <span>{{ t('dashboard.profitCalendar') }}</span>
           </div>
           <div class="calendar-nav">
             <a-button type="link" size="small" @click="prevMonth" :disabled="currentCalendarIndex >= calendarMonths.length - 1">
@@ -273,7 +273,7 @@
         <div class="panel-header">
           <div class="panel-title">
             <PieChartOutlined />
-            <span>{{ t('dashboard.strategyAllocation') || '策略分布' }}</span>
+            <span>{{ t('dashboard.strategyAllocation') }}</span>
           </div>
         </div>
         <div ref="pieChartEl" class="chart-body"></div>
@@ -287,7 +287,7 @@
         <div class="panel-header">
           <div class="panel-title">
             <AreaChartOutlined />
-            <span>{{ t('dashboard.drawdownCurve') || '回撤曲线' }}</span>
+            <span>{{ t('dashboard.drawdownCurve') }}</span>
           </div>
         </div>
         <div ref="drawdownChartEl" class="chart-body chart-sm"></div>
@@ -298,7 +298,7 @@
         <div class="panel-header">
           <div class="panel-title">
             <ClockCircleOutlined />
-            <span>{{ t('dashboard.hourlyDistribution') || '交易时段' }}</span>
+            <span>{{ t('dashboard.hourlyDistribution') }}</span>
           </div>
         </div>
         <div ref="hourlyChartEl" class="chart-body chart-sm"></div>
@@ -310,7 +310,7 @@
       <div class="panel-header">
         <div class="panel-title">
           <OrderedListOutlined />
-          <span>{{ t('dashboard.strategyRanking') || '策略排行榜' }}</span>
+          <span>{{ t('dashboard.strategyRanking') }}</span>
         </div>
       </div>
       <div class="strategy-ranking">
@@ -1206,7 +1206,7 @@ function initPieChart() {
         return `
           <div style="padding: 4px 0;">
             <div style="font-weight:600;margin-bottom:6px;">${p.name}</div>
-            <div style="color:${textColor}">占比 <span style="font-weight:600;color:${isDark ? '#f3f4f6' : '#1f2937'}">${p.percent}%</span></div>
+            <div style="color:${textColor}">${t('dashboard.ratio')} <span style="font-weight:600;color:${isDark ? '#f3f4f6' : '#1f2937'}">${p.percent}%</span></div>
             <div style="color:${textColor}">PNL <span style="font-weight:600;color:${svColor}">$${svStr}</span></div>
           </div>
         `
@@ -1226,7 +1226,7 @@ function initPieChart() {
     color: colors,
     series: [
       {
-        name: '策略分布',
+        name: t('dashboard.strategyAllocation'),
         type: 'pie' as const,
         radius: ['50%', '75%'],
         center: ['50%', '45%'],

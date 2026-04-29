@@ -590,6 +590,51 @@ const messages: Record<string, string> = {
   'common.influence': 'Ảnh hưởng',
   'common.holdings': 'Nắm giữ',
   'common.deleteSuccess': 'Xóa thành công',
+
+  // Lỗi
+  'error.sessionExpired': 'Session expired, please login again',
+  'error.forbidden': 'Forbidden',
+  'error.notFound': 'Not found',
+  'error.serverError': 'Server error',
+  'error.requestFailed': 'Request failed',
+  'error.networkError': 'Network error',
+
+  // Đăng nhập bổ sung
+  'user.login.title': 'Login',
+  'user.login.noToken': 'Login succeeded but no valid token returned',
+  'user.fetchInfoFailed': 'Failed to fetch user info',
+
+  // Dashboard bổ sung
+  'dashboard.graphStatus': 'Knowledge Graph Status',
+  'dashboard.status.ready': 'Ready',
+  'dashboard.status.building': 'Building',
+  'dashboard.label.entity': 'Entities',
+  'dashboard.label.relation': 'Relations',
+  'dashboard.viewGraphAnalysis': 'View Graph Analysis',
+  'dashboard.ratio': 'Ratio',
+
+  // Trading Bot bổ sung
+  'trading-bot.totalInvestment': 'Total Investment',
+  'trading-bot.gridDesc': 'Auto buy low and sell high within price range',
+  'trading-bot.dcaDesc': 'Batch buying to lower cost, sell when target reached',
+  'trading-bot.aiRecommend': 'AI Smart Recommendation',
+  'trading-bot.aiRecommendDesc': 'AI recommends optimal strategy based on current market',
+  'trading-bot.botName': 'Bot Name',
+  'trading-bot.currentPnl': 'Current P&L',
+  'trading-bot.lastRun': 'Last Run',
+
+  // Quản lý ngườ dùng bổ sung
+  'userManage.createUser': 'Create User',
+  'userManage.registerIp': 'Register IP',
+  'userManage.lastLogin': 'Last Login',
+  'userManage.realized': 'Realized',
+  'userManage.unrealized': 'Unrealized',
+
+  // Bổ sung chung 2
+  'common.remarkOptional': 'Optional remark',
+
+  // Trạng thái bổ sung
+  'status.expired': 'Expired',
 }
 
 export default messages
