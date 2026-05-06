@@ -37,7 +37,7 @@
 
 ## 前端技术栈
 
-QuantDinger 采用现代化的企业级前端技术栈构建:
+Fin-AI 基于QuantDinger 改造升级， 采用现代化的企业级前端技术栈构建:
 
 - **框架**: Vue 3.5 + TypeScript 6.0 + Vite 8.0
 - **UI 库**: Ant Design Vue 4.2 + @ant-design/icons-vue
@@ -400,7 +400,7 @@ QuantDinger 不是简单地"在交易软件里加了个 LLM 聊天框",而是把
 
 | 层级 | 技术 |
 |------|------|
-| 前端 | Vue 3.5 + TypeScript 6.0 + Vite 8.0, Ant Design Vue 4.2, Pinia 3.0, Vue I18n 9 |
+| 前端 | Vue 3.5 + TypeScript 6.0 + Vite 8.0, Ant Design Vue 4.2, Pinia 3.0, Vue Router 4.6, Vue I18n 9 (11 种语言), ECharts 5.6, Lightweight Charts 5.2, CodeMirror 6 |
 | 后端 | Flask API、Python 服务层、策略运行时、ORM 数据层 |
 | 多智能体框架 | TradingAgents LangGraph 编排、LangChain 工具链 |
 | 数据源层 | FinceptTerminal 100+ 连接器、Python Analytics 脚本、智能路由 |
@@ -432,7 +432,10 @@ flowchart LR
     U[交易员 / 运营者 / 研究员]
 
     subgraph FE[前端层 - Vue 3]
-        WEB[Vue 3 SPA 应用]
+        WEB[Vue 3.5 SPA 应用<br/>TypeScript 6.0 + Vite 8.0]
+        UI[Ant Design Vue 4.2<br/>Pinia 3.0 + Vue Router 4.6]
+        CHARTS[ECharts 5.6 + Lightweight Charts 5.2<br/>CodeMirror 6 编辑器]
+        I18N[Vue I18n 9 - 11 种语言]
         NG[Nginx 交付层]
         DESKTOP[可选:C++ Qt 桌面端]
     end
@@ -471,6 +474,9 @@ flowchart LR
 
     U --> WEB
     U --> DESKTOP
+    WEB --> UI
+    UI --> CHARTS
+    UI --> I18N
     WEB --> NG --> API
     API --> AI
     API --> AGENT

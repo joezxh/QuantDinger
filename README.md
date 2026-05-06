@@ -37,7 +37,7 @@
 
 ## Frontend Technology Stack
 
-QuantDinger features a modern, enterprise-grade frontend built with cutting-edge technologies:
+Finai base on QuantDinger, features a modern, enterprise-grade frontend built with cutting-edge technologies:
 
 - **Framework**: Vue 3.5 + TypeScript 6.0 + Vite 8.0
 - **UI Library**: Ant Design Vue 4.2 + @ant-design/icons-vue
@@ -396,7 +396,7 @@ That combination is the core difference.
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Vue 3.5 + TypeScript 6.0 + Vite 8.0, Ant Design Vue 4.2, Pinia 3.0, Vue I18n 9 |
+| Frontend | Vue 3.5 + TypeScript 6.0 + Vite 8.0, Ant Design Vue 4.2, Pinia 3.0, Vue Router 4.6, Vue I18n 9 (11 languages), ECharts 5.6, Lightweight Charts 5.2, CodeMirror 6 |
 | Backend | Flask API, Python services, strategy runtime, ORM-refactored data layer |
 | Multi-Agent Framework | TradingAgents LangGraph orchestration, LangChain toolchain |
 | Data Source Layer | FinceptTerminal 100+ connectors, Python Analytics scripts, intelligent routing |
@@ -429,7 +429,10 @@ flowchart LR
     U[Trader / Operator / Researcher]
 
     subgraph FE[Frontend Layer - Vue 3]
-        WEB[Vue 3 SPA Application]
+        WEB[Vue 3.5 SPA Application<br/>TypeScript 6.0 + Vite 8.0]
+        UI[Ant Design Vue 4.2<br/>Pinia 3.0 + Vue Router 4.6]
+        CHARTS[ECharts 5.6 + Lightweight Charts 5.2<br/>CodeMirror 6 Editor]
+        I18N[Vue I18n 9 - 11 Languages]
         NG[Nginx Delivery]
         DESKTOP[Optional: C++ Qt Desktop]
     end
@@ -468,6 +471,9 @@ flowchart LR
 
     U --> WEB
     U --> DESKTOP
+    WEB --> UI
+    UI --> CHARTS
+    UI --> I18N
     WEB --> NG --> API
     API --> AI
     API --> AGENT
