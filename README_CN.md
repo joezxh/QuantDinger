@@ -10,7 +10,7 @@
   <p><em>改造自 QuantDinger、FinceptTerminal 和 TradingAgents。</em></p>
 
   <p>
-    <a href="../README.md"><strong>English</strong></a> &nbsp;·&nbsp;
+    <a href="README.md"><strong>English</strong></a> &nbsp;·&nbsp;
     <a href="README_CN.md"><strong>简体中文</strong></a> &nbsp;·&nbsp;
   </p>
 
