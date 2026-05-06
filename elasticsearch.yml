@@ -1,0 +1,29 @@
+# Elasticsearch 配置文件
+cluster.name: quantdinger-es-cluster
+node.name: es-node-1
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+# 内存设置
+bootstrap.memory_lock: true
+
+# 网络设置
+network.host: 0.0.0.0
+http.port: 9200
+
+# 性能优化
+indices.memory.index_buffer_size: 20%
+indices.fielddata.cache.size: 40%
+thread_pool.search.size: 8
+thread_pool.search.queue_size: 1000
+
+# 分片策略
+index.number_of_shards: 3
+index.number_of_replicas: 1
+
+# 刷新间隔
+index.refresh_interval: 5s
+
+# 合并策略
+index.merge.policy.max_merged_segment: 5gb
+index.merge.policy.segments_per_tier: 10

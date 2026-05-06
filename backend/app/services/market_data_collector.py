@@ -1,4 +1,8 @@
-"""Market data collection service with graph-oriented adapters."""
+"""Market data collection service with graph-oriented adapters.
+
+Uses PriorityRouter for unified data source routing with automatic
+failover, circuit breaking, and multi-provider support.
+"""
 import time
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
@@ -6,28 +10,47 @@ from typing import Any, Dict, List, Optional
 
 from app.collectors.base import CollectedItem
 from app.data_sources.polymarket import PolymarketDataSource
+from app.data_sources.priority_router import get_router, DataCategory
 from app.services.kline import KlineService
 from app.utils.logger import get_logger
-from app.config import APIKeys
 
 logger = get_logger(__name__)
+
+# Market string -> DataCategory mapping
+_MARKET_CATEGORY_MAP = {
+    "Crypto": DataCategory.CRYPTO,
+    "USStock": DataCategory.US_STOCK,
+    "CNStock": DataCategory.CN_STOCK,
+    "HKStock": DataCategory.HK_STOCK,
+    "Forex": DataCategory.FOREX,
+    "Futures": DataCategory.FUTURES,
+    "Macro": DataCategory.MACRO,
+    "PredictionMarket": DataCategory.PREDICTION_MARKET,
+}
 
 
 class MarketDataCollector:
     def __init__(self):
+        self.router = get_router()
         self.kline_service = KlineService()
         self.polymarket_source = PolymarketDataSource()
+        # Keep Finnhub client as a fallback for route_method misses
         self._finnhub_client = None
         self._init_clients()
 
     def _init_clients(self):
-        finnhub_key = APIKeys.FINNHUB_API_KEY
-        if finnhub_key:
-            try:
-                import finnhub
-                self._finnhub_client = finnhub.Client(api_key=finnhub_key)
-            except Exception as e:
-                logger.warning(f"Finnhub client init failed: {e}")
+        """Initialize legacy clients as fallback for providers not yet in the router."""
+        try:
+            from app.config import APIKeys
+            finnhub_key = APIKeys.FINNHUB_API_KEY
+            if finnhub_key:
+                try:
+                    import finnhub
+                    self._finnhub_client = finnhub.Client(api_key=finnhub_key)
+                except Exception as e:
+                    logger.warning(f"Finnhub client init failed: {e}")
+        except Exception:
+            pass
 
     def collect_all(
         self,
@@ -209,25 +232,140 @@ class MarketDataCollector:
     def _get_fundamental(self, market: str, symbol: str) -> Dict[str, Any]:
         if market == "Crypto":
             return {"symbol": symbol, "type": "crypto"}
+
+        # Try PriorityRouter first
+        try:
+            category = _MARKET_CATEGORY_MAP.get(market)
+            if category:
+                result = self.router.route_method(
+                    category.value, "get_fundamentals", symbol=symbol
+                )
+                if result:
+                    return result
+
+                # Try US-stock specific financials via FinancialDatasets
+                if market == "USStock":
+                    result = self.router.route_method(
+                        DataCategory.US_STOCK.value,
+                        "get_all_financials",
+                        ticker=symbol,
+                    )
+                    if result:
+                        return result
+        except Exception as e:
+            logger.debug(f"Router fundamental fetch failed for {symbol}: {e}")
+
+        # Fallback: Finnhub direct client
         if self._finnhub_client and market == "USStock":
             try:
                 return self._finnhub_client.company_basic_financials(symbol, "all") or {}
             except Exception as e:
-                logger.debug(f"Fundamental fetch failed for {symbol}: {e}")
+                logger.debug(f"Finnhub fundamental fetch failed for {symbol}: {e}")
         return {}
 
     def _get_company(self, market: str, symbol: str) -> Dict[str, Any]:
+        # Try PriorityRouter first
+        try:
+            category = _MARKET_CATEGORY_MAP.get(market)
+            if category:
+                result = self.router.route_method(
+                    category.value, "get_company_profile", symbol=symbol
+                )
+                if result:
+                    return result
+        except Exception as e:
+            logger.debug(f"Router company fetch failed for {symbol}: {e}")
+
+        # Fallback: Finnhub direct client
         if self._finnhub_client and market == "USStock":
             try:
                 return self._finnhub_client.company_profile2(symbol=symbol) or {}
             except Exception as e:
-                logger.debug(f"Company fetch failed for {symbol}: {e}")
+                logger.debug(f"Finnhub company fetch failed for {symbol}: {e}")
         return {"symbol": symbol, "name": symbol}
 
     def _get_macro_data(self, market: str, timeout: int = 10) -> Dict[str, Any]:
-        return {"market": market, "status": "placeholder"}
+        """获取宏观经济数据，分别调用各 Provider 获取 FRED/BLS/BEA/WorldBank"""
+        result = {"market": market}
+
+        # FRED key indicators — 直接调用 FREDProvider 的方法
+        try:
+            from app.data_sources.providers.macro_fred import FREDProvider
+            fred = FREDProvider()
+            fred_data = fred.get_key_indicators(limit=10)
+            if fred_data:
+                result["fred"] = fred_data
+        except Exception as e:
+            logger.debug(f"FRED macro fetch failed: {e}")
+
+        # BLS key indicators — 直接调用 BLSProvider 的方法
+        try:
+            from app.data_sources.providers.macro_bls import BLSProvider
+            bls = BLSProvider()
+            bls_data = bls.get_key_indicators()
+            if bls_data:
+                result["bls"] = bls_data
+        except Exception as e:
+            logger.debug(f"BLS macro fetch failed: {e}")
+
+        # BEA key indicators — 直接调用 BEAProvider 的方法
+        try:
+            from app.data_sources.providers.macro_bea import BEAProvider
+            bea = BEAProvider()
+            bea_data = bea.get_key_indicators()
+            if bea_data:
+                result["bea"] = bea_data
+        except Exception as e:
+            logger.debug(f"BEA macro fetch failed: {e}")
+
+        # WorldBank key indicators — 通过路由器调用（优先级低于 FRED/BLS/BEA）
+        try:
+            wb_data = self.router.route_method(
+                DataCategory.MACRO.value, "get_key_indicators"
+            )
+            if wb_data and not any(k.startswith("wb") for k in result):
+                result["worldbank"] = wb_data
+        except Exception as e:
+            logger.debug(f"WorldBank macro fetch failed: {e}")
+
+        if len(result) <= 1:
+            result["status"] = "no_data_available"
+
+        return result
 
     def _get_news(self, market: str, symbol: str, company_name: Optional[str], timeout: int = 8) -> Dict[str, Any]:
+        """获取新闻数据，通过 PriorityRouter 路由"""
+        # Try PriorityRouter first
+        try:
+            if market == "USStock":
+                # Try Google News via router
+                news = self.router.route_method(
+                    DataCategory.NEWS.value, "get_company_news", ticker=symbol, limit=10
+                )
+                if news:
+                    return {"news": news, "sentiment": {"source": "router", "count": len(news)}}
+
+            elif market in ("CNStock", "HKStock"):
+                # Try EastMoney news via router
+                news = self.router.route_method(
+                    DataCategory.NEWS.value, "get_stock_news", symbol=symbol, limit=10
+                )
+                if news:
+                    return {"news": news, "sentiment": {"source": "router", "count": len(news)}}
+
+            # Generic news search
+            query = symbol
+            if company_name:
+                query = f"{company_name} stock"
+            news = self.router.route_method(
+                DataCategory.NEWS.value, "search", query=query, limit=10
+            )
+            if news:
+                return {"news": news, "sentiment": {"source": "router", "count": len(news)}}
+        except Exception as e:
+            logger.debug(f"Router news fetch failed for {symbol}: {e}")
+
+        # Fallback: Finnhub direct client
         if self._finnhub_client and market == "USStock":
             try:
                 end_date = datetime.utcnow().date()
@@ -235,7 +373,7 @@ class MarketDataCollector:
                 items = self._finnhub_client.company_news(symbol, _from=str(start_date), to=str(end_date)) or []
                 return {"news": items[:10], "sentiment": {"source": "finnhub", "count": len(items[:10])}}
             except Exception as e:
-                logger.debug(f"News fetch failed for {symbol}: {e}")
+                logger.debug(f"Finnhub news fetch failed for {symbol}: {e}")
         return {"news": [], "sentiment": {}}
 
     def _get_polymarket_events(self, symbol: str, market: str) -> List[Dict[str, Any]]:

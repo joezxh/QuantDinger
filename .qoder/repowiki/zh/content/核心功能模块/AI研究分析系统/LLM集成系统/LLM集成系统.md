@@ -1,7 +1,7 @@
 # LLM集成系统
 
 <cite>
-**本文引用的文件**
+**本文档引用的文件**
 - [backend_api_python/app/services/llm.py](file://backend_api_python/app/services/llm.py)
 - [backend_api_python/app/services/llm_lb.py](file://backend_api_python/app/services/llm_lb.py)
 - [backend_api_python/app/services/llm_registry.py](file://backend_api_python/app/services/llm_registry.py)
@@ -15,7 +15,14 @@
 - [frontend/src/views/llm/ModelList.vue](file://frontend/src/views/llm/ModelList.vue)
 - [frontend/src/api/llm.js](file://frontend/src/api/llm.js)
 - [frontend/src/config/aiModels.js](file://frontend/src/config/aiModels.js)
+- [frontend/src/locales/lang/zh-CN.js](file://frontend/src/locales/lang/zh-CN.js)
 </cite>
+
+## 更新摘要
+**所做更改**
+- 更新LLM管理界面本地化支持，现支持多语言的模型展示和管理功能
+- 新增LLM相关语言包键值，涵盖供应商、密钥、模型和统计页面的多语言翻译
+- 完善前端LLM管理界面的国际化实现，包括标签页、表格列和操作按钮的本地化
 
 ## 目录
 1. [简介](#简介)
@@ -37,9 +44,10 @@
 - 配置与密钥管理：环境变量与配置映射、API密钥加密存储、前端管理界面
 - 错误处理与重试：HTTP状态码分类、备用提供商切换、超时与回退模型
 - 流式输出：SSE解析、部分结果容错、向后兼容
+- **本地化支持**：LLM管理界面现已完全本地化，支持多语言的模型展示和管理功能
 
 ## 项目结构
-后端采用Flask蓝图提供LLM管理与监控接口；服务层封装LLM调用、负载均衡与注册中心；前端提供LLM配置管理页面。
+后端采用Flask蓝图提供LLM管理与监控接口；服务层封装LLM调用、负载均衡与注册中心；前端提供LLM配置管理页面，现已支持多语言本地化。
 
 ```mermaid
 graph TB
@@ -53,10 +61,11 @@ CL["utils/config_loader.py<br/>环境配置加载"]
 SQL["migrations/llm_lb_setup.sql<br/>数据库表结构"]
 end
 subgraph "前端"
-FE_IDX["views/llm/index.vue<br/>LLM管理页"]
-FE_MODEL["views/llm/ModelList.vue<br/>模型列表"]
+FE_IDX["views/llm/index.vue<br/>LLM管理页多语言"]
+FE_MODEL["views/llm/ModelList.vue<br/>模型列表多语言"]
 FE_API["api/llm.js<br/>LLM API封装"]
 FE_MODELS["config/aiModels.js<br/>模型映射"]
+LANG["locales/lang/zh-CN.js<br/>语言包多语言支持"]
 end
 FE_IDX --> FE_MODEL
 FE_MODEL --> FE_API
@@ -67,6 +76,8 @@ S --> REG
 S --> CFG
 S --> CL
 REG --> SQL
+FE_IDX --> LANG
+FE_MODEL --> LANG
 ```
 
 **图表来源**
@@ -77,10 +88,11 @@ REG --> SQL
 - [backend_api_python/app/config/api_keys.py:1-164](file://backend_api_python/app/config/api_keys.py#L1-L164)
 - [backend_api_python/app/utils/config_loader.py:1-252](file://backend_api_python/app/utils/config_loader.py#L1-L252)
 - [backend_api_python/migrations/llm_lb_setup.sql:1-67](file://backend_api_python/migrations/llm_lb_setup.sql#L1-L67)
-- [frontend/src/views/llm/index.vue:1-58](file://frontend/src/views/llm/index.vue#L1-L58)
+- [frontend/src/views/llm/index.vue:1-78](file://frontend/src/views/llm/index.vue#L1-L78)
 - [frontend/src/views/llm/ModelList.vue:1-162](file://frontend/src/views/llm/ModelList.vue#L1-L162)
 - [frontend/src/api/llm.js:1-90](file://frontend/src/api/llm.js#L1-L90)
 - [frontend/src/config/aiModels.js:1-42](file://frontend/src/config/aiModels.js#L1-L42)
+- [frontend/src/locales/lang/zh-CN.js:4523-4551](file://frontend/src/locales/lang/zh-CN.js#L4523-L4551)
 
 **章节来源**
 - [backend_api_python/app/routes/llm.py:1-723](file://backend_api_python/app/routes/llm.py#L1-L723)
@@ -88,10 +100,11 @@ REG --> SQL
 - [backend_api_python/app/services/llm_lb.py:1-169](file://backend_api_python/app/services/llm_lb.py#L1-L169)
 - [backend_api_python/app/services/llm_registry.py:1-169](file://backend_api_python/app/services/llm_registry.py#L1-L169)
 - [backend_api_python/migrations/llm_lb_setup.sql:1-67](file://backend_api_python/migrations/llm_lb_setup.sql#L1-L67)
-- [frontend/src/views/llm/index.vue:1-58](file://frontend/src/views/llm/index.vue#L1-L58)
+- [frontend/src/views/llm/index.vue:1-78](file://frontend/src/views/llm/index.vue#L1-L78)
 - [frontend/src/views/llm/ModelList.vue:1-162](file://frontend/src/views/llm/ModelList.vue#L1-L162)
 - [frontend/src/api/llm.js:1-90](file://frontend/src/api/llm.js#L1-L90)
 - [frontend/src/config/aiModels.js:1-42](file://frontend/src/config/aiModels.js#L1-L42)
+- [frontend/src/locales/lang/zh-CN.js:4523-4551](file://frontend/src/locales/lang/zh-CN.js#L4523-L4551)
 
 ## 核心组件
 - LLMService：统一的LLM调用入口，负责提供商选择、模型归一化、请求路由、错误处理与备用提供商切换。
@@ -99,6 +112,7 @@ REG --> SQL
 - LLMRegistry：提供数据库访问与缓存，记录调用日志、统计失败次数、触发熔断。
 - 路由层：提供LLM提供商、API密钥、模型与监控统计的REST接口。
 - 配置系统：环境变量映射到嵌套配置，密钥通过元类按需加载，避免明文存储。
+- **本地化系统**：前端语言包支持多语言，LLM管理界面完全本地化。
 
 **章节来源**
 - [backend_api_python/app/services/llm.py:73-813](file://backend_api_python/app/services/llm.py#L73-L813)
@@ -109,18 +123,18 @@ REG --> SQL
 - [backend_api_python/app/config/api_keys.py:64-121](file://backend_api_python/app/config/api_keys.py#L64-L121)
 
 ## 架构总览
-下图展示了从前端到后端的调用链路，以及负载均衡与注册中心的协作关系。
+下图展示了从前端到后端的调用链路，以及负载均衡与注册中心的协作关系，包含本地化支持的完整流程。
 
 ```mermaid
 sequenceDiagram
-participant FE as "前端"
+participant FE as "前端多语言"
 participant API as "后端接口(routes/llm.py)"
 participant SVC as "LLMService"
 participant REG as "LLMRegistry"
 participant LB as "LLMLBService"
 participant NODE as "LLMNode"
 participant LLM as "LLM提供商"
-FE->>API : "调用模型/发送消息"
+FE->>API : "调用模型/发送消息本地化标签"
 API->>SVC : "call_llm_api(...)"
 SVC->>REG : "查询可用节点(模型/用户)"
 REG-->>SVC : "节点列表(权重/状态)"
@@ -131,7 +145,7 @@ SVC->>LLM : "发起请求(支持流式)"
 LLM-->>SVC : "返回结果/错误"
 SVC->>REG : "记录调用日志/失败计数"
 SVC-->>API : "返回结果"
-API-->>FE : "响应"
+API-->>FE : "响应多语言内容"
 ```
 
 **图表来源**
@@ -148,7 +162,7 @@ API-->>FE : "响应"
   - 显式指定：优先使用构造函数或配置中的提供商。
   - 自动检测：按DeepSeek > Grok > OpenAI > Google > OpenRouter顺序查找已配置密钥。
   - OpenAI-Compatible需显式设置BASE_URL。
-- 模型归一化：当使用OpenRouter风格的“提供商/模型”格式时，自动提取实际模型名，并对不匹配当前提供商的模型使用默认模型。
+- 模型归一化：当使用OpenRouter风格的"提供商/模型"格式时，自动提取实际模型名，并对不匹配当前提供商的模型使用默认模型。
 - 请求路由与重试：
   - 若模型在注册中心配置了LB策略，则走负载均衡路径；否则走传统直连。
   - 对402/403等常见错误尝试备用提供商；对404/429等可回退错误尝试回退模型。
@@ -369,16 +383,18 @@ QD_LLM_API_KEY ||--o{ QD_LLM_CALL_LOG : "logs"
 - [backend_api_python/env.example:64-95](file://backend_api_python/env.example#L64-L95)
 
 ### 前端管理界面
-- 管理页：LLM管理页包含提供商、密钥、模型与统计四个标签页。
-- 模型列表：支持新增/编辑模型，配置LB策略、重试次数与超时；联动提供商下拉。
+- 管理页：LLM管理页包含提供商、密钥、模型与统计四个标签页，全部支持多语言本地化。
+- 模型列表：支持新增/编辑模型，配置LB策略、重试次数与超时；联动提供商下拉，所有文本标签均使用本地化翻译。
 - API封装：统一的LLM API模块，封装列表、创建/更新与统计查询。
 - 模型映射：前端维护OpenRouter风格的模型ID到显示名称的映射。
+- **本地化实现**：通过语言包文件提供多语言支持，包括LLM页面标题、描述、表格列头、操作按钮等完整本地化内容。
 
 **章节来源**
-- [frontend/src/views/llm/index.vue:1-58](file://frontend/src/views/llm/index.vue#L1-L58)
+- [frontend/src/views/llm/index.vue:1-78](file://frontend/src/views/llm/index.vue#L1-L78)
 - [frontend/src/views/llm/ModelList.vue:1-162](file://frontend/src/views/llm/ModelList.vue#L1-L162)
 - [frontend/src/api/llm.js:1-90](file://frontend/src/api/llm.js#L1-L90)
 - [frontend/src/config/aiModels.js:1-42](file://frontend/src/config/aiModels.js#L1-L42)
+- [frontend/src/locales/lang/zh-CN.js:4523-4551](file://frontend/src/locales/lang/zh-CN.js#L4523-L4551)
 
 ## 依赖关系分析
 - LLMService依赖：
@@ -392,6 +408,7 @@ QD_LLM_API_KEY ||--o{ QD_LLM_CALL_LOG : "logs"
 - 前端依赖：
   - 统一API模块：与后端接口对接。
   - 模型映射：确保前端显示与后端模型命名一致。
+  - **语言包系统**：提供多语言支持，LLM管理界面完全本地化。
 
 ```mermaid
 graph LR
@@ -404,6 +421,8 @@ ROUTES --> ENC["加密工具"]
 ROUTES --> AUTH["认证中间件"]
 FE["前端"] --> API["api/llm.js"]
 API --> ROUTES
+FE --> LANG["语言包系统"]
+LANG --> I18N["多语言支持"]
 ```
 
 **图表来源**
@@ -426,8 +445,9 @@ API --> ROUTES
   - 熔断器在连续失败后自动阻断，避免雪崩效应。
 - 流式输出：
   - SSE解析与累积在服务端完成，前端仍可获得完整文本；如需实时推送，可在上游扩展WebSocket推送逻辑。
-
-[本节为通用指导，无需特定文件来源]
+- **本地化性能**：
+  - 语言包按需加载，避免不必要的内存占用。
+  - 多语言切换时使用缓存机制，提升切换性能。
 
 ## 故障排查指南
 - 常见错误与提示：
@@ -438,19 +458,21 @@ API --> ROUTES
   - 连续失败达到阈值后密钥进入熔断状态；修复问题后等待自动恢复或手动调整状态。
 - 流式处理：
   - 若流式解析失败但已接收部分内容，系统会返回部分结果并记录警告；可检查日志定位问题。
+- **本地化问题**：
+  - 如出现文本显示异常，检查对应语言包是否正确加载。
+  - 确认浏览器语言设置与系统语言配置一致。
 
 **章节来源**
 - [backend_api_python/app/services/llm.py:246-274](file://backend_api_python/app/services/llm.py#L246-L274)
 - [backend_api_python/app/services/llm_registry.py:153-158](file://backend_api_python/app/services/llm_registry.py#L153-L158)
 
 ## 结论
-QuantDinger的LLM集成系统通过LLMService统一抽象多提供商调用，结合LLMLBService与LLMRegistry实现了灵活的负载均衡、熔断与监控。配合路由层与前端管理界面，用户可以方便地添加新提供商、配置API密钥与模型参数，并通过多种策略优化性能与稳定性。建议在生产环境中：
+QuantDinger的LLM集成系统通过LLMService统一抽象多提供商调用，结合LLMLBService与LLMRegistry实现了灵活的负载均衡、熔断与监控。配合路由层与前端管理界面，用户可以方便地添加新提供商、配置API密钥与模型参数，并通过多种策略优化性能与稳定性。**最新的本地化改进使得LLM管理界面完全支持多语言，用户可以在不同语言环境下进行模型管理操作。**建议在生产环境中：
 - 为不同提供商配置独立密钥与权重，启用加权轮询或最少连接策略。
 - 设置合理的超时与重试次数，开启熔断器。
 - 使用一致性哈希保障用户会话粘性。
 - 开启流式输出以改善用户体验，同时保留非流式作为回退。
-
-[本节为总结，无需特定文件来源]
+- **充分利用本地化功能，为不同地区用户提供母语界面体验。**
 
 ## 附录
 
@@ -470,8 +492,21 @@ QuantDinger的LLM集成系统通过LLMService统一抽象多提供商调用，�
 - 环境变量配置：参考env.example，设置LLM_PROVIDER与各提供商的API Key与Base URL。
 - 模型配置：在前端模型列表中选择LB策略、重试次数与超时。
 - 调用示例：通过LLMService的call_llm_api方法传入messages与model，系统自动选择提供商与模型并返回结果。
+- **本地化配置**：通过语言包系统实现多语言支持，LLM管理界面完全本地化。
 
 **章节来源**
 - [backend_api_python/env.example:64-95](file://backend_api_python/env.example#L64-L95)
 - [frontend/src/views/llm/ModelList.vue:48-62](file://frontend/src/views/llm/ModelList.vue#L48-L62)
 - [backend_api_python/app/services/llm.py:470-683](file://backend_api_python/app/services/llm.py#L470-L683)
+- [frontend/src/locales/lang/zh-CN.js:4523-4551](file://frontend/src/locales/lang/zh-CN.js#L4523-L4551)
+
+### 本地化实现细节
+- **语言包结构**：LLM相关键值位于语言包文件中，包括页面标题、描述、表格列头、操作按钮等。
+- **多语言支持**：前端通过Vue-i18n实现多语言切换，LLM管理界面的所有文本都支持本地化。
+- **键值命名规范**：使用`llm.`前缀标识LLM相关翻译键，便于管理和维护。
+- **界面元素本地化**：标签页、表格列、按钮文本、提示信息等全部支持多语言显示。
+
+**章节来源**
+- [frontend/src/locales/lang/zh-CN.js:4523-4551](file://frontend/src/locales/lang/zh-CN.js#L4523-L4551)
+- [frontend/src/views/llm/index.vue:3-17](file://frontend/src/views/llm/index.vue#L3-L17)
+- [frontend/src/views/llm/ModelList.vue:83-90](file://frontend/src/views/llm/ModelList.vue#L83-L90)

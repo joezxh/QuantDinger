@@ -96,6 +96,12 @@ class DataSourceConfig(Base):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+    rate_limit_config: Mapped["DataSourceRateLimitConfig | None"] = relationship(
+        "DataSourceRateLimitConfig",
+        back_populates="source_config",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return (
@@ -383,4 +389,147 @@ class QueryCache(Base):
         return (
             f"<QueryCache(key={self.cache_key[:12]}..., "
             f"source={self.source_code}, status={self.status})>"
+        )
+
+
+class DataSourceRateLimitConfig(Base):
+    """
+    数据源限流配置表
+
+    存储各数据源的限流参数，支持动态调整限流配置，
+    与 TokenBucketRateLimiter 限流机制集成。
+
+    关联关系：
+    - source_config_id → DataSourceConfig.id (1:1)
+    - 支持多 API Key 场景下的独立限流配置
+    """
+    __tablename__ = "data_rate_limit_configs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    source_config_id: Mapped[int] = mapped_column(
+        ForeignKey("data_data_source_configs.id", ondelete="CASCADE"),
+        nullable=False,
+        comment="关联的数据源配置ID"
+    )
+
+    # 限流策略: token_bucket / sliding_window / fixed_window / adaptive
+    strategy: Mapped[str] = mapped_column(
+        String(30), nullable=False, server_default="token_bucket"
+    )
+
+    # 令牌桶参数
+    rate: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="60",
+        comment="每个周期允许的请求数"
+    )
+    period: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="60",
+        comment="周期长度（秒），默认60秒=1分钟"
+    )
+    burst: Mapped[int | None] = mapped_column(
+        Integer, nullable=True,
+        comment="突发容量，默认等于rate"
+    )
+
+    # 并发限制
+    max_concurrent: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="10",
+        comment="最大并发请求数"
+    )
+
+    # 滑动窗口参数（用于 sliding_window 策略）
+    window_size: Mapped[int | None] = mapped_column(
+        Integer, nullable=True,
+        comment="滑动窗口大小（秒）"
+    )
+    max_requests_per_window: Mapped[int | None] = mapped_column(
+        Integer, nullable=True,
+        comment="滑动窗口内最大请求数"
+    )
+
+    # 自适应限流
+    enable_adaptive: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false",
+        comment="是否启用自适应限流（根据错误率动态调整）"
+    )
+    min_rate: Mapped[int | None] = mapped_column(
+        Integer, nullable=True,
+        comment="自适应限流最小速率"
+    )
+    max_rate: Mapped[int | None] = mapped_column(
+        Integer, nullable=True,
+        comment="自适应限流最大速率"
+    )
+
+    # 健康状态联动
+    reduce_rate_on_error: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="true",
+        comment="连续错误时是否降低速率"
+    )
+    error_threshold: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="5",
+        comment="触发降速的连续错误次数"
+    )
+
+    # 优先级和权重
+    priority: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="50",
+        comment="限流优先级（高优先级数据源获得更多配额）"
+    )
+    weight: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="1",
+        comment="负载均衡权重"
+    )
+
+    # 统计字段
+    total_requests: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0",
+        comment="总请求数"
+    )
+    total_rejected: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0",
+        comment="总拒绝数（超限被拒绝）"
+    )
+    total_errors: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0",
+        comment="总错误数"
+    )
+    last_request_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+        comment="最后请求时间"
+    )
+    last_rejected_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+        comment="最后拒绝时间"
+    )
+
+    # 启用状态
+    enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="true"
+    )
+
+    # 配置来源
+    config_source: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="database",
+        comment="配置来源: database / environment / code"
+    )
+
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Relationships
+    source_config: Mapped["DataSourceConfig"] = relationship(
+        "DataSourceConfig", back_populates="rate_limit_config"
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<DataSourceRateLimitConfig(source={self.source_config_id}, "
+            f"strategy={self.strategy}, rate={self.rate}/{self.period}s)>"
         )

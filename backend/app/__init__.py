@@ -160,7 +160,56 @@ def create_app():
     # Start generic sync scheduler (if enabled)
     _maybe_start_sync_scheduler()
 
+    # Start data source health checker (if enabled)
+    _maybe_start_health_checker()
+
+    # Start priority adjuster (if enabled)
+    _maybe_start_priority_adjuster()
+
     return app
+
+
+def _maybe_start_priority_adjuster():
+    """Start data source priority adjuster (background daemon)."""
+    import os
+    enabled = os.getenv("ENABLE_PRIORITY_ADJUSTER", "true").lower() == "true"
+    if not enabled:
+        logger.info("Priority adjuster is disabled (ENABLE_PRIORITY_ADJUSTER=false)")
+        return
+
+    debug = os.getenv("PYTHON_API_DEBUG", "false").lower() == "true"
+    if debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        return
+
+    try:
+        from app.data_sources.priority_adjuster import start_priority_adjuster
+        interval = int(os.getenv("PRIORITY_ADJUST_INTERVAL", "600"))
+        start_priority_adjuster(adjust_interval=interval)
+        logger.info(f"Priority adjuster started (interval={interval}s)")
+    except Exception as e:
+        logger.error(f"Failed to start priority adjuster: {e}")
+
+
+def _maybe_start_health_checker():
+    """Start data source health checker (background daemon)."""
+    import os
+    enabled = os.getenv("ENABLE_HEALTH_CHECKER", "true").lower() == "true"
+    if not enabled:
+        logger.info("Health checker is disabled (ENABLE_HEALTH_CHECKER=false)")
+        return
+
+    # Avoid starting in Werkzeug reloader child process during dev
+    debug = os.getenv("PYTHON_API_DEBUG", "false").lower() == "true"
+    if debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        return
+
+    try:
+        from app.services.data_source_health_checker import start_health_checker
+        interval = int(os.getenv("HEALTH_CHECK_INTERVAL", "300"))
+        start_health_checker(check_interval=interval)
+        logger.info(f"Health checker started (interval={interval}s)")
+    except Exception as e:
+        logger.error(f"Failed to start health checker: {e}")
 
 
 def _maybe_start_sync_scheduler():

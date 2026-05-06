@@ -9,6 +9,27 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'user.login.title', requiresAuth: false, hideHeader: true },
   },
   {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/login/index.vue'),
+    meta: { title: 'user.register.tab', requiresAuth: false, hideHeader: true },
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('@/views/login/index.vue'),
+    meta: { title: 'user.resetPassword.title', requiresAuth: false, hideHeader: true },
+  },
+  // Legacy redirects
+  {
+    path: '/indicator-analysis',
+    redirect: '/indicator-ide',
+  },
+  {
+    path: '/backtest-center',
+    redirect: '/indicator-ide',
+  },
+  {
     path: '/',
     component: () => import('@/layouts/AppLayout.vue'),
     redirect: '/ai-asset-analysis',
@@ -92,6 +113,24 @@ const routes: RouteRecordRaw[] = [
         name: 'DataSource',
         component: () => import('@/views/data-source/index.vue'),
         meta: { title: 'menu.dataSource', icon: 'DatabaseOutlined', requiresAdmin: true },
+      },
+      {
+        path: 'data-source/health',
+        name: 'DataSourceHealth',
+        component: () => import('@/views/data-source/HealthDashboard.vue'),
+        meta: { title: '数据源健康监控', icon: 'HealthCheckOutlined', requiresAdmin: true },
+      },
+      {
+        path: 'data-source/keys',
+        name: 'DataSourceApiKeys',
+        component: () => import('@/views/data-source/ApiKeyManager.vue'),
+        meta: { title: 'API密钥管理', icon: 'KeyOutlined', requiresAdmin: true },
+      },
+      {
+        path: 'data-source/rate-limit',
+        name: 'DataSourceRateLimit',
+        component: () => import('@/views/data-source/RateLimitManager.vue'),
+        meta: { title: '限流配置管理', icon: 'ControlOutlined', requiresAdmin: true },
       },
 
       // --- System & Management ---

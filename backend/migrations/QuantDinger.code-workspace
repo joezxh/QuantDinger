@@ -8,6 +8,12 @@
 		},
 		{
 			"path": "../../../github/FinceptTerminal"
+		},
+		{
+			"path": "../../../finance/TradingAgents-CN"
+		},
+		{
+			"path": "../../../finance/dexter"
 		}
 	],
 	"settings": {}

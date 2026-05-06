@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2 class="page-title">
         <RobotOutlined />
-        <span>{{ $t('menu.tradingBot') }}</span>
+        <span>{{ t('menu.tradingBot') }}</span>
       </h2>
       <p class="page-desc">{{ t('trading-bot.pageSubtitle') }}</p>
     </div>
@@ -66,44 +66,19 @@
       </a-col>
     </a-row>
 
-    <!-- Bot Types -->
-    <div class="section-title">
-      <h3>{{ t('trading-bot.createNew') }}</h3>
-    </div>
-    <a-row :gutter="16" class="bot-types-row">
-      <a-col :span="8">
-        <a-card class="type-card" hoverable @click="createBot('grid')">
-          <div class="type-icon"><AppstoreOutlined /></div>
-          <div class="type-info">
-            <h4>{{ t('trading-bot.type.grid') }}</h4>
-            <p>{{ t('trading-bot.gridDesc') }}</p>
-          </div>
-        </a-card>
-      </a-col>
-      <a-col :span="8">
-        <a-card class="type-card" hoverable @click="createBot('dca')">
-          <div class="type-icon"><LineChartOutlined /></div>
-          <div class="type-info">
-            <h4>{{ t('trading-bot.type.dca') }}</h4>
-            <p>{{ t('trading-bot.dcaDesc') }}</p>
-          </div>
-        </a-card>
-      </a-col>
-      <a-col :span="8">
-        <a-card class="type-card ai-card" hoverable @click="showAiDialog = true">
-          <div class="type-icon"><BulbOutlined /></div>
-          <div class="type-info">
-            <h4>{{ t('trading-bot.aiRecommend') }}</h4>
-            <p>{{ t('trading-bot.aiRecommendDesc') }}</p>
-          </div>
-        </a-card>
-      </a-col>
-    </a-row>
+    <!-- Bot Type Cards -->
+    <BotTypeCards
+      @select="handleSelectBotType"
+      @ai-create="showAiModal = true"
+    />
 
     <!-- Bot List -->
     <div class="section-title" style="margin-top: 24px;">
       <h3>{{ t('trading-bot.myBots') }}</h3>
-      <a-button type="primary" size="small" @click="loadBots" :loading="loading">{{ t('common.refresh') }}</a-button>
+      <a-button type="primary" size="small" @click="loadBots" :loading="loading">
+        <ReloadOutlined />
+        {{ t('common.refresh') }}
+      </a-button>
     </div>
     <a-table
       :columns="columns"
@@ -115,8 +90,8 @@
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'name'">
           <div class="bot-name-cell">
-            <strong>{{ record.name }}</strong>
-            <span class="bot-type-tag">{{ record.bot_type || record.strategy_type }}</span>
+            <strong>{{ record.strategy_name || record.name }}</strong>
+            <a-tag size="small" color="purple">{{ record.bot_type || record.strategy_type }}</a-tag>
           </div>
         </template>
         <template v-if="column.key === 'status'">
@@ -125,42 +100,82 @@
           </a-tag>
         </template>
         <template v-if="column.key === 'pnl'">
-          <span :class="record.unrealized_pnl >= 0 ? 'profit' : 'loss'">
-            {{ record.unrealized_pnl >= 0 ? '+' : '' }}${{ formatNumber(record.unrealized_pnl) }}
+          <span :class="(record.unrealized_pnl || 0) >= 0 ? 'profit' : 'loss'">
+            {{ (record.unrealized_pnl || 0) >= 0 ? '+' : '' }}${{ formatNumber(record.unrealized_pnl || 0) }}
           </span>
         </template>
         <template v-if="column.key === 'action'">
           <a-space>
             <a-button type="link" size="small" @click="viewDetail(record)">{{ t('common.detail') }}</a-button>
-            <a-button 
-              type="link" 
-              size="small" 
+            <a-button
+              type="link"
+              size="small"
               :danger="record.status === 'running'"
               @click="toggleStatus(record)"
             >
               {{ record.status === 'running' ? t('common.stop') : t('common.start') }}
             </a-button>
+            <a-button type="link" size="small" @click="editBot(record)" :disabled="record.status === 'running'">
+              {{ t('common.edit') }}
+            </a-button>
+            <a-popconfirm :title="t('common.deleteConfirm')" @confirm="deleteBot(record.id)">
+              <a-button type="link" danger size="small" :disabled="record.status === 'running'">
+                {{ t('common.delete') }}
+              </a-button>
+            </a-popconfirm>
           </a-space>
         </template>
       </template>
     </a-table>
+
+    <!-- Create/Edit Modal -->
+    <BotCreateModal
+      v-model:open="createModalOpen"
+      :bot-type="selectedBotType"
+      :edit-bot="editingBot"
+      @success="loadBots"
+    />
+
+    <!-- Detail Modal -->
+    <BotDetailModal
+      v-model:open="detailModalOpen"
+      :bot="selectedBot"
+      @start="handleStart"
+      @stop="handleStop"
+      @edit="editBot"
+      @delete="handleDeleteFromDetail"
+    />
+
+    <!-- AI Modal -->
+    <AiBotModal
+      v-model:open="showAiModal"
+      @apply="handleAiApply"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { 
-  RobotOutlined, WalletOutlined, StockOutlined, PlayCircleOutlined, PauseCircleOutlined,
-  AppstoreOutlined, LineChartOutlined, BulbOutlined 
+import {
+  RobotOutlined, WalletOutlined, StockOutlined, PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
-import { getStrategyList, startStrategy, stopStrategy } from '@/api/strategy'
+import { getStrategyList, startStrategy, stopStrategy, deleteStrategy } from '@/api/strategy'
+import BotTypeCards from './components/BotTypeCards.vue'
+import BotCreateModal from './components/BotCreateModal.vue'
+import BotDetailModal from './components/BotDetailModal.vue'
+import AiBotModal from './components/AiBotModal.vue'
 
 const { t } = useI18n()
 const loading = ref(false)
 const bots = ref<any[]>([])
-const showAiDialog = ref(false)
+const createModalOpen = ref(false)
+const detailModalOpen = ref(false)
+const showAiModal = ref(false)
+const selectedBotType = ref('grid')
+const editingBot = ref<any>(null)
+const selectedBot = ref<any>(null)
 
 const totalEquity = computed(() => {
   return bots.value.reduce((sum, bot) => sum + (bot.trading_config?.initial_capital || 0), 0)
@@ -180,11 +195,11 @@ const columns = [
   { title: t('common.status'), dataIndex: 'status', key: 'status' },
   { title: t('trading-bot.currentPnl'), dataIndex: 'unrealized_pnl', key: 'pnl' },
   { title: t('trading-bot.lastRun'), dataIndex: 'last_run_at', key: 'last_run_at' },
-  { title: t('common.action'), key: 'action' }
+  { title: t('common.action'), key: 'action', width: 260 }
 ]
 
 const formatNumber = (num: number) => {
-  if (!num) return '0.00'
+  if (!num && num !== 0) return '0.00'
   return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
@@ -193,7 +208,6 @@ const loadBots = async () => {
   try {
     const res: any = await getStrategyList()
     if (res.code === 1) {
-      // Filter for bots (assuming bots have bot_type or strategy_mode === 'bot')
       const all = res.data || []
       bots.value = all.filter((s: any) => s.strategy_mode === 'bot' || s.bot_type)
     }
@@ -204,12 +218,21 @@ const loadBots = async () => {
   }
 }
 
-const createBot = (type: string) => {
-  message.info(`Creating ${type} bot wizard (Placeholder)`)
+const handleSelectBotType = (type: string) => {
+  selectedBotType.value = type
+  editingBot.value = null
+  createModalOpen.value = true
 }
 
 const viewDetail = (record: any) => {
-  message.info(`Viewing details for ${record.name}`)
+  selectedBot.value = record
+  detailModalOpen.value = true
+}
+
+const editBot = (record: any) => {
+  selectedBotType.value = record.bot_type || record.strategy_type || 'grid'
+  editingBot.value = record
+  createModalOpen.value = true
 }
 
 const toggleStatus = async (record: any) => {
@@ -225,6 +248,39 @@ const toggleStatus = async (record: any) => {
   } catch (error) {
     message.error(t('common.failed'))
   }
+}
+
+const handleStart = (bot: any) => {
+  toggleStatus(bot)
+}
+
+const handleStop = (bot: any) => {
+  toggleStatus(bot)
+}
+
+const deleteBot = async (id: number) => {
+  try {
+    const res: any = await deleteStrategy(id)
+    if (res.code === 1) {
+      message.success(t('common.deleted'))
+      loadBots()
+    } else {
+      message.error(res.msg || t('common.deleteFailed'))
+    }
+  } catch (error) {
+    message.error(t('common.deleteFailed'))
+  }
+}
+
+const handleDeleteFromDetail = (bot: any) => {
+  detailModalOpen.value = false
+  deleteBot(bot.id)
+}
+
+const handleAiApply = (preset: any) => {
+  selectedBotType.value = preset.botType || 'grid'
+  editingBot.value = null
+  createModalOpen.value = true
 }
 
 onMounted(() => {
@@ -293,7 +349,7 @@ onMounted(() => {
   font-size: 20px;
   font-weight: bold;
   color: #262626;
-  
+
   &.profit { color: #52c41a; }
   &.loss { color: #f5222d; }
 }
@@ -303,73 +359,11 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  
+
   h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-  }
-}
-
-.bot-types-row {
-  margin-bottom: 32px;
-}
-
-.type-card {
-  border-radius: 8px;
-  cursor: pointer;
-  
-  &:hover {
-    border-color: #1890ff;
-    box-shadow: 0 4px 12px rgba(24,144,255,0.1);
-  }
-  
-  :deep(.ant-card-body) {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 20px;
-  }
-  
-  &.ai-card {
-    background: linear-gradient(135deg, #f6f0ff 0%, #ffffff 100%);
-    border-color: #d3adf7;
-    
-    &:hover {
-      border-color: #722ed1;
-      box-shadow: 0 4px 12px rgba(114,46,209,0.1);
-    }
-    
-    .type-icon {
-      color: #722ed1;
-      background: rgba(114,46,209,0.1);
-    }
-  }
-}
-
-.type-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: #1890ff;
-  background: rgba(24,144,255,0.1);
-  flex-shrink: 0;
-}
-
-.type-info {
-  h4 {
-    margin: 0 0 4px 0;
-    font-size: 16px;
-    font-weight: 600;
-  }
-  p {
-    margin: 0;
-    font-size: 12px;
-    color: #8c8c8c;
   }
 }
 
@@ -383,10 +377,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  
-  .bot-type-tag {
-    font-size: 12px;
-    color: #8c8c8c;
+
+  .ant-tag {
+    width: fit-content;
   }
 }
 

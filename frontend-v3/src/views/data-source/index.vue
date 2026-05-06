@@ -6,7 +6,12 @@
         <p class="subtitle">配置 API 密钥、管理同步任务以及维护数据集元数据</p>
       </div>
       <div class="header-right">
-        <a-tag color="blue">Admin Only</a-tag>
+        <a-space>
+          <a-button type="primary" @click="$router.push('/data-source/health')">
+            健康监控
+          </a-button>
+          <a-tag color="blue">Admin Only</a-tag>
+        </a-space>
       </div>
     </div>
 
@@ -18,19 +23,29 @@
               <ConfigList />
             </div>
           </a-tab-pane>
+          <a-tab-pane key="test-query" tab="测试查询">
+            <div class="tab-content">
+              <TestQuery />
+            </div>
+          </a-tab-pane>
+          <a-tab-pane key="import-export" tab="导入/导出">
+            <div class="tab-content">
+              <ImportExport />
+            </div>
+          </a-tab-pane>
           <a-tab-pane key="sync-tasks" :tab="t('batch.auto59')">
             <div class="tab-content">
               <SyncTaskTab />
             </div>
           </a-tab-pane>
           <a-tab-pane key="keys" :tab="t('batch.auto60')">
-            <div class="tab-content empty-content">
-              <a-empty description="密钥管理模块正在迁移中..." />
+            <div class="tab-content">
+              <KeyList />
             </div>
           </a-tab-pane>
           <a-tab-pane key="datasets" :tab="t('batch.auto61')">
-            <div class="tab-content empty-content">
-              <a-empty description="数据集管理模块正在迁移中..." />
+            <div class="tab-content">
+              <DatasetList />
             </div>
           </a-tab-pane>
         </a-tabs>
@@ -43,7 +58,11 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ConfigList from './components/ConfigList.vue'
+import TestQuery from './components/TestQuery.vue'
+import ImportExport from './components/ImportExport.vue'
 import SyncTaskTab from './components/SyncTaskTab.vue'
+import KeyList from './components/KeyList.vue'
+import DatasetList from './components/DatasetList.vue'
 
 const { t } = useI18n()
 const activeTab = ref('configs')

@@ -20,7 +20,28 @@
 - [frontend-v3/src/utils/request.ts](file://frontend-v3/src/utils/request.ts)
 - [frontend/src/views/dashboard/index.vue](file://frontend/src/views/dashboard/index.vue)
 - [frontend-v3/src/views/dashboard/index.vue](file://frontend-v3/src/views/dashboard/index.vue)
+- [frontend-v3/src/locales/index.ts](file://frontend-v3/src/locales/index.ts)
+- [frontend-v3/src/composables/useI18n.ts](file://frontend-v3/src/composables/useI18n.ts)
+- [frontend-v3/src/components/SelectLang/index.vue](file://frontend-v3/src/components/SelectLang/index.vue)
+- [frontend-v3/src/stores/app.ts](file://frontend-v3/src/stores/app.ts)
+- [frontend-v3/scripts/i18n-migrate.cjs](file://frontend-v3/scripts/i18n-migrate.cjs)
+- [frontend-v3/scripts/i18n-migrate2.cjs](file://frontend-v3/scripts/i18n-migrate2.cjs)
+- [frontend-v3/src/locales/zh-CN.ts](file://frontend-v3/src/locales/zh-CN.ts)
+- [frontend-v3/src/locales/en-US.ts](file://frontend-v3/src/locales/en-US.ts)
+- [frontend-v3/src/locales/ar-SA.ts](file://frontend-v3/src/locales/ar-SA.ts)
+- [frontend-v3/src/locales/fr-FR.ts](file://frontend-v3/src/locales/fr-FR.ts)
+- [frontend-v3/src/locales/de-DE.ts](file://frontend-v3/src/locales/de-DE.ts)
+- [frontend-v3/src/locales/ja-JP.ts](file://frontend-v3/src/locales/ja-JP.ts)
+- [frontend-v3/src/locales/ko-KR.ts](file://frontend-v3/src/locales/ko-KR.ts)
 </cite>
+
+## 更新摘要
+**变更内容**
+- 新增全面的国际化(i18n)支持章节，涵盖10种语言的本地化实现
+- 添加vue-i18n集成到Vue 3 Composition API生态系统的详细说明
+- 新增语言切换组件和状态管理集成
+- 添加国际化迁移工具脚本的使用说明
+- 更新架构图以反映新的国际化架构
 
 ## 目录
 1. [项目概述](#项目概述)
@@ -28,10 +49,11 @@
 3. [核心组件对比](#核心组件对比)
 4. [架构概览](#架构概览)
 5. [详细组件分析](#详细组件分析)
-6. [依赖关系分析](#依赖关系分析)
-7. [性能考虑](#性能考虑)
-8. [故障排除指南](#故障排除指南)
-9. [结论](#结论)
+6. [国际化系统](#国际化系统)
+7. [依赖关系分析](#依赖关系分析)
+8. [性能考虑](#性能考虑)
+9. [故障排除指南](#故障排除指南)
+10. [结论](#结论)
 
 ## 项目概述
 
@@ -40,7 +62,7 @@ QuantDinger 是一个量化交易平台，正在进行从 Vue 2 到 Vue 3 的前
 - **Vue 2 版本** (`frontend/`): 基于 Vue 2.6.14，使用 Vuex 状态管理
 - **Vue 3 版本** (`frontend-v3/`): 基于 Vue 3.5.32，使用 Pinia 状态管理
 
-本次重写涉及核心框架升级、状态管理重构、组件现代化以及整体架构优化。
+**更新** 本次重写新增了全面的国际化(i18n)支持，集成vue-i18n到Vue 3 Composition API生态系统，支持10种语言的本地化。
 
 ## 项目结构分析
 
@@ -61,6 +83,7 @@ V3_App["App.vue<br/>基础应用组件"]
 V3_Router["router/index.ts<br/>Vue Router 4.x"]
 V3_Store["stores/app.ts<br/>Pinia Store"]
 V3_Layout["layouts/AppLayout.vue<br/>布局组件"]
+V3_I18n["locales/<br/>国际化系统"]
 end
 V2_Main --> V2_App
 V2_App --> V2_Router
@@ -70,11 +93,13 @@ V3_Main --> V3_App
 V3_App --> V3_Router
 V3_App --> V3_Store
 V3_App --> V3_Layout
+V3_App --> V3_I18n
 ```
 
 **图表来源**
 - [frontend/src/main.js:1-62](file://frontend/src/main.js#L1-L62)
 - [frontend-v3/src/main.ts:1-18](file://frontend-v3/src/main.ts#L1-L18)
+- [frontend-v3/src/locales/index.ts:1-48](file://frontend-v3/src/locales/index.ts#L1-L48)
 
 ### 核心依赖差异
 
@@ -85,6 +110,7 @@ V3_App --> V3_Layout
 | 状态管理 | vuex@3.6.2 | pinia@3.0.4 |
 | UI 框架 | ant-design-vue@1.7.8 | ant-design-vue@4.2.6 |
 | 构建工具 | @vue/cli-service | vite + vue-tsc |
+| 国际化 | vue-i18n@8.x | vue-i18n@9.x |
 
 **章节来源**
 - [frontend/package.json:1-85](file://frontend/package.json#L1-L85)
@@ -110,8 +136,9 @@ class Vue3App {
 +Ant Design Vue 4.x
 +main.ts 入口
 +Composition API
++i18n 国际化
 }
-Vue3App --|> Vue2App : "重写升级"
+Vue3App --|> Vue2App : "重写升级 + 国际化"
 ```
 
 **图表来源**
@@ -290,6 +317,111 @@ Vue3Dashboard --|> Vue2Dashboard : "功能增强"
 - [frontend/src/views/dashboard/index.vue:1-800](file://frontend/src/views/dashboard/index.vue#L1-L800)
 - [frontend-v3/src/views/dashboard/index.vue:1-800](file://frontend-v3/src/views/dashboard/index.vue#L1-L800)
 
+## 国际化系统
+
+### 国际化架构设计
+
+```mermaid
+graph TB
+subgraph "国际化系统 (frontend-v3/)"
+I18n_Index[i18n/index.ts<br/>vue-i18n 创建]
+I18n_Composables[composables/useI18n.ts<br/>组合式函数]
+I18n_Locale[locales/<br/>多语言文件]
+I18n_SelectLang[components/SelectLang/<br/>语言选择组件]
+I18n_AppStore[stores/app.ts<br/>语言状态管理]
+end
+subgraph "语言文件"
+ZH_CN[zh-CN.ts<br/>简体中文]
+EN_US[en-US.ts<br/>英语]
+JA_JP[ja-JP.ts<br/>日语]
+KO_KR[ko-KR.ts<br/>韩语]
+VI_VN[vi-VN.ts<br/>越南语]
+TH_TH[th-TH.ts<br/>泰语]
+AR_SA[ar-SA.ts<br/>阿拉伯语]
+FR_FR[fr-FR.ts<br/>法语]
+DE_DE[de-DE.ts<br/>德语]
+ZH_TW[zh-TW.ts<br/>繁体中文]
+end
+I18n_Index --> I18n_Composables
+I18n_Index --> I18n_Locale
+I18n_Locale --> ZH_CN
+I18n_Locale --> EN_US
+I18n_Locale --> JA_JP
+I18n_Locale --> KO_KR
+I18n_Locale --> VI_VN
+I18n_Locale --> TH_TH
+I18n_Locale --> AR_SA
+I18n_Locale --> FR_FR
+I18n_Locale --> DE_DE
+I18n_Locale --> ZH_TW
+I18n_SelectLang --> I18n_AppStore
+```
+
+**图表来源**
+- [frontend-v3/src/locales/index.ts:1-48](file://frontend-v3/src/locales/index.ts#L1-L48)
+- [frontend-v3/src/composables/useI18n.ts:1-10](file://frontend-v3/src/composables/useI18n.ts#L1-L10)
+- [frontend-v3/src/components/SelectLang/index.vue:1-92](file://frontend-v3/src/components/SelectLang/index.vue#L1-L92)
+
+### 支持的语言列表
+
+国际化系统支持以下10种语言：
+
+| 语言代码 | 语言名称 | 本地化文件 |
+|----------|----------|------------|
+| zh-CN | 简体中文 | zh-CN.ts |
+| en-US | 英语 | en-US.ts |
+| ja-JP | 日语 | ja-JP.ts |
+| ko-KR | 韩语 | ko-KR.ts |
+| vi-VN | 越南语 | vi-VN.ts |
+| th-TH | 泰语 | th-TH.ts |
+| ar-SA | 阿拉伯语 | ar-SA.ts |
+| fr-FR | 法语 | fr-FR.ts |
+| de-DE | 德语 | de-DE.ts |
+| zh-TW | 繁体中文 | zh-TW.ts |
+
+### 语言切换组件实现
+
+```mermaid
+sequenceDiagram
+participant User as "用户"
+participant SelectLang as "SelectLang 组件"
+participant I18n as "vue-i18n"
+participant AppStore as "App Store"
+User->>SelectLang : 点击语言选择
+SelectLang->>I18n : 设置 locale
+SelectLang->>AppStore : 更新语言状态
+AppStore->>AppStore : setStoredLocale()
+SelectLang->>SelectLang : 刷新界面
+```
+
+**图表来源**
+- [frontend-v3/src/components/SelectLang/index.vue:44-53](file://frontend-v3/src/components/SelectLang/index.vue#L44-L53)
+- [frontend-v3/src/stores/app.ts:24-27](file://frontend-v3/src/stores/app.ts#L24-L27)
+
+### 国际化迁移工具
+
+系统提供了两个迁移工具脚本来帮助从旧版本迁移到新的国际化架构：
+
+#### i18n-migrate.cjs
+- 从zh-CN.ts构建反向映射
+- 自动替换message.success/error/warning调用
+- 批量替换模板文本模式
+- 处理属性绑定替换
+
+#### i18n-migrate2.cjs
+- 处理剩余的中文文本替换
+- 批量替换属性绑定（label、tab、title等）
+- 处理按钮和标签文本
+- 替换表格列标题和消息提示
+
+**章节来源**
+- [frontend-v3/src/locales/index.ts:1-48](file://frontend-v3/src/locales/index.ts#L1-L48)
+- [frontend-v3/src/composables/useI18n.ts:1-10](file://frontend-v3/src/composables/useI18n.ts#L1-L10)
+- [frontend-v3/src/components/SelectLang/index.vue:1-92](file://frontend-v3/src/components/SelectLang/index.vue#L1-L92)
+- [frontend-v3/src/stores/app.ts:1-38](file://frontend-v3/src/stores/app.ts#L1-L38)
+- [frontend-v3/scripts/i18n-migrate.cjs:1-410](file://frontend-v3/scripts/i18n-migrate.cjs#L1-L410)
+- [frontend-v3/scripts/i18n-migrate2.cjs:1-380](file://frontend-v3/scripts/i18n-migrate2.cjs#L1-L380)
+
 ## 依赖关系分析
 
 ### 核心依赖迁移
@@ -309,12 +441,14 @@ V3_Router[vue-router@4.6.4]
 V3_Pinia[pinia@3.0.4]
 V3_Antd[ant-design-vue@4.2.6]
 V3_Vite[vite + vue-tsc]
+V3_I18n[vue-i18n@9.x]
 end
 V3_Core --> V2_Core
 V3_Router --> V2_Router
 V3_Pinia --> V2_Vuex
 V3_Antd --> V2_Antd
 V3_Vite --> V2_CLI
+V3_I18n --> V2_I18n
 ```
 
 **图表来源**
@@ -336,11 +470,13 @@ V3_Pinia[Pinia Store]
 V3_Composables[Composables]
 V3_Reactive[响应式状态]
 V3_TypeSafe[类型安全]
+V3_Locale[语言状态]
 end
 V3_Pinia --> V2_Vuex
 V3_Composables --> V2_Modules
 V3_Reactive --> V2_Mutations
 V3_TypeSafe --> V2_Getters
+V3_Locale --> V3_Locale
 ```
 
 **图表来源**
@@ -376,11 +512,13 @@ V3_SplitStores[拆分 Store]
 V3_PartialUpdates[部分更新]
 V3_ComposableOpt[组合式优化]
 V3_TypeCache[类型缓存]
+V3_LocaleCache[语言缓存]
 end
 V3_SplitStores --> V2_LargeStore
 V3_PartialUpdates --> V2_SyncUpdates
 V3_ComposableOpt --> V2_MutationOverhead
 V3_TypeCache --> V3_SplitStores
+V3_LocaleCache --> V3_LocaleCache
 ```
 
 ### 组件渲染优化
@@ -441,6 +579,16 @@ provide('reload', handleRefresh)
 const reload = inject('reload')
 ```
 
+#### 4. 国际化相关问题
+
+**问题**: 语言切换不生效
+
+**解决方案**: 检查以下几点：
+- 确认 locales 目录中的语言文件完整
+- 验证 i18n 配置中的 fallbackLocale 设置
+- 检查 localStorage 中的 app_locale 键值
+- 确认 SelectLang 组件的事件处理逻辑
+
 **章节来源**
 - [frontend/src/utils/request.js:54-91](file://frontend/src/utils/request.js#L54-L91)
 - [frontend-v3/src/utils/request.ts:117-155](file://frontend-v3/src/utils/request.ts#L117-L155)
@@ -479,6 +627,7 @@ Vue 3 前端重写项目展现了现代前端技术栈的最佳实践：
 2. **状态管理重构**: 从 Vuex 迁移到 Pinia，提供更好的 TypeScript 支持
 3. **架构优化**: 采用 Composition API 和现代化的组件设计
 4. **开发工具升级**: 使用 Vite 提供更快的开发体验
+5. **国际化全面支持**: 新增10种语言的完整本地化支持
 
 ### 技术优势
 
@@ -486,6 +635,7 @@ Vue 3 前端重写项目展现了现代前端技术栈的最佳实践：
 - **开发体验**: 更好的 TypeScript 支持和开发工具链
 - **维护性**: 更清晰的状态管理和组件架构
 - **可扩展性**: 更灵活的架构设计支持未来功能扩展
+- **全球化能力**: 完整的国际化支持满足多语言需求
 
 ### 未来发展方向
 
@@ -493,5 +643,6 @@ Vue 3 前端重写项目展现了现代前端技术栈的最佳实践：
 2. **功能完善**: 完善从 Vue 2 到 Vue 3 的功能对齐
 3. **测试覆盖**: 增强单元测试和集成测试覆盖率
 4. **文档完善**: 补充详细的开发和部署文档
+5. **国际化扩展**: 根据用户反馈添加更多语言支持
 
-这次重写为 QuantDinger 项目奠定了坚实的技术基础，使其能够更好地支持未来的业务发展和技术演进。
+这次重写为 QuantDinger 项目奠定了坚实的技术基础，使其能够更好地支持未来的业务发展和技术演进。新增的国际化系统特别为项目的全球化发展提供了强有力的技术支撑。

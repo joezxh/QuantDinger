@@ -44,6 +44,27 @@ from app.models.user import User
 from app.models.verification import OAuthLink, VerificationCode
 from app.models.watchlist import Watchlist
 
+# 新增多存储引擎模型
+from app.models.news import NewsArticle
+from app.models.macro import MacroEconomicIndicator, EconomicCalendarEvent
+from app.models.sentiment import SentimentMarketIndicator, SocialSentiment, AlternativeSocialSentiment
+from app.models.security import SecurityCompany, SecurityShareholder, SecurityInstitutionalHolding, SecurityInsiderTrade
+from app.models.entity_dedup import (
+    EntityFinancialInstitution,
+    EntityInstitutionAlias,
+    EntityIndividualShareholder,
+    EntityPolymarketUser,
+    EntityPolymarketWalletLink,
+    EntityRelationship,
+    PolymarketTradingNetwork,
+)
+from app.models.polymarket_extended import (
+    PolymarketAccount,
+    PolymarketOrder,
+    PolymarketPosition,
+    PolymarketTradeHistory,
+)
+
 __all__ = [
     "AnalysisMemory",
     "AiCalibration",
@@ -112,4 +133,26 @@ __all__ = [
     "UserRole",
     "VerificationCode",
     "Watchlist",
+    # 新增多存储引擎模型
+    "NewsArticle",
+    "MacroEconomicIndicator",
+    "EconomicCalendarEvent",
+    "SentimentMarketIndicator",
+    "SocialSentiment",
+    "AlternativeSocialSentiment",
+    "SecurityCompany",
+    "SecurityShareholder",
+    "SecurityInstitutionalHolding",
+    "SecurityInsiderTrade",
+    "EntityFinancialInstitution",
+    "EntityInstitutionAlias",
+    "EntityIndividualShareholder",
+    "EntityPolymarketUser",
+    "EntityPolymarketWalletLink",
+    "EntityRelationship",
+    "PolymarketTradingNetwork",
+    "PolymarketAccount",
+    "PolymarketOrder",
+    "PolymarketPosition",
+    "PolymarketTradeHistory",
 ]

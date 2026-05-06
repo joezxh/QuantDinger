@@ -1,128 +1,96 @@
 """
-Cache utilities.
-Local-first behavior: use in-memory cache by default.
-Redis is only used when explicitly enabled via environment variables.
+缓存策略管理器
 """
-import time
-import threading
-from typing import Optional, Any
 import json
+import logging
+from typing import Any, Optional
 
-from app.utils.logger import get_logger
-from app.config import CacheConfig
+from ..extensions import redis_client
 
-logger = get_logger(__name__)
-
-
-class MemoryCache:
-    """内存缓存（Redis 不可用时的备选方案）"""
-    
-    def __init__(self):
-        self._cache = {}
-        self._lock = threading.Lock()
-    
-    def get(self, key: str) -> Optional[str]:
-        with self._lock:
-            if key in self._cache:
-                data, expiry = self._cache[key]
-                if expiry > time.time():
-                    return data
-                else:
-                    del self._cache[key]
-            return None
-    
-    def setex(self, key: str, ttl: int, value: str):
-        with self._lock:
-            expiry = time.time() + ttl
-            self._cache[key] = (value, expiry)
-    
-    def delete(self, key: str):
-        with self._lock:
-            if key in self._cache:
-                del self._cache[key]
-    
-    def clear(self):
-        with self._lock:
-            self._cache.clear()
+logger = logging.getLogger(__name__)
 
 
-class CacheManager:
-    """缓存管理器"""
+class CacheStrategy:
+    """缓存策略管理器"""
     
-    _instance = None
-    _lock = threading.Lock()
+    CACHE_CONFIG = {
+        # 热数据缓存
+        'realtime_price': {'ttl': 60, 'prefix': 'price:'},
+        'latest_news': {'ttl': 300, 'prefix': 'news:latest:'},
+        'market_sentiment': {'ttl': 900, 'prefix': 'sentiment:'},
+        
+        # 查询结果缓存
+        'search_results': {'ttl': 3600, 'prefix': 'search:'},
+        'company_info': {'ttl': 86400, 'prefix': 'company:'},
+        'institution_info': {'ttl': 86400, 'prefix': 'institution:'},
+        
+        # 去重缓存
+        'dedup_hash': {'ttl': 604800, 'prefix': 'dedup:'},
+        'imported_items': {'ttl': 604800, 'prefix': 'imported:'},
+        
+        # 会话缓存
+        'user_session': {'ttl': 86400, 'prefix': 'session:'},
+        'api_rate_limit': {'ttl': 60, 'prefix': 'rate:'}
+    }
     
-    def __new__(cls):
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = super().__new__(cls)
-                    cls._instance._initialized = False
-        return cls._instance
-    
-    def __init__(self):
-        if self._initialized:
-            return
-            
-        self._initialized = True
-        self._client = None
-        self._use_redis = False
-
-        # Local-first: do NOT touch Redis unless explicitly enabled.
-        if not CacheConfig.ENABLED:
-            self._client = MemoryCache()
-            self._use_redis = False
-            return
-
-        # Try Redis only when enabled.
-        try:
-            import redis
-            from app.config import RedisConfig
-
-            self._client = redis.Redis(
-                host=RedisConfig.HOST,
-                port=RedisConfig.PORT,
-                db=RedisConfig.DB,
-                password=RedisConfig.PASSWORD,
-                decode_responses=True,
-                socket_connect_timeout=RedisConfig.CONNECT_TIMEOUT,
-                socket_timeout=RedisConfig.SOCKET_TIMEOUT
-            )
-            self._client.ping()
-            self._use_redis = True
-            logger.info("Redis cache connected")
-        except Exception as e:
-            # Fall back silently (keep startup logs clean in local mode).
-            logger.info(f"Redis is enabled but unavailable; using in-memory cache instead: {e}")
-            self._client = MemoryCache()
-            self._use_redis = False
-    
-    def get(self, key: str) -> Optional[Any]:
+    def get_cached(self, cache_type: str, key: str) -> Optional[Any]:
         """获取缓存"""
+        config = self.CACHE_CONFIG.get(cache_type)
+        if not config:
+            return None
+        
+        cache_key = f"{config['prefix']}{key}"
         try:
-            data = self._client.get(key)
-            if data:
-                return json.loads(data)
-            return None
+            cached = redis_client.get(cache_key)
+            if cached:
+                return json.loads(cached)
         except Exception as e:
-            logger.error(f"Cache read failed: {e}")
-            return None
+            logger.error(f"Cache get error: {e}")
+        
+        return None
     
-    def set(self, key: str, value: Any, ttl: int = 300):
+    def set_cached(self, cache_type: str, key: str, value: Any):
         """设置缓存"""
+        config = self.CACHE_CONFIG.get(cache_type)
+        if not config:
+            return
+        
+        cache_key = f"{config['prefix']}{key}"
         try:
-            self._client.setex(key, ttl, json.dumps(value))
+            redis_client.setex(
+                cache_key,
+                config['ttl'],
+                json.dumps(value, default=str)
+            )
         except Exception as e:
-            logger.error(f"Cache write failed: {e}")
+            logger.error(f"Cache set error: {e}")
     
-    def delete(self, key: str):
-        """删除缓存"""
+    def invalidate_cache(self, cache_type: str, key: str):
+        """使缓存失效"""
+        config = self.CACHE_CONFIG.get(cache_type)
+        if not config:
+            return
+        
+        cache_key = f"{config['prefix']}{key}"
         try:
-            self._client.delete(key)
+            redis_client.delete(cache_key)
         except Exception as e:
-            logger.error(f"Cache delete failed: {e}")
+            logger.error(f"Cache invalidate error: {e}")
     
-    @property
-    def is_redis(self) -> bool:
-        return self._use_redis
+    def invalidate_pattern(self, cache_type: str, pattern: str):
+        """按模式使缓存失效"""
+        config = self.CACHE_CONFIG.get(cache_type)
+        if not config:
+            return
+        
+        search_pattern = f"{config['prefix']}{pattern}*"
+        try:
+            keys = redis_client.keys(search_pattern)
+            if keys:
+                redis_client.delete(*keys)
+        except Exception as e:
+            logger.error(f"Cache invalidate pattern error: {e}")
 
+
+# 全局实例
+cache_strategy = CacheStrategy()

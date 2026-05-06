@@ -1,370 +1,477 @@
 """
-数据源管理 API 路由
-提供数据源配置、API 密钥、数据集元数据、查询缓存的 CRUD 接口
+数据源管理 API
+提供数据源配置查询、健康状态监控、优先级调整等接口
 """
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify
 
-from app.utils.auth import login_required, admin_required, get_current_user_id, get_current_user_role
 from app.utils.logger import get_logger
-from app.services.data_source_service import get_data_source_service
-from app.services.api_key_service import get_api_key_service
-from app.services.dataset_service import get_dataset_service
-from app.services.query_cache_service import get_query_cache_service
 
 logger = get_logger(__name__)
-data_source_bp = Blueprint('data_source', __name__)
+
+data_source_bp = Blueprint("data_source", __name__, url_prefix="/api/data-sources")
 
 
-def _get_user_context():
-    """获取当前用户上下文"""
-    return {
-        "user_id": get_current_user_id(),
-        "user_role": get_current_user_role() or "user"
-    }
-
-
-# ==================== DataSourceConfig ====================
-
-@data_source_bp.route('/configs', methods=['GET'])
-@login_required
-def list_configs():
-    """列出数据源配置"""
+@data_source_bp.route("/", methods=["GET"])
+def list_data_sources():
+    """获取所有数据源配置"""
     try:
-        params = request.args
-        result = get_data_source_service().list_configs(
-            layer=params.get('layer'),
-            market_category=params.get('market_category'),
-            enabled=params.get('enabled', type=lambda x: x.lower() == 'true'),
-            search=params.get('search'),
-            page=params.get('page', 1, type=int),
-            page_size=params.get('page_size', 50, type=int)
+        from app.database.session import get_session
+        from app.models.data_source_meta import DataSourceConfig
+
+        with get_session() as session:
+            configs = session.query(DataSourceConfig).order_by(
+                DataSourceConfig.layer, DataSourceConfig.source_name
+            ).all()
+
+            result = []
+            for c in configs:
+                result.append({
+                    "id": c.id,
+                    "source_code": c.source_code,
+                    "source_name": c.source_name,
+                    "layer": c.layer,
+                    "market_categories": c.market_categories or [],
+                    "enabled": c.enabled,
+                    "load_balance_strategy": c.load_balance_strategy,
+                    "config_json": c.config_json or {},
+                    "api_key_configured": len(c.api_keys) > 0,
+                    "notes": c.notes,
+                })
+
+            return jsonify({"data_sources": result, "total": len(result)})
+    except Exception as e:
+        logger.error(f"Failed to list data sources: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/<source_code>", methods=["GET"])
+def get_data_source(source_code: str):
+    """获取指定数据源配置"""
+    try:
+        from app.database.session import get_session
+        from app.models.data_source_meta import DataSourceConfig
+
+        with get_session() as session:
+            config = session.query(DataSourceConfig).filter(
+                DataSourceConfig.source_code == source_code
+            ).first()
+
+            if not config:
+                return jsonify({"error": f"Data source '{source_code}' not found"}), 404
+
+            return jsonify({
+                "source_code": config.source_code,
+                "source_name": config.source_name,
+                "layer": config.layer,
+                "market_categories": config.market_categories or [],
+                "enabled": config.enabled,
+                "load_balance_strategy": config.load_balance_strategy,
+                "config_json": config.config_json or {},
+                "datasets": [
+                    {
+                        "dataset_code": d.dataset_code,
+                        "dataset_name": d.dataset_name,
+                        "return_type": d.return_type,
+                    }
+                    for d in config.datasets
+                ],
+            })
+    except Exception as e:
+        logger.error(f"Failed to get data source {source_code}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/<source_code>/toggle", methods=["POST"])
+def toggle_data_source(source_code: str):
+    """启用/禁用数据源"""
+    try:
+        from app.database.session import get_session
+        from app.models.data_source_meta import DataSourceConfig
+
+        body = request.get_json(silent=True) or {}
+        enabled = body.get("enabled")
+
+        if enabled is None:
+            return jsonify({"error": "Missing 'enabled' field"}), 400
+
+        with get_session() as session:
+            config = session.query(DataSourceConfig).filter(
+                DataSourceConfig.source_code == source_code
+            ).first()
+
+            if not config:
+                return jsonify({"error": f"Data source '{source_code}' not found"}), 404
+
+            config.enabled = enabled
+            session.flush()
+
+            return jsonify({
+                "source_code": config.source_code,
+                "enabled": config.enabled,
+                "message": f"Data source '{source_code}' {'enabled' if enabled else 'disabled'}",
+            })
+    except Exception as e:
+        logger.error(f"Failed to toggle data source {source_code}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/health", methods=["GET"])
+def get_health_status():
+    """获取所有数据源健康状态"""
+    try:
+        from app.data_sources.priority_router import get_router
+        router = get_router()
+        status = router.get_status()
+        return jsonify(status)
+    except Exception as e:
+        logger.error(f"Failed to get health status: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/health/<source_code>", methods=["POST"])
+def check_source_health(source_code: str):
+    """检查指定数据源健康状态"""
+    try:
+        from app.database.session import get_session
+        from app.models.data_source_meta import DataSourceConfig
+
+        with get_session() as session:
+            config = session.query(DataSourceConfig).filter(
+                DataSourceConfig.source_code == source_code
+            ).first()
+
+            if not config:
+                return jsonify({"error": f"Data source '{source_code}' not found"}), 404
+
+            import time
+            from app.data_sources.config_resolver import ConfigResolver
+
+            healthy = False
+            latency_ms = 0
+            error_msg = ""
+
+            try:
+                start = time.monotonic()
+
+                if source_code == "crypto_ccxt":
+                    from app.data_sources.crypto import CryptoDataSource
+                    ds = CryptoDataSource()
+                    ticker = ds.get_ticker("BTC/USDT")
+                    healthy = ticker.get("last", 0) > 0
+                elif source_code == "us_stock_yfinance":
+                    from app.data_sources.us_stock import USStockDataSource
+                    ds = USStockDataSource()
+                    ticker = ds.get_ticker("AAPL")
+                    healthy = ticker.get("last", 0) > 0
+                elif source_code.startswith("macro_fred"):
+                    api_key = ConfigResolver.get_api_key(source_code)
+                    healthy = bool(api_key)
+                elif source_code.startswith("cn_stock_tushare"):
+                    token = ConfigResolver.get_api_key(source_code)
+                    healthy = bool(token)
+                else:
+                    healthy = config.enabled
+
+                latency_ms = int((time.monotonic() - start) * 1000)
+            except Exception as e:
+                error_msg = str(e)
+                healthy = False
+
+            # 更新健康状态表
+            from app.utils.db_postgres import execute_sql
+            execute_sql(
+                """INSERT INTO data_source_health (source_code, category, status, latency_ms, last_check_at, last_error)
+                   VALUES (%s, %s, %s, %s, NOW(), %s)
+                   ON CONFLICT (source_code, category) DO UPDATE SET
+                     status = EXCLUDED.status,
+                     latency_ms = EXCLUDED.latency_ms,
+                     last_check_at = EXCLUDED.last_check_at,
+                     last_error = EXCLUDED.last_error,
+                     updated_at = NOW()""",
+                (source_code, ", ".join(config.market_categories or []), "healthy" if healthy else "unhealthy", latency_ms, error_msg),
+            )
+
+            return jsonify({
+                "source_code": source_code,
+                "status": "healthy" if healthy else "unhealthy",
+                "latency_ms": latency_ms,
+                "error": error_msg or None,
+            })
+    except Exception as e:
+        logger.error(f"Health check failed for {source_code}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/router/status", methods=["GET"])
+def get_router_status():
+    """获取路由器状态"""
+    try:
+        from app.data_sources.priority_router import get_router
+        router = get_router()
+        return jsonify(router.get_status())
+    except Exception as e:
+        logger.error(f"Failed to get router status: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/categories", methods=["GET"])
+def list_categories():
+    """获取所有数据类别及其数据源"""
+    try:
+        from app.data_sources.priority_router import get_router, DataCategory
+        router = get_router()
+
+        result = {}
+        for cat in DataCategory:
+            entries = router.get_providers(cat.value)
+            result[cat.value] = [
+                {
+                    "source_code": e.source_code,
+                    "priority": e.priority,
+                    "provider_name": e.provider.name,
+                }
+                for e in entries
+            ]
+
+        return jsonify({"categories": result})
+    except Exception as e:
+        logger.error(f"Failed to list categories: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/macro/indicators", methods=["GET"])
+def get_macro_indicators():
+    """获取关键宏观经济指标"""
+    try:
+        category = request.args.get("category", "all")
+        result = {}
+
+        if category in ("all", "fred"):
+            try:
+                from app.data_sources.providers.macro_fred import FREDProvider
+                fred = FREDProvider()
+                result["fred"] = fred.get_key_indicators(limit=10)
+            except Exception as e:
+                result["fred"] = {"error": str(e)}
+
+        if category in ("all", "bls"):
+            try:
+                from app.data_sources.providers.macro_bls import BLSProvider
+                bls = BLSProvider()
+                result["bls"] = bls.get_key_indicators()
+            except Exception as e:
+                result["bls"] = {"error": str(e)}
+
+        if category in ("all", "worldbank"):
+            try:
+                from app.data_sources.providers.macro_worldbank import WorldBankProvider
+                wb = WorldBankProvider()
+                country = request.args.get("country", "all")
+                result["worldbank"] = wb.get_key_indicators(country=country)
+            except Exception as e:
+                result["worldbank"] = {"error": str(e)}
+
+        if category in ("all", "bea"):
+            try:
+                from app.data_sources.providers.macro_bea import BEAProvider
+                bea = BEAProvider()
+                result["bea"] = bea.get_key_indicators()
+            except Exception as e:
+                result["bea"] = {"error": str(e)}
+
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Failed to get macro indicators: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/defi/tvl", methods=["GET"])
+def get_defi_tvl():
+    """获取DeFi TVL数据"""
+    try:
+        from app.data_sources.providers.crypto_defillama import DefiLlamaProvider
+        provider = DefiLlamaProvider()
+
+        data_type = request.args.get("type", "chains")
+        if data_type == "chains":
+            data = provider.get_chains_tvl()
+        elif data_type == "protocols":
+            data = provider.get_protocols()
+        elif data_type == "global":
+            data = provider.get_global_tvl()
+        elif data_type == "dex":
+            data = provider.get_dex_volumes()
+        else:
+            data = provider.get_chains_tvl()
+
+        return jsonify({"data": data, "source": "defillama"})
+    except Exception as e:
+        logger.error(f"Failed to get DeFi TVL: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/cftc/cot", methods=["GET"])
+def get_cot_report():
+    """获取CFTC持仓报告"""
+    try:
+        from app.data_sources.providers.futures_cftc import CFTCProvider
+        provider = CFTCProvider()
+
+        commodity = request.args.get("commodity", "BTC")
+        limit = int(request.args.get("limit", 52))
+
+        data = provider.get_cot_report(commodity, limit=limit)
+        return jsonify({"data": data, "commodity": commodity, "source": "cftc"})
+    except Exception as e:
+        logger.error(f"Failed to get COT report: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/news", methods=["GET"])
+def get_news():
+    """获取新闻数据"""
+    try:
+        source = request.args.get("source", "google")
+        query = request.args.get("query", "")
+        limit = int(request.args.get("limit", 10))
+
+        if source == "google":
+            from app.data_sources.providers.news_google import GoogleNewsProvider
+            provider = GoogleNewsProvider()
+            if query:
+                data = provider.search(query, limit=limit)
+            else:
+                data = provider.get_global_macro_news(limit=limit)
+        elif source == "eastmoney":
+            from app.data_sources.providers.news_eastmoney import EastMoneyNewsProvider
+            provider = EastMoneyNewsProvider()
+            if query:
+                data = provider.get_stock_news(query, limit=limit)
+            else:
+                data = provider.get_financial_news(limit=limit)
+        else:
+            data = []
+
+        return jsonify({"data": data, "source": source})
+    except Exception as e:
+        logger.error(f"Failed to get news: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/cboe/history", methods=["GET"])
+def get_cboe_history():
+    """获取CBOE波动率指数历史数据"""
+    try:
+        from app.data_sources.providers.futures_cboe import CBOEProvider
+        provider = CBOEProvider()
+
+        index_name = request.args.get("index", "VIX")
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+
+        data = provider.get_index_history(index_name, start_date=start_date, end_date=end_date)
+        return jsonify({"data": data, "index": index_name, "source": "cboe"})
+    except Exception as e:
+        logger.error(f"Failed to get CBOE history: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/cboe/indices", methods=["GET"])
+def get_cboe_indices():
+    """获取CBOE可用指数列表"""
+    try:
+        from app.data_sources.providers.futures_cboe import CBOEProvider
+        provider = CBOEProvider()
+        data = provider.get_available_indices()
+        return jsonify({"indices": data, "source": "cboe"})
+    except Exception as e:
+        logger.error(f"Failed to get CBOE indices: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/bea/indicators", methods=["GET"])
+def get_bea_indicators():
+    """获取BEA宏观经济指标数据"""
+    try:
+        from app.data_sources.providers.macro_bea import BEAProvider
+        provider = BEAProvider()
+
+        indicator = request.args.get("indicator", "nominal_gdp")
+        year = request.args.get("year")
+        frequency = request.args.get("frequency", "Q")
+
+        data = provider.get_indicator(indicator, year=year, frequency=frequency)
+        return jsonify({"data": data, "indicator": indicator, "source": "bea"})
+    except Exception as e:
+        logger.error(f"Failed to get BEA indicators: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/priority/status", methods=["GET"])
+def get_priority_status():
+    """获取优先级调整器状态"""
+    try:
+        from app.data_sources.priority_adjuster import get_priority_adjuster
+        adjuster = get_priority_adjuster()
+        return jsonify(adjuster.get_adjustment_status())
+    except Exception as e:
+        logger.error(f"Failed to get priority status: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/priority/adjust", methods=["POST"])
+def adjust_priorities():
+    """手动触发一次优先级调整"""
+    try:
+        from app.data_sources.priority_adjuster import get_priority_adjuster
+        adjuster = get_priority_adjuster()
+        results = adjuster.adjust_now()
+        return jsonify({"adjusted": results})
+    except Exception as e:
+        logger.error(f"Failed to adjust priorities: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@data_source_bp.route("/fundamentals/<ticker>", methods=["GET"])
+def get_fundamentals(ticker: str):
+    """获取基本面数据（通过 Fundamentals 类别路由）"""
+    try:
+        from app.data_sources.priority_router import get_router, DataCategory
+        router = get_router()
+
+        frequency = request.args.get("frequency", "annual")
+
+        # Try FinancialDatasets first (highest priority in Fundamentals)
+        result = router.route_method(
+            DataCategory.FUNDAMENTALS.value, "get_all_financials",
+            ticker=ticker, frequency=frequency
         )
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except Exception as e:
-        logger.error(f"list_configs failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
+        if result:
+            return jsonify({"data": result, "ticker": ticker, "source": "router"})
 
-
-@data_source_bp.route('/configs/<int:config_id>', methods=['GET'])
-@login_required
-def get_config(config_id):
-    """获取单个数据源配置"""
-    try:
-        config = get_data_source_service().get_config(config_id)
-        if not config:
-            return jsonify({'code': 0, 'msg': '配置不存在'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': config})
-    except Exception as e:
-        logger.error(f"get_config failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/configs', methods=['POST'])
-@login_required
-@admin_required
-def create_config():
-    """创建数据源配置（admin only）"""
-    try:
-        data = request.get_json() or {}
-        required = ['source_code', 'source_name']
-        for field in required:
-            if field not in data or not data[field]:
-                return jsonify({'code': 0, 'msg': f'缺少必填字段: {field}'}), 400
-        result = get_data_source_service().create_config(data)
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except Exception as e:
-        logger.error(f"create_config failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/configs/<int:config_id>', methods=['PUT'])
-@login_required
-@admin_required
-def update_config(config_id):
-    """更新数据源配置（admin only）"""
-    try:
-        data = request.get_json() or {}
-        result = get_data_source_service().update_config(config_id, data)
-        if not result:
-            return jsonify({'code': 0, 'msg': '配置不存在'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except Exception as e:
-        logger.error(f"update_config failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/configs/<int:config_id>', methods=['DELETE'])
-@login_required
-@admin_required
-def delete_config(config_id):
-    """删除数据源配置（admin only）"""
-    try:
-        success = get_data_source_service().delete_config(config_id)
-        if not success:
-            return jsonify({'code': 0, 'msg': '配置不存在'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': None})
-    except Exception as e:
-        logger.error(f"delete_config failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/configs/<int:config_id>/test', methods=['POST'])
-@login_required
-@admin_required
-def test_config_connection(config_id):
-    """测试数据源连接（admin only）"""
-    try:
-        result = get_data_source_service().test_connection(config_id)
-        return jsonify({'code': 1 if result['success'] else 0, 'msg': result['message'], 'data': result})
-    except Exception as e:
-        logger.error(f"test_config_connection failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-# ==================== API Keys ====================
-
-@data_source_bp.route('/keys', methods=['GET'])
-@login_required
-def list_keys():
-    """列出 API 密钥（带权限过滤）"""
-    try:
-        ctx = _get_user_context()
-        params = request.args
-        result = get_api_key_service().list_keys(
-            source_config_id=params.get('source_config_id', type=int),
-            key_type=params.get('key_type'),
-            status=params.get('status'),
-            user_id=ctx['user_id'],
-            user_role=ctx['user_role'],
-            page=params.get('page', 1, type=int),
-            page_size=params.get('page_size', 50, type=int)
+        # Fallback: SimFin
+        result = router.route_method(
+            DataCategory.FUNDAMENTALS.value, "get_fundamentals", symbol=ticker
         )
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
+        if result:
+            return jsonify({"data": result, "ticker": ticker, "source": "router"})
+
+        return jsonify({"data": None, "ticker": ticker, "error": "No fundamentals data available"})
     except Exception as e:
-        logger.error(f"list_keys failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
+        logger.error(f"Failed to get fundamentals for {ticker}: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
-@data_source_bp.route('/keys/<int:key_id>', methods=['GET'])
-@login_required
-def get_key(key_id):
-    """获取单个 API 密钥"""
+@data_source_bp.route("/cboe/futures", methods=["GET"])
+def get_cboe_futures():
+    """获取 VIX 期货期限结构"""
     try:
-        ctx = _get_user_context()
-        key = get_api_key_service().get_key(key_id, ctx['user_id'], ctx['user_role'])
-        if not key:
-            return jsonify({'code': 0, 'msg': '密钥不存在或无权限'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': key})
+        from app.data_sources.providers.futures_cboe import CBOEProvider
+        provider = CBOEProvider()
+
+        date = request.args.get("date")
+        data = provider.get_futures_term_structure(date=date if date else None)
+        return jsonify({"data": data, "source": "cboe"})
     except Exception as e:
-        logger.error(f"get_key failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/keys', methods=['POST'])
-@login_required
-def create_key():
-    """创建 API 密钥"""
-    try:
-        data = request.get_json() or {}
-        required = ['source_config_id', 'key_value']
-        for field in required:
-            if field not in data or not data[field]:
-                return jsonify({'code': 0, 'msg': f'缺少必填字段: {field}'}), 400
-
-        ctx = _get_user_context()
-        # 非管理员只能创建 private 密钥
-        if ctx['user_role'] != 'admin' and data.get('key_type') == 'public':
-            return jsonify({'code': 0, 'msg': '无权限创建公共密钥'}), 403
-
-        # 非管理员自动将 user_id 设为当前用户
-        if ctx['user_role'] != 'admin':
-            data['user_id'] = ctx['user_id']
-            data['key_type'] = 'private'
-
-        result = get_api_key_service().create_key(data, created_by=ctx['user_id'])
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except ValueError as e:
-        return jsonify({'code': 0, 'msg': str(e)}), 400
-    except Exception as e:
-        logger.error(f"create_key failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/keys/<int:key_id>', methods=['PUT'])
-@login_required
-def update_key(key_id):
-    """更新 API 密钥"""
-    try:
-        data = request.get_json() or {}
-        ctx = _get_user_context()
-        result = get_api_key_service().update_key(
-            key_id, data, ctx['user_id'], ctx['user_role']
-        )
-        if not result:
-            return jsonify({'code': 0, 'msg': '密钥不存在或无权限'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except Exception as e:
-        logger.error(f"update_key failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/keys/<int:key_id>', methods=['DELETE'])
-@login_required
-def delete_key(key_id):
-    """删除 API 密钥"""
-    try:
-        ctx = _get_user_context()
-        success = get_api_key_service().delete_key(key_id, ctx['user_id'], ctx['user_role'])
-        if not success:
-            return jsonify({'code': 0, 'msg': '密钥不存在或无权限'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': None})
-    except Exception as e:
-        logger.error(f"delete_key failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-# ==================== Datasets ====================
-
-@data_source_bp.route('/datasets', methods=['GET'])
-@login_required
-def list_datasets():
-    """列出数据集元数据"""
-    try:
-        params = request.args
-        result = get_dataset_service().list_datasets(
-            source_id=params.get('source_id', type=int),
-            dataset_code=params.get('dataset_code'),
-            search=params.get('search'),
-            page=params.get('page', 1, type=int),
-            page_size=params.get('page_size', 50, type=int)
-        )
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except Exception as e:
-        logger.error(f"list_datasets failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/datasets/<int:dataset_id>', methods=['GET'])
-@login_required
-def get_dataset(dataset_id):
-    """获取单个数据集"""
-    try:
-        dataset = get_dataset_service().get_dataset(dataset_id)
-        if not dataset:
-            return jsonify({'code': 0, 'msg': '数据集不存在'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': dataset})
-    except Exception as e:
-        logger.error(f"get_dataset failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/datasets', methods=['POST'])
-@login_required
-@admin_required
-def create_dataset():
-    """创建数据集（admin only）"""
-    try:
-        data = request.get_json() or {}
-        required = ['source_id', 'dataset_code', 'dataset_name']
-        for field in required:
-            if field not in data or not data[field]:
-                return jsonify({'code': 0, 'msg': f'缺少必填字段: {field}'}), 400
-        result = get_dataset_service().create_dataset(data)
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except Exception as e:
-        logger.error(f"create_dataset failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/datasets/<int:dataset_id>', methods=['PUT'])
-@login_required
-@admin_required
-def update_dataset(dataset_id):
-    """更新数据集（admin only）"""
-    try:
-        data = request.get_json() or {}
-        result = get_dataset_service().update_dataset(dataset_id, data)
-        if not result:
-            return jsonify({'code': 0, 'msg': '数据集不存在'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except Exception as e:
-        logger.error(f"update_dataset failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/datasets/<int:dataset_id>', methods=['DELETE'])
-@login_required
-@admin_required
-def delete_dataset(dataset_id):
-    """删除数据集（admin only）"""
-    try:
-        success = get_dataset_service().delete_dataset(dataset_id)
-        if not success:
-            return jsonify({'code': 0, 'msg': '数据集不存在'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': None})
-    except Exception as e:
-        logger.error(f"delete_dataset failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/configs/<int:config_id>/datasets', methods=['GET'])
-@login_required
-def get_config_datasets(config_id):
-    """获取某个数据源下的所有数据集"""
-    try:
-        result = get_dataset_service().get_datasets_by_source(config_id)
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except Exception as e:
-        logger.error(f"get_config_datasets failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-# ==================== Query Cache ====================
-
-@data_source_bp.route('/cache', methods=['GET'])
-@login_required
-@admin_required
-def list_cache():
-    """列出查询缓存（admin only）"""
-    try:
-        params = request.args
-        result = get_query_cache_service().list_cache(
-            source_code=params.get('source_code'),
-            status=params.get('status'),
-            page=params.get('page', 1, type=int),
-            page_size=params.get('page_size', 50, type=int)
-        )
-        return jsonify({'code': 1, 'msg': 'success', 'data': result})
-    except Exception as e:
-        logger.error(f"list_cache failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/cache/<int:cache_id>', methods=['DELETE'])
-@login_required
-@admin_required
-def delete_cache(cache_id):
-    """删除缓存条目（admin only）"""
-    try:
-        success = get_query_cache_service().delete_cache(cache_id)
-        if not success:
-            return jsonify({'code': 0, 'msg': '缓存不存在'}), 404
-        return jsonify({'code': 1, 'msg': 'success', 'data': None})
-    except Exception as e:
-        logger.error(f"delete_cache failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
-
-
-@data_source_bp.route('/cache/cleanup', methods=['POST'])
-@login_required
-@admin_required
-def cleanup_cache():
-    """清理过期缓存（admin only）"""
-    try:
-        data = request.get_json() or {}
-        max_age_hours = data.get('max_age_hours', 24)
-        count = get_query_cache_service().cleanup_expired(max_age_hours)
-        return jsonify({'code': 1, 'msg': 'success', 'data': {'deleted_count': count}})
-    except Exception as e:
-        logger.error(f"cleanup_cache failed: {e}")
-        return jsonify({'code': 0, 'msg': str(e)}), 500
+        logger.error(f"Failed to get CBOE futures: {e}")
+        return jsonify({"error": str(e)}), 500

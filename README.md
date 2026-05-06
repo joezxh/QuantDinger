@@ -3,35 +3,55 @@
     <img src="docs/screenshots/logo.svg" alt="QuantumQuant Logo" width="220" height="220">
   </a>
 
-  <h1>QuantDinger</h1>
+  <h1>Fin-AI</h1>
   <h3>Your Private AI Quant Operating System</h3>
-  <p><strong>Research markets, generate Python strategies, backtest ideas, and run live trading workflows on infrastructure you control.</strong></p>
-  <p><em>Self-hosted AI trading platform for quant research, backtesting, execution, and operator-ready growth.</em></p>
+  <p><strong>Research markets, generate Python strategies, backtest ideas, and run live trading workflows on infrastructure you control — powered by multi-agent intelligence and 100+ data sources.</strong></p>
+  <p><em>Self-hosted AI trading platform integrating quant research, multi-agent analysis, institutional-grade data, backtesting, execution, and operator-ready growth.</em></p>
+  <p><em>Transformed from QuantDinger, FinceptTerminal, and TradingAgents.</em></p>
 
   <p>
     <a href="README.md"><strong>English</strong></a> &nbsp;·&nbsp;
     <a href="docs/README_CN.md"><strong>简体中文</strong></a> &nbsp;·&nbsp;
-    <a href="https://ai.quantumquant.com"><strong>Live Demo</strong></a> &nbsp;·&nbsp;
-    <a href="https://www.youtube.com/watch?v=tNAZ9uMiUUw"><strong>Video Demo</strong></a> &nbsp;·&nbsp;
-    <a href="https://www.quantumquant.com"><strong>Website</strong></a> &nbsp;·&nbsp;
-    <a href="https://t.me/quantumquant"><strong>Telegram</strong></a> &nbsp;·&nbsp;
-    <a href="https://discord.com/invite/tyx5B6TChr"><strong>Discord</strong></a> &nbsp;·&nbsp;
-    <a href="https://youtube.com/@quantumquant"><strong>YouTube</strong></a>
   </p>
 
   <p>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square&logo=apache" alt="License"></a>
     <img src="https://img.shields.io/badge/Version-3.0.2-orange?style=flat-square" alt="Version">
     <img src="https://img.shields.io/badge/Python-3.10%2B%20%7C%20Docker%20image%203.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
+    <img src="https://img.shields.io/badge/Frontend-Vue%203%20%2B%20TS%20%2B%20Vite-4FC08D?style=flat-square&logo=vue.js&logoColor=white" alt="Frontend">
+    <img src="https://img.shields.io/badge/Multi--Agent-LangGraph-FF6B6B?style=flat-square" alt="Multi-Agent">
+    <img src="https://img.shields.io/badge/Data%20Sources-100%2B-2196F3?style=flat-square" alt="Data Sources">
     <img src="https://img.shields.io/badge/Docker-Compose%20Ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
-    <img src="https://img.shields.io/badge/Frontend-Prebuilt-1f8b4c?style=flat-square" alt="Frontend">
     <img src="https://img.shields.io/github/stars/brokermr810/QuantDinger?style=flat-square&logo=github" alt="Stars">
   </p>
 </div>
 
 ---
 
-> QuantDinger is a **self-hosted, local-first quantitative trading and algorithmic trading platform** for **AI research, Python strategy generation, backtesting, and live execution**.
+> Fin-AI is a **self-hosted, local-first quantitative trading and algorithmic trading platform** integrating **AI research, multi-agent analysis, Python strategy generation, institutional-grade data connectivity, backtesting, and live execution**.
+>
+> **Project Transformation**: Fin-AI is transformed and integrated from three outstanding open-source projects:
+> - [QuantDinger](https://github.com/brokermr810/QuantDinger) — AI market analysis, Python strategy development, backtesting, and live execution
+> - [FinceptTerminal](https://github.com/Fincept-Corporation/FinceptTerminal) — 100+ financial data connectors, QuantLib institutional-grade analytics, 16+ broker integrations
+> - [TradingAgents](https://github.com/TauricResearch/TradingAgents) — Multi-agent LLM trading framework with LangGraph orchestration and specialized role collaboration
+
+## Frontend Technology Stack
+
+QuantDinger features a modern, enterprise-grade frontend built with cutting-edge technologies:
+
+- **Framework**: Vue 3.5 + TypeScript 6.0 + Vite 8.0
+- **UI Library**: Ant Design Vue 4.2 + @ant-design/icons-vue
+- **State Management**: Pinia 3.0
+- **Routing**: Vue Router 4.6
+- **Internationalization**: Vue I18n 9 (11 languages: EN, CN, TW, JA, KO, FR, DE, AR, TH, VI)
+- **Charts**: ECharts 5.6 + vue-echarts + Lightweight Charts 5.2 (K-line charts)
+- **Code Editor**: CodeMirror 6 (Python syntax highlighting)
+- **HTTP Client**: Axios 1.15
+- **Utilities**: DayJS, Markdown-it, Marked, Highlight.js
+- **Styling**: Less 4.6
+- **Build**: vue-tsc + Vite
+
+The frontend provides 20+ functional modules including dashboard, indicator IDE, trading bots, AI analysis, data source management, LLM configuration, portfolio management, and more.
 
 ## Try in 2 Minutes
 
@@ -47,60 +67,84 @@ Then open:
 - login with `quantumquant` / `123456`
 - read `backend_api_python/.env` before production use
 
-## What Is QuantDinger?
+## What Is Fin-AI?
 
-QuantDinger is a **self-hosted AI trading platform** and **quant research workspace** for teams and operators who want one system for:
+Fin-AI is a **self-hosted AI trading platform** and **quant research workspace** that integrates three powerful open-source projects into one unified system:
 
-- AI market analysis
+- **[QuantDinger Core](https://github.com/brokermr810/QuantDinger)**: AI market analysis, Python strategy development, backtesting, and live execution
+- **[FinceptTerminal Integration](https://github.com/Fincept-Corporation/FinceptTerminal)**: 100+ financial data connectors, institutional-grade analytics (QuantLib, DCF, risk metrics), 16+ broker integrations
+- **[TradingAgents Framework](https://github.com/TauricResearch/TradingAgents)**: Multi-agent LLM trading framework with specialized roles (analysts, researchers, traders, risk managers)
+
+For teams and operators who want one system for:
+
+- AI-powered market research with multi-agent collaboration
 - Python indicator and strategy development
-- backtesting and strategy persistence
-- live trading execution
-- portfolio monitoring and alerts
-- multi-user operations, billing, and commercialization
+- Institutional-grade financial analytics and valuation
+- Backtesting with decision persistence and reflection
+- Live trading execution across 16+ brokers and exchanges
+- Portfolio monitoring, alerts, and operations
+- Multi-user management, billing, and commercialization
 
-If you are searching for an **open source quant platform**, **AI trading research stack**, **self-hosted backtesting system**, or **natural-language-to-Python strategy workflow**, this is what QuantDinger is built for.
+If you are searching for an **open source quant platform**, **AI trading research stack**, **self-hosted backtesting system**, or **natural-language-to-Python strategy workflow**, this is what Fin-AI is built for.
 
-## Why QuantDinger? AI-Powered Quantitative Trading and Backtesting
+## Why Fin-AI? AI-Powered Quantitative Trading with Multi-Agent Intelligence
 
 - **Self-hosted by design**: your credentials, strategy code, market workflows, and operational data stay under your control.
-- **Research to execution in one product**: AI analysis, charting, strategy logic, backtests, quick trade, and live operations are connected.
-- **Python-native and AI-assisted**: write indicators and strategies directly in Python, or use AI to accelerate drafting and iteration.
+- **Research to execution in one product**: AI analysis, multi-agent collaboration, charting, strategy logic, backtests, quick trade, and live operations are connected.
+- **Python-native and AI-assisted**: write indicators and strategies directly in Python, or use multi-agent AI to accelerate drafting and iteration.
+- **100+ data connectors**: from free sources (Yahoo Finance, FRED, World Bank) to institutional-grade data (Polygon, DBnomics, government APIs).
+- **Institutional-grade analytics**: QuantLib suite (18 modules), DCF valuation, portfolio optimization, risk metrics (VaR, Sharpe), derivatives pricing.
+- **Multi-agent intelligence**: specialized AI agents (fundamentals, sentiment, news, technical analysts) collaborate through structured debates to inform trading decisions.
+- **16+ broker integrations**: crypto (Binance, OKX, Kraken), equities (IBKR, Alpaca), forex (MT5), and Indian brokers (Zerodha, Angel One).
 - **Built for operators, not just demos**: Docker Compose, PostgreSQL, Redis, Nginx, health checks, worker toggles, and environment-based configuration.
-- **Commercialization-ready**: memberships, credits, admin management, and USDT payment flows are already part of the stack.
+- **Commercialization ready**: memberships, credits, admin management, and USDT payment flows are already part of the stack.
 
 ## The Core Promise
 
-QuantDinger gives you something most trading tools do not:
+Fin-AI gives you something most trading tools do not:
 
 - **one stack instead of five** for research, strategy code, backtests, execution, alerts, and operations
 - **AI that sits inside the workflow**, not beside it
 - **Python flexibility without losing product UX**
 - **private deployment without giving up growth features**
+- **professional-grade data coverage** from free to institutional sources
+- **multi-agent simulation** of professional trading teams
+- **extensible agent ecosystem** for continuous enhancement
 
-## QuantDinger vs Patchwork Setups
+## Fin-AI vs Patchwork Setups
 
-| Typical Setup | QuantDinger |
+| Typical Setup | Fin-AI |
 |---------------|-------------|
 | AI chat tool disconnected from real strategy workflows | AI analysis, AI code generation, backtest feedback, and execution workflows live in one product |
 | Separate charting app, Python scripts, bot runner, and notification stack | One deployable platform for charting, strategy logic, runtime services, and alerts |
 | Hosted SaaS with limited control over credentials and alpha | Self-hosted architecture with your own infra, keys, and operational data |
 | Research tools with no operator layer | Multi-user roles, billing, credits, admin controls, and deployment-ready configuration |
+| Single data source or expensive API subscriptions | 100+ data connectors with free and premium options, intelligent routing and caching |
+| Solo research analysis with limited perspectives | Multi-agent collaboration simulating professional trading firm with specialized roles |
+| Analysis results lost after each session | Persistent decision logs, automatic reflection, and experience accumulation |
+| Desktop terminal or web platform, not both | Web-first platform with optional C++ Qt desktop for institutional-grade deep analysis |
 
 ## Who It Is For
 
-- **Traders and quants** who want AI-assisted market research without giving up control of infrastructure and data.
-- **Python strategy developers** who want charting, backtests, and live execution in one environment.
-- **Small teams and studios** building internal trading tools or private research platforms.
-- **Operators and founders** who need a deployable product with user management, billing, and admin controls.
+- **Traders and quants** who want AI-assisted market research with multi-agent collaboration without giving up control of infrastructure and data.
+- **Python strategy developers** who want charting, backtests, institutional-grade analytics, and live execution in one environment.
+- **Small teams and studios** building internal trading tools or private research platforms with professional data connectivity.
+- **Operators and founders** who need a deployable product with user management, billing, admin controls, and 100+ data sources.
+- **Data-driven researchers** who need multi-source data integration and institutional-grade analysis tools (DCF, risk metrics, derivatives).
+- **Multi-agent workflow explorers** who want to leverage AI agent collaboration to enhance research quality and decision-making.
+- **Traditional financial analysts** transitioning from desktop terminals to web-based collaborative platforms.
 
 ## Use Cases
 
-- **AI-assisted market research** for crypto, stocks, forex, prediction markets, and cross-market workflows
+- **AI-assisted market research** for crypto, stocks, forex, prediction markets, and cross-market workflows with multi-agent collaboration
 - **Python-native strategy development** for quantitative trading and algorithmic trading teams, with parameterized indicators and cross-sectional portfolios
+- **Institutional-grade financial analysis** including DCF valuation, portfolio optimization, risk metrics (VaR, Sharpe), and derivatives pricing
 - **Automated trading bots** — Grid, Martingale, Trend, and DCA bots with real-time monitoring
-- **Backtesting and iteration** for signal strategies, saved strategies, trading bots, and execution assumptions
-- **Private trading infrastructure** for teams that want self-hosted deployment, local LLMs, and privacy-first operations
-- **Commercial trading products** that need users, billing, USDT payments, credits, and admin controls
+- **Backtesting and iteration** for signal strategies, saved strategies, trading bots, and execution assumptions with decision persistence and reflection
+- **Private trading infrastructure** for teams that want self-hosted deployment, local LLMs, multi-agent workflows, and privacy-first operations
+- **Commercial trading products** that need users, billing, USDT payments, credits, admin controls, and 100+ data connectors
+- **Macro and geopolitical analysis** with maritime tracking, satellite data, and global intelligence
+- **Algorithmic trading and HFT research** with QuantLib quantitative analysis suite
 
 ## Visual Tour
 
@@ -115,14 +159,35 @@ QuantDinger gives you something most trading tools do not:
   </tr>
 </table>
 
-## What You Can Do With QuantDinger
+## What You Can Do With Fin-AI
 
-### AI Research and Decision Support
+### AI Research and Multi-Agent Decision Support
 
 - Run fast AI-driven market analysis across price action, kline structure, macro/news context, and selected external inputs.
 - Store analysis history and memory for repeatable review and future calibration.
 - Configure multiple LLM providers such as OpenRouter, OpenAI, Gemini, DeepSeek, and more.
 - Optionally enable ensemble and calibration-style flows for more robust AI outputs.
+- **Deploy multi-agent collaboration** with specialized roles:
+  - **Fundamentals Analyst**: evaluates company financials, intrinsic values, and red flags
+  - **Sentiment Analyst**: analyzes social media and public sentiment with scoring algorithms
+  - **News Analyst**: monitors global news and macroeconomic indicators
+  - **Technical Analyst**: utilizes MACD, RSI, and other technical indicators
+  - **Research Team**: bullish and bearish researchers engage in structured debates
+  - **Trader Agent**: composes reports to make informed trading decisions
+  - **Risk Management**: continuously evaluates portfolio risk and adjusts strategies
+  - **Portfolio Manager**: approves/rejects transaction proposals
+- **Access 37+ professional AI agents** including Trader/Investor frameworks (Buffett, Graham, Lynch, Munger, Klarman, Marks…), Economic, and Geopolitics frameworks.
+- **Local LLM support** with Ollama for fully private AI workflows.
+
+### 100+ Data Sources and Market Coverage
+
+- **Economic Data**: DBnomics, FRED, IMF, World Bank, BLS, BEA
+- **Market Data**: Polygon, Yahoo Finance, AkShare, Tiingo, Finnhub, Twelve Data
+- **Crypto**: Kraken, Binance, CoinGecko, DeFiLlama
+- **Alternative Data**: Adanos market sentiment, Reddit, X, Polymarket
+- **China Markets**: A-shares (SSE, SZSE), HK stocks (HKEX) via AkShare, Tushare, BaoStock
+- **Global Intelligence**: maritime tracking, geopolitical analysis, satellite data
+- **Intelligent routing and caching**: priority-based provider routing, multi-level caching (memory → Redis → PostgreSQL), rate limiting, and health monitoring
 
 ### Indicator and Strategy Development
 
@@ -131,12 +196,24 @@ QuantDinger gives you something most trading tools do not:
 - Generate indicator or strategy code from natural language and refine it in Python.
 - Visualize indicators, buy/sell signals, and strategy output directly on professional chart interfaces.
 
+### Institutional-Grade Quantitative Analytics
+
+- **QuantLib Suite**: 18 quantitative analysis modules for pricing, risk, stochastic processes, volatility, and fixed income
+- **DCF Valuation**: discounted cash flow models for equity research and intrinsic value calculation
+- **Portfolio Optimization**: modern portfolio theory, efficient frontier, and risk-return optimization
+- **Risk Metrics**: Value at Risk (VaR), Sharpe ratio, maximum drawdown, and comprehensive risk analytics
+- **Derivatives Pricing**: options, futures, and complex derivatives pricing models
+- **Factor Discovery**: ML-based factor analysis and alpha generation
+
 ### Backtesting and Iteration
 
 - Run historical backtests with stored trades, metrics, and equity curves.
 - Backtest both indicator-driven logic and saved strategy records.
 - Persist strategy snapshots and review historical runs for reproducibility.
 - Use AI-assisted post-backtest analysis to improve parameters and execution assumptions.
+- **Decision persistence**: TradingAgents framework persists decision logs with automatic reflection
+- **Checkpoint resume**: LangGraph checkpointing allows crashed runs to resume from last successful step
+- **Cross-ticker lessons**: recent decisions and lessons carry forward to improve future analysis
 
 ### Live Trading and Operations
 
@@ -144,13 +221,26 @@ QuantDinger gives you something most trading tools do not:
 - Use quick-trade flows to go from analysis to action faster.
 - Monitor open positions, review trade history, and close positions from the platform.
 - Run automated or semi-automated strategy workflows with runtime services and workers.
+- **16+ broker integrations**: Zerodha, Angel One, Upstox, Fyers, IBKR, Alpaca, Tradier, Saxo, Kraken, HyperLiquid, and more
+- **Paper trading engine**: test strategies in simulated environment before going live
 
 ### Multi-Market Coverage
 
 - Crypto spot and derivatives
-- US stocks through IBKR
-- Forex through MT5
+- US stocks through IBKR, Alpaca, Yahoo Finance, Polygon, Finnhub
+- Forex through MT5, OANDA
+- China A-shares and HK stocks through AkShare, Tushare, BaoStock
+- Fixed income and bond market analysis
+- Commodities and futures markets
 - Prediction market research through Polymarket analysis workflows
+
+### Global Intelligence and Alternative Data
+
+- **Maritime Tracking**: ship tracking and maritime intelligence
+- **Geopolitical Analysis**: global event monitoring and impact assessment
+- **Relationship Mapping**: entity relationship graphs and network analysis
+- **Satellite Data**: alternative data from satellite imagery
+- **Market Sentiment**: Adanos cross-source retail sentiment across Reddit, X, finance news
 
 ### Multi-User, Alerts, and Billing
 
@@ -192,7 +282,7 @@ QuantDinger gives you something most trading tools do not:
 
 ## AI Capabilities
 
-QuantDinger is not just "LLM chat added to a trading app". The current AI layer is integrated into the actual research and strategy workflow.
+QuantDinger is not just "LLM chat added to a trading app". The current AI layer integrates multi-agent collaboration, institutional analytics, and the actual research and strategy workflow.
 
 ### Fast Analysis
 
@@ -202,6 +292,29 @@ QuantDinger is not just "LLM chat added to a trading app". The current AI layer 
 - Supports multiple LLM providers: OpenRouter, OpenAI, Gemini, DeepSeek, Anthropic, and more
 - **OpenAI-compatible API support** — connect to any OpenAI-compatible endpoint
 - **Ollama local model support** — run local LLMs for fully private analysis
+
+### Multi-Agent Deep Analysis (TradingAgents Framework)
+
+- **Analyst Team**:
+  - Fundamentals Analyst: company financials, performance metrics, intrinsic values
+  - Sentiment Analyst: social media, public sentiment, sentiment scoring
+  - News Analyst: global news, macroeconomic indicators, event impact
+  - Technical Analyst: MACD, RSI, technical patterns, price forecasting
+- **Researcher Team**: bullish and bearish researchers engage in structured debates
+- **Trader Agent**: composes analyst and researcher reports for informed decisions
+- **Risk Management Team**: evaluates portfolio risk, market volatility, liquidity
+- **Portfolio Manager**: approves/rejects transaction proposals, sends to simulated exchange
+- **LangGraph orchestration**: flexible and modular workflow management
+- **Multi-provider LLM support**: OpenAI, Google, Anthropic, xAI, DeepSeek, Qwen, GLM, OpenRouter, Ollama, Azure
+- **Structured-output agents**: Research Manager, Trader, Portfolio Manager with typed outputs
+
+### Professional Agent Framework (FinceptTerminal)
+
+- **37+ AI Agents** across Trader/Investor frameworks (Buffett, Graham, Lynch, Munger, Klarman, Marks…)
+- **Economic Analysis Agents**: macroeconomic indicators, policy impact assessment
+- **Geopolitics Agents**: global events, political risk analysis
+- **Local LLM support**: run agents on private infrastructure with Ollama
+- **Multi-provider support**: OpenAI, Anthropic, Gemini, Groq, DeepSeek, MiniMax, OpenRouter, Ollama
 
 ### AI Strategy and Indicator Generation
 
@@ -222,6 +335,9 @@ QuantDinger is not just "LLM chat added to a trading app". The current AI layer 
 - Better repeatability and comparison over time
 - A foundation for future calibration and reflection loops
 - User timezone support (IANA) for localized time display
+- **Persistent decision log**: TradingAgents persists decisions to `~/.tradingagents/memory/trading_memory.md`
+- **Automatic reflection**: generates one-paragraph reflection on realized return and alpha vs SPY
+- **Cross-ticker lessons**: recent same-ticker decisions plus cross-ticker lessons injected into prompts
 
 ### Ensemble, Calibration, and Reflection
 
@@ -233,6 +349,8 @@ QuantDinger is not just "LLM chat added to a trading app". The current AI layer 
 
 - Backtest outputs can feed into AI-generated suggestions
 - Useful for parameter tuning, risk adjustments, and faster iteration
+- **Checkpoint resume**: LangGraph saves state after each node, crashed runs resume from last successful step
+- **Per-ticker SQLite databases**: checkpoints at `~/.tradingagents/cache/checkpoints/<TICKER>.db`
 
 ### Polymarket and Cross-Market Research
 
@@ -243,52 +361,62 @@ QuantDinger is not just "LLM chat added to a trading app". The current AI layer 
 
 ## Why It Is Different
 
-Most trading stacks give you one or two of these pieces. QuantDinger aims to give you the full operating system:
+Most trading stacks give you one or two of these pieces. Fin-AI aims to give you the full operating system:
 
 1. **Self-hosted infrastructure**
-2. **AI research workflows**
-3. **Python strategy development**
-4. **Backtesting**
-5. **Live execution**
-6. **Portfolio and notification operations**
-7. **Commercialization primitives**
+2. **Multi-agent AI research workflows**
+3. **100+ data source coverage**
+4. **Python strategy development**
+5. **Institutional-grade analytics tools**
+6. **Backtesting with reflection**
+7. **Live execution (16+ brokers)**
+8. **Portfolio and notification operations**
+9. **Commercialization primitives**
 
 That combination is the core difference.
 
 ## Why It Converts Better Than a Typical Trading Tool
 
-- **For traders**: it shortens the path from idea to execution — from AI analysis to Quick Trade, from indicator to live bot, all in one interface.
-- **For quants**: it keeps Python and strategy control front and center, now with parameter passing, cross-indicator calling, cross-sectional portfolios, and full backtest history.
-- **For operators**: it adds the parts most open-source trading projects skip, including multi-user RBAC, membership billing, USDT on-chain payments, and deployable Docker Compose configuration.
-- **For AI-first workflows**: it turns analysis into something actionable, reviewable, and eventually automatable — with local LLM support via Ollama for fully private AI workflows.
+- **For traders**: it shortens the path from idea to execution — from AI analysis to Quick Trade, from indicator to live bot, all in one interface, enhanced by multi-agent collaboration and 100+ data sources.
+- **For quants**: it keeps Python and strategy control front and center, now with parameter passing, cross-indicator calling, cross-sectional portfolios, full backtest history, and institutional-grade QuantLib analytics.
+- **For operators**: it adds the parts most open-source trading projects skip, including multi-user RBAC, membership billing, USDT on-chain payments, deployable Docker Compose configuration, and professional data connectivity.
+- **For AI-first workflows**: it turns analysis into something actionable, reviewable, and eventually automatable — with local LLM support via Ollama for fully private AI workflows, multi-agent collaboration, and persistent decision logs with automatic reflection.
+- **For researchers**: it provides institutional-grade tools, global data coverage, multi-perspective analysis through specialized agents, and deep analytics capabilities previously only available on expensive terminals.
 
-## How It Works
-
-At a practical level, QuantDinger runs as a self-hosted application stack:
-
-- a prebuilt Vue frontend served by Nginx
+- a modern Vue 3 + TypeScript frontend served by Nginx
 - a Flask API backend with Python services
+- TradingAgents multi-agent framework with LangGraph orchestration
+- FinceptTerminal 100+ data connectors and Python analytics scripts
 - PostgreSQL for state, users, strategies, and history
 - Redis for worker support and runtime coordination
 - exchange, broker, AI, payment, and notification integrations through configurable adapters
+- optional C++ Qt desktop application for institutional-grade deep analysis
 
 ### Architecture Summary
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Prebuilt Vue application served by Nginx |
+| Frontend | Vue 3.5 + TypeScript 6.0 + Vite 8.0, Ant Design Vue 4.2, Pinia 3.0, Vue I18n 9 |
 | Backend | Flask API, Python services, strategy runtime, ORM-refactored data layer |
+| Multi-Agent Framework | TradingAgents LangGraph orchestration, LangChain toolchain |
+| Data Source Layer | FinceptTerminal 100+ connectors, Python Analytics scripts, intelligent routing |
 | Storage | PostgreSQL 16 |
 | Cache / worker support | Redis 7 |
-| Trading layer | Exchange adapters, IBKR, MT5 |
-| AI layer | LLM provider integration, memory, calibration, optional workers |
+| Trading Layer | Exchange adapters, 16+ brokers, IBKR, MT5 |
+| AI Layer | Multi-LLM provider integration, 37+ professional agents, memory, calibration, multi-agent collaboration |
+| Analytics Tools | QuantLib 18 modules, DCF, risk metrics, derivatives pricing |
 | Billing | Membership, credits, USDT TRC20 payment flow |
-| Deployment | Docker Compose with health checks |
+| Deployment | Docker Compose with health checks (primary) + C++ Qt desktop (optional) |
+| Optional Desktop | FinceptTerminal C++20 Qt6 for institutional-grade deep analysis |
 
 ### Execution Model
 
-- Market data is pulled through a pluggable data layer.
+- Market data is pulled through a pluggable data layer with 100+ connectors.
+- Intelligent routing: priority-based provider selection, multi-level caching (memory → Redis → PostgreSQL), rate limiting per provider, and health monitoring every 5 minutes.
 - Backtests run on the server-side strategy engine, including strategy snapshot handling and dedicated strategy backtest persistence.
+- Multi-agent analysis: TradingAgents framework deploys specialized agents (analysts, researchers, traders, risk managers) through LangGraph orchestration.
+- Decision persistence: completed decisions logged to `~/.tradingagents/memory/trading_memory.md` with automatic reflection on realized returns.
+- Checkpoint resume: LangGraph checkpointing allows crashed or interrupted runs to resume from last successful step.
 - Live strategies and trading bots (Grid, Martingale, Trend, DCA) run through runtime services that generate order intent.
 - Pending orders are then dispatched through exchange-specific execution adapters.
 - Quick Trade provides direct discretionary execution from analysis pages.
@@ -300,42 +428,57 @@ At a practical level, QuantDinger runs as a self-hosted application stack:
 flowchart LR
     U[Trader / Operator / Researcher]
 
-    subgraph FE[Frontend Layer]
-        WEB[Vue Web App]
+    subgraph FE[Frontend Layer - Vue 3]
+        WEB[Vue 3 SPA Application]
         NG[Nginx Delivery]
+        DESKTOP[Optional: C++ Qt Desktop]
     end
 
     subgraph BE[Application Layer]
         API[Flask API Gateway]
         AI[AI Analysis Services]
+        AGENT[Multi-Agent Collaboration Framework]
         STRAT[Strategy and Backtest Engine]
         EXEC[Execution and Quick Trade]
         BILL[Billing and Membership]
+        ANALYTICS[Institutional-Grade Analytics]
     end
 
     subgraph DATA[State Layer]
         PG[(PostgreSQL 16)]
         REDIS[(Redis 7)]
         FILES[Logs and Runtime Data]
+        MEMORY[Decision Log and Reflection]
+    end
+
+    subgraph DATASRC[Data Source Layer]
+        DS100[100+ Data Connectors]
+        MARKET[Market Data / News]
+        ECON[Economic / Macro Data]
+        ALT[Alternative Data]
     end
 
     subgraph EXT[External Integrations]
         LLM[LLM Providers]
         EXCH[Crypto Exchanges]
-        BROKER[IBKR / MT5]
-        MARKET[Market Data / News]
+        BROKER[16+ Brokers / IBKR / MT5]
         PAY[TronGrid / USDT Payment]
         NOTIFY[Telegram / Email / SMS / Webhook]
     end
 
     U --> WEB
+    U --> DESKTOP
     WEB --> NG --> API
     API --> AI
+    API --> AGENT
     API --> STRAT
     API --> EXEC
     API --> BILL
+    API --> ANALYTICS
 
     AI --> PG
+    AGENT --> PG
+    AGENT --> MEMORY
     STRAT --> PG
     EXEC --> PG
     BILL --> PG
@@ -343,141 +486,18 @@ flowchart LR
     API --> FILES
 
     AI --> LLM
-    AI --> MARKET
+    AGENT --> LLM
+    AI --> DATASRC
+    AGENT --> DATASRC
     EXEC --> EXCH
     EXEC --> BROKER
     BILL --> PAY
     API --> NOTIFY
 ```
 
-## Quick Start
-
-> Requirement: install [Docker](https://docs.docker.com/get-docker/). Node.js is not required for deployment because this repository already includes the prebuilt frontend in `frontend/dist`.
-
-### Linux / macOS
-
-```bash
-git clone https://github.com/brokermr810/QuantDinger.git
-cd QuantDinger
-cp backend_api_python/env.example backend_api_python/.env
-./scripts/generate-secret-key.sh
-docker-compose up -d --build
-```
-
-### Windows PowerShell
-
-```powershell
-git clone https://github.com/brokermr810/QuantDinger.git
-cd QuantDinger
-Copy-Item backend_api_python\env.example -Destination backend_api_python\.env
-$key = py -c "import secrets; print(secrets.token_hex(32))"
-(Get-Content backend_api_python\.env) -replace '^SECRET_KEY=.*$', "SECRET_KEY=$key" | Set-Content backend_api_python\.env -Encoding UTF8
-docker-compose up -d --build
-```
-
-After startup:
-
-- Frontend: `http://localhost:8888`
-- Backend health check: `http://localhost:5000/api/health`
-- Default login: `quantumquant` / `123456`
-
-Important deployment notes:
-
-- The backend container will **not start** if `SECRET_KEY` still uses the default value.
-- The main application config lives in `backend_api_python/.env`.
-- Root `.env` is optional and is mainly used for image mirrors or custom ports.
-- The default stack includes `frontend`, `backend`, `postgres`, and `redis`.
-
-### Common Docker Commands
-
-```bash
-docker-compose ps
-docker-compose logs -f backend
-docker-compose restart backend
-docker-compose up -d --build
-docker-compose down
-```
-
-### Optional Root `.env`
-
-If you need custom ports or image mirrors, create a root `.env`:
-
-```ini
-FRONTEND_PORT=3000
-BACKEND_PORT=127.0.0.1:5001
-IMAGE_PREFIX=docker.m.daocloud.io/library/
-```
-
-## Minimal Example: Python Indicator Strategy
-
-This is the kind of Python-native strategy logic QuantDinger is designed for:
-
-```python
-# @param sma_short int 14 Short moving average
-# @param sma_long int 28 Long moving average
-
-sma_short_period = params.get('sma_short', 14)
-sma_long_period = params.get('sma_long', 28)
-
-my_indicator_name = "Dual Moving Average Strategy"
-my_indicator_description = f"SMA {sma_short_period}/{sma_long_period} crossover"
-
-df = df.copy()
-sma_short = df["close"].rolling(sma_short_period).mean()
-sma_long = df["close"].rolling(sma_long_period).mean()
-
-buy = (sma_short > sma_long) & (sma_short.shift(1) <= sma_long.shift(1))
-sell = (sma_short < sma_long) & (sma_short.shift(1) >= sma_long.shift(1))
-
-df["buy"] = buy.fillna(False).astype(bool)
-df["sell"] = sell.fillna(False).astype(bool)
-```
-
-See full examples:
-
-- [`docs/examples/dual_ma_with_params.py`](docs/examples/dual_ma_with_params.py)
-- [`docs/examples/multi_indicator_composite.py`](docs/examples/multi_indicator_composite.py)
-- [`docs/examples/cross_sectional_momentum_rsi.py`](docs/examples/cross_sectional_momentum_rsi.py)
-
-## Supported Markets, Brokers, and Exchanges
-
-### Crypto Exchanges
-
-| Venue | Coverage |
-|-------|----------|
-| Binance | Spot, Futures, Margin |
-| OKX | Spot, Perpetual, Options |
-| Bitget | Spot, Futures, Copy Trading |
-| Bybit | Spot, Linear Futures |
-| Coinbase | Spot |
-| Kraken | Spot, Futures |
-| KuCoin | Spot, Futures |
-| Gate.io | Spot, Futures |
-| Deepcoin | Derivatives integration |
-| HTX | Spot, USDT-margined perpetuals |
-
-### Traditional Markets
-
-| Market | Broker / Source | Execution |
-|--------|------------------|-----------|
-| US Stocks | IBKR, Yahoo Finance, Finnhub | Via IBKR |
-| Forex | MT5, OANDA | Via MT5 |
-| Futures | Exchange and data integrations | Data and workflow support |
-
-### China & Hong Kong Stocks
-
-| Market | Exchange | Coverage |
-|--------|----------|----------|
-| A-Shares (A股) | SSE, SZSE | Data and watchlist support |
-| HK Stocks (港股) | HKEX | Data and watchlist support |
-
-### Prediction Markets
-
-Polymarket is currently supported as a **research and analysis workflow**, not as direct in-platform live execution. It is useful for market lookup, divergence analysis, opportunity scoring, and AI-assisted review.
-
 ## Strategy Development Modes
 
-QuantDinger supports two main strategy authoring models:
+QuantDinger supports multiple strategy authoring models:
 
 ### IndicatorStrategy
 
@@ -501,20 +521,21 @@ QuantDinger supports two main strategy authoring models:
 - indicators receive a `data` dictionary (symbol → DataFrame) for cross-symbol analysis
 - parallel execution across symbols for efficient portfolio operations
 
-### Trading Bot Strategies
+### Multi-Agent Strategy
 
-- **Grid Bot** — automated buy-low-sell-high within configured price bands
-- **Martingale Bot** — layered averaging-down with automatic cost basis tracking
-- **Trend Bot** — directional trading with position sizing based on live equity
-- **DCA Bot** — time-based periodic investment, independent of K-line frequency
+- TradingAgents agents collaborate to generate strategy recommendations
+- Fundamental, sentiment, news, and technical analysts provide multi-perspective insights
+- Bullish and bearish researchers debate to surface risks and opportunities
+- Trader agent composes comprehensive trading decisions
+- Risk management team evaluates and adjusts strategies
 
-### Indicator Community & Marketplace
+### Quantitative Analysis Strategy
 
-- publish indicators to the community marketplace with review and approval workflow
-- purchase, rate, and comment on community indicators
-- one-click sync code updates when publishers release new versions
-- performance tracking with backtest return, live PnL, and win rate
-- VIP free indicators for members
+- QuantLib integration for institutional-grade quantitative analysis
+- DCF valuation models for intrinsic value calculation
+- Portfolio optimization using modern portfolio theory
+- Risk metrics computation (VaR, Sharpe, maximum drawdown)
+- Derivatives pricing for options and futures strategies
 
 For the full developer workflow, see:
 
@@ -531,14 +552,50 @@ QuantDinger/
 ├── backend_api_python/      # Open backend source code
 │   ├── app/routes/          # REST endpoints
 │   ├── app/services/        # AI, trading, billing, backtest, integrations
+│   ├── app/agents/          # TradingAgents multi-agent framework integration
+│   ├── app/analytics/       # FinceptTerminal QuantLib analytics modules
 │   ├── migrations/init.sql  # Database initialization
 │   ├── env.example          # Main environment template
 │   └── Dockerfile
-├── frontend/                # Prebuilt frontend delivery package
-│   ├── dist/
+├── frontend-v3/             # Vue 3 + TypeScript frontend source
+│   ├── src/
+│   │   ├── api/             # API layer (20+ modules)
+│   │   │   ├── ai-trading.ts      # AI trading APIs
+│   │   │   ├── data-source.ts     # Data source management APIs
+│   │   │   ├── strategy.ts        # Strategy management APIs
+│   │   │   ├── llm.ts             # LLM configuration APIs
+│   │   │   └── ...
+│   │   ├── views/           # Page views (20+ functional modules)
+│   │   │   ├── dashboard/         # Dashboard
+│   │   │   ├── indicator-ide/     # Indicator IDE
+│   │   │   ├── trading-bot/       # Trading Bots
+│   │   │   ├── ai-analysis/       # AI Analysis
+│   │   │   ├── data-source/       # Data Source Management
+│   │   │   ├── llm/               # LLM Management
+│   │   │   ├── portfolio/         # Portfolio Management
+│   │   │   └── ...
+│   │   ├── components/      # Reusable components
+│   │   │   ├── KlineChart/        # K-line chart component
+│   │   │   ├── CodeEditor/        # Code editor component
+│   │   │   └── GraphVisualization/# Knowledge graph visualization
+│   │   ├── stores/          # Pinia state management
+│   │   ├── router/          # Vue Router configuration
+│   │   ├── locales/         # Internationalization (11 languages)
+│   │   └── composables/     # Vue composables
+│   ├── package.json         # Dependencies
+│   ├── vite.config.ts       # Vite build configuration
+│   └── tsconfig.json        # TypeScript configuration
+├── frontend/                # Prebuilt frontend delivery package (production)
+│   ├── dist/                # Build artifacts
 │   ├── Dockerfile
 │   └── nginx.conf
+├── data_connectors/         # FinceptTerminal 100+ data connectors
+├── agents/                  # TradingAgents multi-agent workflows
+│   ├── analysts/            # Analyst team
+│   ├── researchers/         # Researcher team
+│   └── managers/            # Trader and portfolio managers
 ├── docs/                    # Product, strategy, and deployment documentation
+├── desktop/                 # Optional: C++ Qt desktop (FinceptTerminal)
 ├── docker-compose.yml
 ├── LICENSE
 └── TRADEMARKS.md
@@ -553,6 +610,9 @@ Use `backend_api_python/env.example` as the primary template. Key areas include:
 | Authentication | `SECRET_KEY`, `ADMIN_USER`, `ADMIN_PASSWORD` |
 | Database | `DATABASE_URL` |
 | LLM / AI | `LLM_PROVIDER`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY` |
+| Multi-Agent | `ENABLE_MULTI_AGENT_ANALYSIS`, `MAX_DEBATE_ROUNDS`, `AGENT_LLM_PROVIDER` |
+| Data Sources | `DATA_CONNECTORS_ENABLED`, `POLYGON_API_KEY`, `FRED_API_KEY`, `AKSHARE_ENABLED` |
+| Quantitative Analytics | `QUANTLIB_ENABLED`, `ENABLE_DCF_VALUATION`, `ENABLE_RISK_METRICS` |
 | OAuth | `GOOGLE_CLIENT_ID`, `GITHUB_CLIENT_ID` |
 | Security | `TURNSTILE_SITE_KEY`, `ENABLE_REGISTRATION` |
 | Billing | `BILLING_ENABLED`, `BILLING_COST_AI_ANALYSIS` |
@@ -599,25 +659,91 @@ Use `backend_api_python/env.example` as the primary template. Key areas include:
 | Email | [Setup](docs/NOTIFICATION_EMAIL_CONFIG_EN.md) | [Config](docs/NOTIFICATION_EMAIL_CONFIG_CH.md) |
 | SMS | [Setup](docs/NOTIFICATION_SMS_CONFIG_EN.md) | [Config](docs/NOTIFICATION_SMS_CONFIG_CH.md) |
 
+### New Guides
+
+| Topic | Description |
+|-------|-------------|
+| Multi-Agent Analysis Guide | How to configure and use TradingAgents multi-agent framework |
+| Data Source Configuration Guide | How to configure 100+ data connectors and intelligent routing |
+| QuantLib Analytics Guide | How to use institutional-grade quantitative analysis tools |
+| Desktop Application Guide | How to use optional C++ Qt desktop for deep analysis |
+
+## Supported Markets, Brokers, and Exchanges
+
+### Crypto Exchanges
+
+| Venue | Coverage |
+|-------|----------|
+| Binance | Spot, Futures, Margin |
+| OKX | Spot, Perpetual, Options |
+| Bitget | Spot, Futures, Copy Trading |
+| Bybit | Spot, Linear Futures |
+| Coinbase | Spot |
+| Kraken | Spot, Futures |
+| KuCoin | Spot, Futures |
+| Gate.io | Spot, Futures |
+| Deepcoin | Derivatives integration |
+| HTX | Spot, USDT-margined perpetuals |
+
+### Traditional Markets
+
+| Market | Broker / Source | Execution |
+|--------|------------------|-----------|
+| US Stocks | IBKR, Yahoo Finance, Finnhub, Polygon, Alpaca | Via IBKR, Alpaca |
+| Forex | MT5, OANDA | Via MT5 |
+| Futures | Exchange and data integrations | Data and workflow support |
+| China A-Shares | SSE, SZSE via AkShare, Tushare, BaoStock | Data and watchlist support |
+| HK Stocks | HKEX via AkShare, Tushare | Data and watchlist support |
+| Fixed Income | Bond market data and analysis | Analytics support |
+| Commodities | Commodity market data | Data and workflow support |
+
+### Broker Integrations (FinceptTerminal)
+
+| Region | Brokers |
+|--------|---------|
+| India | Zerodha, Angel One, Upstox, Fyers, Dhan, Groww, Kotak, IIFL, 5paisa, AliceBlue, Shoonya, Motilal |
+| Global | IBKR, Alpaca, Tradier, Saxo Bank |
+| Crypto | Kraken, HyperLiquid |
+
+### Prediction Markets
+
+Polymarket is currently supported as a **research and analysis workflow**, not as direct in-platform live execution. It is useful for market lookup, divergence analysis, opportunity scoring, and AI-assisted review.
+
 ## FAQ
 
-### Is QuantDinger really self-hosted?
+### Is Fin-AI really self-hosted?
 
 Yes. The default deployment model is your own Docker Compose stack with your own database, Redis instance, credentials, and environment configuration.
 
-### Is QuantDinger only for crypto trading?
+### Is Fin-AI only for crypto trading?
 
-No. Crypto is a major focus, but the platform also includes IBKR workflows for US stocks, MT5 workflows for forex, and Polymarket research support.
+No. Crypto is a major focus, but the platform also includes IBKR and Alpaca workflows for US stocks, MT5 workflows for forex, China A-shares and HK stocks support, prediction market research, and comprehensive multi-market coverage through 100+ data connectors.
 
 ### Can I write strategies directly in Python?
 
-Yes. QuantDinger supports both dataframe-style `IndicatorStrategy` development and event-driven `ScriptStrategy` development. You can also use AI to generate a starting point and then edit it yourself.
+Yes. Fin-AI supports both dataframe-style `IndicatorStrategy` development and event-driven `ScriptStrategy` development. You can also use AI to generate a starting point and then edit it yourself. Multi-agent AI collaboration can provide strategy recommendations based on comprehensive market analysis.
 
 ### Is this a research tool or a live trading platform?
 
-It is both. QuantDinger is built to connect AI research, charting, strategy development, backtesting, quick trade flows, and live execution operations in one system.
+It is both. Fin-AI is built to connect AI research, multi-agent analysis, charting, strategy development, institutional-grade analytics, backtesting with reflection, quick trade flows, and live execution operations in one system.
 
-### Can I use QuantDinger commercially?
+### How does multi-agent analysis work?
+
+Fin-AI integrates the TradingAgents framework, which deploys specialized LLM-powered agents: fundamentals analyst, sentiment analyst, news analyst, technical analyst, bullish and bearish researchers, trader, risk management team, and portfolio manager. These agents collaborate through structured debates to evaluate market conditions and inform trading decisions. Decisions are persisted with automatic reflection for continuous improvement.
+
+### How do I configure the 100+ data connectors?
+
+Data connectors are configured through environment variables and the data source management UI. The system supports intelligent routing with priority-based provider selection, multi-level caching (memory → Redis → PostgreSQL), per-provider rate limiting, and health monitoring every 5 minutes. See the Data Source Configuration Guide for details.
+
+### What is the difference between the web and desktop versions?
+
+The web version (Vue 3 + TypeScript) is the primary platform for daily operations, strategy development, AI analysis, and trading. The optional C++ Qt desktop application (FinceptTerminal) provides institutional-grade deep analysis with Bloomberg-terminal-class performance, native C++20 execution, and advanced QuantLib analytics. Both can be used together for comprehensive research and trading workflows.
+
+### How does decision persistence and reflection work?
+
+TradingAgents persists completed decisions to `~/.tradingagents/memory/trading_memory.md`. On the next run for the same ticker, it fetches the realised return (raw and alpha vs SPY), generates a one-paragraph reflection, and injects the most recent same-ticker decisions plus recent cross-ticker lessons into the Portfolio Manager prompt. This ensures each analysis carries forward what worked and what didn't.
+
+### Can I use Fin-AI commercially?
 
 The backend is licensed under Apache 2.0. The frontend source has a separate source-available license. Commercial use is supported, but you should review the licensing terms in this repository and contact the project for frontend/commercial authorization if needed.
 
@@ -627,6 +753,8 @@ The backend is licensed under Apache 2.0. The frontend source has a separate sou
 |------------|---------|
 | [QuantDinger](https://github.com/brokermr810/QuantDinger) | Main repository: backend, deployment stack, docs, prebuilt frontend delivery |
 | [QuantDinger Frontend](https://github.com/brokermr810/QuantDinger-Vue) | Vue frontend source repository for UI development and customization |
+| [FinceptTerminal](https://github.com/Fincept-Corporation/FinceptTerminal) | Financial data terminal with 100+ connectors and institutional-grade analytics |
+| [TradingAgents](https://github.com/TauricResearch/TradingAgents) | Multi-agent LLM trading framework with specialized roles |
 
 ## Exchange Partner Links
 
@@ -657,12 +785,12 @@ For commercial licensing, frontend source access, branding authorization, or dep
 
 ## Legal Notice and Compliance
 
-- QuantDinger is provided for lawful research, education, system development, and compliant trading or operational use only.
+- Fin-AI is provided for lawful research, education, system development, and compliant trading or operational use only.
 - No individual or organization may use this software, any derivative work, or any related service for unlawful, fraudulent, abusive, deceptive, market-manipulative, sanctions-violating, money-laundering, or other prohibited activity.
-- Any commercial use, deployment, operation, resale, or service offering based on QuantDinger must comply with all applicable laws, regulations, licensing requirements, sanctions rules, tax rules, data-protection rules, consumer-protection rules, and market or exchange rules in the jurisdictions where it is used.
+- Any commercial use, deployment, operation, resale, or service offering based on Fin-AI must comply with all applicable laws, regulations, licensing requirements, sanctions rules, tax rules, data-protection rules, consumer-protection rules, and market or exchange rules in the jurisdictions where it is used.
 - Users are solely responsible for determining whether their use of the software is lawful in their country or region, and for obtaining any approvals, registrations, disclosures, or professional advice required by applicable law.
-- QuantDinger, its copyright holders, contributors, licensors, maintainers, and affiliated open-source participants do not provide legal, tax, investment, compliance, or regulatory advice.
-- To the maximum extent permitted by applicable law, QuantDinger and all related contributors and rights holders disclaim responsibility and liability for any unlawful use, regulatory breach, trading loss, service interruption, enforcement action, or other consequence arising from the use or misuse of the software.
+- Fin-AI, its copyright holders, contributors, licensors, maintainers, and affiliated open-source participants do not provide legal, tax, investment, compliance, or regulatory advice.
+- To the maximum extent permitted by applicable law, Fin-AI and all related contributors and rights holders disclaim responsibility and liability for any unlawful use, regulatory breach, trading loss, service interruption, enforcement action, or other consequence arising from the use or misuse of the software.
 
 ## Start Here
 
@@ -698,7 +826,7 @@ Crypto donations:
 
 ## Acknowledgements
 
-QuantDinger stands on top of a strong open-source ecosystem. Special thanks to projects such as:
+QuantDinger stands on top of strong open-source ecosystems. Special thanks to projects such as:
 
 - [Flask](https://flask.palletsprojects.com/)
 - [Pandas](https://pandas.pydata.org/)
@@ -710,5 +838,9 @@ QuantDinger stands on top of a strong open-source ecosystem. Special thanks to p
 - [ECharts](https://echarts.apache.org/)
 - [Capacitor](https://capacitorjs.com/)
 - [bip-utils](https://github.com/ebellocchia/bip_utils)
+- [FinceptTerminal](https://github.com/Fincept-Corporation/FinceptTerminal) — financial data terminal with 100+ connectors and institutional-grade analytics
+- [TradingAgents](https://github.com/TauricResearch/TradingAgents) — multi-agent LLM trading framework
+- [LangGraph](https://github.com/langchain-ai/langgraph) — orchestration framework for multi-agent workflows
+- [QuantLib](https://www.quantlib.org/) — quantitative finance library for derivatives pricing and risk management
 
-<p align="center"><sub>If QuantDinger is useful to you, a GitHub star helps the project a lot.</sub></p>
+<p align="center"><sub>If Fin-AI is useful to you, a GitHub star helps the project a lot.</sub></p>
