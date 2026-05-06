@@ -150,12 +150,12 @@ Fin-AI 真正想提供的,不只是一个"量化工具",而是:
 
 <table align="center" width="100%">
   <tr>
-    <td width="50%" align="center"><img src="screenshots/v31.png" alt="Indicator IDE" style="border-radius: 6px;"><br/><sub>指标 IDE、图表研究、回测与快速交易</sub></td>
-    <td width="50%" align="center"><img src="screenshots/v32.png" alt="AI Asset Analysis" style="border-radius: 6px;"><br/><sub>AI 资产分析与机会雷达</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/v31.png" alt="Indicator IDE" style="border-radius: 6px;"><br/><sub>指标 IDE、图表研究、回测与快速交易</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/v32.png" alt="AI Asset Analysis" style="border-radius: 6px;"><br/><sub>AI 资产分析与机会雷达</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="screenshots/v33.png" alt="Trading Bots" style="border-radius: 6px;"><br/><sub>交易机器人工作台与自动化模板</sub></td>
-    <td align="center"><img src="screenshots/v34.png" alt="Strategy Live" style="border-radius: 6px;"><br/><sub>策略实盘运营、绩效与监控</sub></td>
+    <td align="center"><img src="docs/screenshots/v33.png" alt="Trading Bots" style="border-radius: 6px;"><br/><sub>交易机器人工作台与自动化模板</sub></td>
+    <td align="center"><img src="docs/screenshots/v34.png" alt="Strategy Live" style="border-radius: 6px;"><br/><sub>策略实盘运营、绩效与监控</sub></td>
   </tr>
 </table>
 
